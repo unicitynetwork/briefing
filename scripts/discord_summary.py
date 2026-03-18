@@ -151,10 +151,9 @@ header  = f'{total} PRs merged{rel_str} | {len(contributors)} contributor{"s" if
 THEME_COLORS = [1941621, 8353757, 3639005, 15704871, 14177840, 6529314]
 
 embeds = [{
-    'title': cap('Unicity - what shipped', 256),
+    'title': cap('What was shipped yesterday', 256),
     'description': cap(f'{date_disp}\n\n{header}', 4096),
-    'color': 1941621,
-    'url': 'https://unicitynetwork.github.io/briefing/'
+    'color': 1941621
 }]
 
 for i, theme in enumerate(themes[:5]):
@@ -163,11 +162,6 @@ for i, theme in enumerate(themes[:5]):
         'description': cap(theme.get('description', ''), 4096),
         'color': THEME_COLORS[i % len(THEME_COLORS)]
     })
-
-embeds.append({
-    'description': 'View full daily briefing: https://unicitynetwork.github.io/briefing/',
-    'color': 4473921
-})
 
 total_chars = sum(len(e.get('title','')) + len(e.get('description','')) for e in embeds)
 print(f'Embed count: {len(embeds)}, total chars: {total_chars}')
