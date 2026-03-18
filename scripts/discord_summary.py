@@ -46,22 +46,31 @@ def gh_search(q):
     with urllib.request.urlopen(req) as r:
         return json.loads(r.read())['items']
 
-ORGS = ['unicity-astrid', 'unicity-sphere', 'unicitynetwork']
+# Three project areas with their orgs and display names
+AREAS = [
+    ('astrid',        ['unicity-astrid'],  'Astrid'),
+    ('sphere',        ['unicity-sphere'],  'Sphere'),
+    ('unicitynetwork',['unicitynetwork'],  'Unicity Network'),
+]
 
+area_prs     = {}   # area_key -> list of PRs
 all_prs      = []
 releases     = []
 contributors = set()
 
-for org in ORGS:
-    prs = gh_search(f'org:{org} is:pr is:merged merged:{date_str}')
-    all_prs.extend(prs)
-    for pr in prs:
-        contributors.add(pr['user']['login'])
-        m = re.search(r'v\d+\.\d+\.\d+', pr['title'])
-        t = pr['title'].lower()
-        if m and ('release' in t or 'chore: release' in t):
-            repo = pr['repository_url'].split('/')[-1]
-            releases.append(f'{repo} {m.group()}')
+for area_key, orgs, _ in AREAS:
+    area_prs[area_key] = []
+    for org in orgs:
+        prs = gh_search(f'org:{org} is:pr is:merged merged:{date_str}')
+        area_prs[area_key].extend(prs)
+        all_prs.extend(prs)
+        for pr in prs:
+            contributors.add(pr['user']['login'])
+            m = re.search(r'v\d+\.\d+\.\d+', pr['title'])
+            t = pr['title'].lower()
+            if m and ('release' in t or 'chore: release' in t):
+                repo = pr['repository_url'].split('/')[-1]
+                releases.append(f'{repo} {m.group()}')
 
 total = len(all_prs)
 print(f'Found {total} PRs merged on {date_str}')
@@ -70,48 +79,68 @@ if total == 0:
     discord_post({'content': f'No PRs merged on {date_disp}.', 'username': 'Unicity Briefing'})
     exit(0)
 
-# 2. Build PR list for Claude
+# 2. Build per-area PR lists for Claude
 
-pr_lines = []
-for pr in all_prs:
-    repo = pr['repository_url'].split('/')[-1]
-    body = (pr.get('body') or '')[:300].replace('\n', ' ')
-    pr_lines.append(f'- [{repo}] #{pr["number"]} "{pr["title"]}" by @{pr["user"]["login"]} | {body}')
+def build_pr_text(prs):
+    lines = []
+    for pr in prs:
+        repo = pr['repository_url'].split('/')[-1]
+        body = (pr.get('body') or '')[:200].replace('\n', ' ')
+        lines.append(f'- [{repo}] #{pr["number"]} "{pr["title"]}" by @{pr["user"]["login"]} | {body}')
+    return '\n'.join(lines)
 
-pr_text = '\n'.join(pr_lines)
+# 3. Call Anthropic API — one call, all areas in one prompt
+
+area_sections = []
+for area_key, orgs, label in AREAS:
+    prs = area_prs[area_key]
+    if prs:
+        area_sections.append(f'=== {label} ({len(prs)} PRs) ===\n{build_pr_text(prs)}')
+
+pr_text = '\n\n'.join(area_sections)
 
 prompt = f"""You are writing the daily engineering executive summary for the Unicity project.
 Date: {date_disp}
 Total PRs merged: {total}
 Releases: {', '.join(releases) if releases else 'none'}
 
-Here are all the merged PRs:
+PRs are grouped by project area below:
+
 {pr_text}
 
-Write a concise executive summary grouped by THEME (not by repo or org).
-Each theme should have:
-1. A short title (max 8 words, plain text only)
-2. Two to three sentences explaining what changed and why it matters. Plain English, no jargon.
+Write a summary with one section per project area that had activity.
+Each section has:
+- "area": the project area name exactly as shown (Astrid, Sphere, or Unicity Network)
+- "pr_count": number of PRs in that area
+- "themes": array of 1-3 themes, each with:
+  - "title": short punchy title, max 8 words, plain text
+  - "repos": comma-separated list of repo names involved (e.g. "astrid, sdk-rust, capsule-memory")
+  - "description": 2-3 plain English sentences explaining what changed and why it matters. Mention specific repo names.
 
-Respond ONLY with a valid JSON array, no markdown fences, no preamble. Format:
+Respond ONLY with a valid JSON array, no markdown fences, no preamble:
 [
-  {{"title": "Theme title", "description": "Two to three sentence explanation."}},
+  {{
+    "area": "Astrid",
+    "pr_count": 34,
+    "themes": [
+      {{"title": "...", "repos": "astrid, sdk-rust", "description": "..."}}
+    ]
+  }},
   ...
 ]
 
 Rules:
-- Group related PRs into one theme
+- Only include areas that have PRs
 - Skip pure chore/bump PRs unless they represent a meaningful version milestone
-- Max 5 themes
-- Title: plain text, max 60 chars, no special characters
-- Description: plain text, max 250 chars, no special characters, no backticks, no asterisks"""
-
-# 3. Call Anthropic API
+- Max 3 themes per area
+- Title: max 60 chars, no special characters
+- Repos: just the short repo name(s), comma separated
+- Description: max 300 chars, plain text, no backticks, no asterisks"""
 
 print('Calling Anthropic API...')
 payload = json.dumps({
     'model': 'claude-haiku-4-5-20251001',
-    'max_tokens': 1000,
+    'max_tokens': 1500,
     'messages': [{'role': 'user', 'content': prompt}]
 }).encode()
 
@@ -135,11 +164,11 @@ except urllib.error.HTTPError as e:
 
 raw = resp['content'][0]['text'].strip()
 raw = re.sub(r'^```[a-z]*\n?', '', raw).rstrip('`').strip()
-print(f'Claude generated themes: {raw[:200]}')
-themes = json.loads(raw)
-print(f'Theme count: {len(themes)}')
+print(f'Claude raw output (first 300): {raw[:300]}')
+areas_out = json.loads(raw)
+print(f'Areas: {len(areas_out)}')
 
-# 4. Build Discord embeds
+# 4. Build Discord embeds — one per area
 
 def cap(s, n):
     s = str(s).strip()
@@ -148,7 +177,12 @@ def cap(s, n):
 rel_str = f' | {", ".join(releases)}' if releases else ''
 header  = f'{total} PRs merged{rel_str} | {len(contributors)} contributor{"s" if len(contributors)!=1 else ""}'
 
-THEME_COLORS = [1941621, 8353757, 3639005, 15704871, 14177840, 6529314]
+# Area colors: astrid=purple, sphere=teal, unicitynetwork=blue
+AREA_COLORS = {
+    'Astrid':           8353757,   # purple  0x7F77DD
+    'Sphere':           1941621,   # teal    0x1D9E75
+    'Unicity Network':  3639005,   # blue    0x378ADD
+}
 
 embeds = [{
     'title': cap('What was shipped yesterday', 256),
@@ -156,11 +190,31 @@ embeds = [{
     'color': 1941621
 }]
 
-for i, theme in enumerate(themes[:5]):
+for area in areas_out:
+    area_name  = area.get('area', 'Update')
+    pr_count   = area.get('pr_count', '')
+    themes     = area.get('themes', [])
+    color      = AREA_COLORS.get(area_name, 6579300)
+
+    # Build description: one block per theme
+    theme_blocks = []
+    for t in themes[:3]:
+        title  = t.get('title', '')
+        repos  = t.get('repos', '')
+        desc   = t.get('description', '')
+        block  = f'**{title}**'
+        if repos:
+            block += f'\n`{repos}`'
+        if desc:
+            block += f'\n{desc}'
+        theme_blocks.append(block)
+
+    description = '\n\n'.join(theme_blocks)
+
     embeds.append({
-        'title': cap(theme.get('title', 'Update'), 256),
-        'description': cap(theme.get('description', ''), 4096),
-        'color': THEME_COLORS[i % len(THEME_COLORS)]
+        'title': cap(f'{area_name} — {pr_count} PRs', 256),
+        'description': cap(description, 4096),
+        'color': color
     })
 
 total_chars = sum(len(e.get('title','')) + len(e.get('description','')) for e in embeds)
