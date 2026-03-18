@@ -26,7 +26,9 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .header{margin-bottom:20px;padding-bottom:14px;border-bottom:0.5px solid rgba(0,0,0,0.1)}
 .header h2{font-size:18px;font-weight:500}
 .header p{font-size:13px;color:#666;margin-top:3px}
-.window-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#E6F1FB;color:#0C447C;margin-top:5px}
+.header-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.window-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#E6F1FB;color:#0C447C}
+.updated-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#F1EFE8;color:#444}
 .org-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .pr-table{width:100%;border-collapse:collapse;font-size:12px}
 .pr-table th{font-size:10.5px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em;padding:6px 10px;background:#f5f4f0;border-bottom:0.5px solid rgba(0,0,0,0.1);text-align:left}
@@ -56,7 +58,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .mc-detail{font-size:12px;color:#666;margin-top:5px;line-height:1.5}
 .tag{font-size:11px;color:#666;background:#fff;padding:1px 6px;border-radius:4px;display:inline-block;margin:2px 2px 0 0}
 .method-note{font-size:11px;color:#666;background:#f5f4f0;border-radius:8px;padding:8px 12px;margin-top:12px;border-left:3px solid #7F77DD;line-height:1.5}
-.generated-note{font-size:11px;color:#aaa;margin-top:16px;text-align:center}</style>
+.footer-note{font-size:11px;color:#aaa;margin-top:16px;text-align:center;padding-bottom:8px}</style>
 </head>
 <body>
 <div style="max-width:960px;margin:0 auto;padding:1.25rem 0">
@@ -64,8 +66,11 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 <div class="header">
   <h2>Unicity project &mdash; daily brief</h2>
   <p>Wednesday, 18 March 2026</p>
-  <span class="window-badge">Coverage: Tuesday, 17 March 2026 &middot; GitHub API (author + involves sweep)</span>
-  
+  <div class="header-meta">
+    <span class="window-badge">Coverage: Tuesday, 17 March 2026 &middot; GitHub API (author + involves sweep)</span>
+    <span class="updated-badge">Updated: 18 March 2026, 13:16 UTC</span>
+    
+  </div>
 </div>
 
 <div class="metric-grid">
@@ -81,26 +86,26 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">SDK 0.3.0 Release with Documentation Features</div>
-    <div class="event-detail">Released astrid-sdk 0.3.0 with doc comments as tool descriptions and inline mutable flags. Added release workflow for automated GitHub releases and changelog extraction.</div>
+    <div class="event-title">SDK 0.3.0 release with doc comments</div>
+    <div class="event-detail">Released astrid-sdk version 0.3.0 featuring doc comments as tool descriptions and inline mutable flags. This enables LLMs to make better decisions when selecting which tool to call by providing rich documentation in JSON schemas.</div>
     <div class="event-meta"><code>sdk-rust</code></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Capsule Ecosystem SDK Upgrade Rollout</div>
-    <div class="event-detail">Systematically upgraded all capsules to astrid-sdk 0.3.0 and fixed WASM compatibility issues. Multiple capsules added uuid rng-getrandom feature and updated CI targets to wasm32-wasip1.</div>
+    <div class="event-title">Cascading SDK dependency updates across capsules</div>
+    <div class="event-detail">Systematically upgraded astrid-sdk to 0.3.0 across 16 capsules. Updates include wasm compatibility fixes for uuid and CI target corrections to use wasm32-wasip1 instead of wasm32-unknown-unknown.</div>
     <div class="event-meta"><code>capsule-skills, capsule-shell, capsule-session, capsule-router, capsule-registry, capsule-react, capsule-prompt-builder, capsule-openai-compat, capsule-memory, capsule-identity, capsule-http, capsule-hook-bridge, capsule-fs, capsule-context-engine, capsule-cli, capsule-anthropic</code></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Tool Descriptions and Documentation Across Capsules</div>
-    <div class="event-detail">Added doc comments to tool methods and capsule impl blocks enabling LLM tool selection via descriptions. Leverages new SDK 0.3.0 feature for automatic schema documentation.</div>
+    <div class="event-title">Tool descriptions and documentation enhancements</div>
+    <div class="event-detail">Added comprehensive doc comments to tools and capsule impl blocks across six core capsules, improving LLM tool selection by providing rich metadata descriptions in exported schemas.</div>
     <div class="event-meta"><code>capsule-openai-compat, capsule-identity, capsule-skills, capsule-shell, capsule-http, capsule-fs</code></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Boot Pipeline and CLI Architecture Improvements</div>
-    <div class="event-detail">Extracted daemon and build tooling into standalone binaries and released astrid 0.4.0. Added streaming HTTP airlock and boot pipeline fixes for end-to-end capsule execution.</div>
+    <div class="event-title">Boot pipeline and CLI infrastructure improvements</div>
+    <div class="event-detail">Fixed critical boot pipeline issues and refactored kernel daemon and build tooling into standalone binaries. Added headless mode support and post-install configuration to astrid CLI, plus streaming HTTP airlock capabilities for real-time response consumption.</div>
     <div class="event-meta"><code>astrid, sdk-rust</code></div>
   </div></div>
 </div>
@@ -110,14 +115,14 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Wallet Management and dApp Notifications</div>
-    <div class="event-detail">Enhanced wallet switching and logout notifications to dApps with identity-aware connect protocol. Added video background poster feature to improve UI experience.</div>
+    <div class="event-title">Wallet and identity management enhancements</div>
+    <div class="event-detail">Enhanced dApp notifications for wallet switching and logout events while implementing identity-aware connect protocol in the SDK. Added video background poster support for improved UI/UX in sphere wallet application.</div>
     <div class="event-meta"><code>sphere, sphere-sdk</code></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">On-Chain Achievement Synchronization</div>
-    <div class="event-detail">Implemented on-chain achievement sync functionality enabling persistent achievement tracking across the blockchain network.</div>
+    <div class="event-title">On-chain achievement synchronization</div>
+    <div class="event-detail">Implemented on-chain achievement syncing to enable persistent, blockchain-verified tracking of user accomplishments across the sphere ecosystem.</div>
     <div class="event-meta"><code>sphere-quest</code></div>
   </div></div>
 </div>
@@ -127,14 +132,14 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="event-row">
   <div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Receipt Removal from Certification Flow</div>
-    <div class="event-detail">Removed receipt from certification request and response structures in both SDK and aggregator implementations. Simplifies certification protocol across the relay network.</div>
+    <div class="event-title">Receipt removal from certification flows</div>
+    <div class="event-detail">Removed receipt handling from certification request and response payloads in both state-transition-sdk and aggregator-go, simplifying the certification protocol.</div>
     <div class="event-meta"><code>state-transition-sdk, aggregator-go</code></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Relay Metrics and Observability</div>
-    <div class="event-detail">Added metrics collection to the unicity-relay enabling better monitoring and observability of relay network performance.</div>
+    <div class="event-title">Relay metrics instrumentation</div>
+    <div class="event-detail">Added metrics instrumentation to unicity-relay for improved observability and monitoring of relay operations.</div>
     <div class="event-meta"><code>unicity-relay</code></div>
   </div></div>
 </div>
@@ -180,7 +185,7 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   </div>
 </div>
 
-<p class="generated-note">Auto-generated 2026-03-18 13:06 UTC &mdash; ristik/ndsmt-experiments commits require manual check</p>
+<p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
 
 </div>
 </body>
