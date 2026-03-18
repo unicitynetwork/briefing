@@ -33,7 +33,7 @@ def gh_search(q, per_page=50):
         with urllib.request.urlopen(req) as r:
             return json.loads(r.read()).get('items', [])
     except Exception as e:
-        print(f'Search error ({q[:80]}): {e}')
+        print(f'  search error: {e} | query: {q[:80]}')
         return []
 
 def gh_graphql(query, variables=None):
@@ -51,7 +51,7 @@ def gh_graphql(query, variables=None):
         with urllib.request.urlopen(req) as r:
             return json.loads(r.read())
     except Exception as e:
-        print(f'GraphQL error: {e}')
+        print(f'  graphql error: {e}')
         return {}
 
 ORGS = ['unicity-astrid', 'unicity-sphere', 'unicitynetwork']
@@ -72,7 +72,7 @@ MEMBER_NAMES = {
     'jvsteiner':'Jamie Steiner',
 }
 
-# ── 3. Per-org merged PR sweep ────────────────────────────────────────────────
+# ── 3. Merged PRs ─────────────────────────────────────────────────────────────
 org_prs      = {}
 all_prs      = []
 releases     = []
@@ -81,6 +81,7 @@ merged_keys  = set()
 
 for org in ORGS:
     prs = gh_search(f'org:{org} is:pr is:merged merged:{date_range}', per_page=100)
+    time.sleep(2)
     org_prs[org] = prs
     all_prs.extend(prs)
     for pr in prs:
@@ -95,49 +96,28 @@ for org in ORGS:
 total_merged = len(all_prs)
 print(f'Merged PRs: {total_merged}')
 
-# ── 4. involves sweep ─────────────────────────────────────────────────────────
-member_data     = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
-seen_per_member = {m: set() for m in MEMBERS}
-
-for member in MEMBERS:
-    for org in ORGS:
-        for kind in ('pr', 'issue'):
-            items = gh_search(f'involves:{member} updated:>={window_start} is:{kind} org:{org}')
-            for item in items:
-                uid = (item['number'], item['repository_url'])
-                if uid in seen_per_member[member]:
-                    continue
-                seen_per_member[member].add(uid)
-                is_author = item['user']['login'].lower() == member.lower()
-                is_merged = bool(item.get('pull_request', {}).get('merged_at'))
-                is_open   = item['state'] == 'open'
-                if is_author and is_merged:
-                    member_data[member]['authored_merged'].append(item)
-                elif is_author and is_open:
-                    member_data[member]['authored_open'].append(item)
-                else:
-                    member_data[member]['involved'].append(item)
-        time.sleep(0.3)
-
-print('Involves sweep done')
-
-# ── 5. Long-standing open PRs (>7 days) ──────────────────────────────────────
+# ── 4. Long-standing open PRs — runs FIRST before involves sweep
+#       to avoid GitHub Search API rate limit exhaustion (30 req/min)
 cutoff   = (now - timedelta(days=7)).strftime('%Y-%m-%d')
 long_prs = []
 for org in ORGS:
-    results = gh_search(f'org:{org} is:pr is:open created:<{cutoff}', per_page=50)
+    results = gh_search(f'org:{org} is:pr is:open created:<{cutoff}', per_page=100)
+    time.sleep(2)
     long_prs.extend(results)
 long_prs.sort(key=lambda p: p['created_at'])
 print(f'Long-standing open PRs: {len(long_prs)}')
 
-# ── 6. Board fetch via GraphQL ────────────────────────────────────────────────
+# ── 5. Board fetch via GraphQL — paginated, skipping Done items
+#       board_keys includes ALL items (even Done) so "not on board" is accurate
+#       board_issues only flags non-Done problems
 BOARD_Q = '''
-query($org: String!, $num: Int!) {
+query($org: String!, $num: Int!, $cursor: String) {
   organization(login: $org) {
     projectV2(number: $num) {
       title
-      items(first: 100) {
+      items(first: 100, after: $cursor) {
         totalCount
+        pageInfo { hasNextPage endCursor }
         nodes {
           fieldValues(first: 15) {
             nodes {
@@ -163,78 +143,156 @@ query($org: String!, $num: Int!) {
   }
 }'''
 
-boards     = {}
-board_keys = set()
+boards     = {}   # org -> list of non-Done items (for comparison)
+board_keys = set() # ALL items including Done (for "is PR tracked?" check)
+board_counts = {}  # org -> {status: count}
 
 for org in ORGS:
-    result    = gh_graphql(BOARD_Q, {'org': org, 'num': 1})
+    all_nodes  = []
+    cursor     = None
+    page       = 0
+    board_title = ''
+    total_items = 0
+    status_counts = {}
+
+    while True:
+        page += 1
+        result = gh_graphql(BOARD_Q, {'org': org, 'num': 1, 'cursor': cursor})
+        try:
+            proj      = result['data']['organization']['projectV2']
+            page_data = proj['items']
+            nodes     = page_data['nodes']
+            has_next  = page_data['pageInfo']['hasNextPage']
+            cursor    = page_data['pageInfo']['endCursor']
+            if page == 1:
+                board_title = proj.get('title', '')
+                total_items = page_data['totalCount']
+                print(f'  Board {org} "{board_title}": {total_items} items total')
+            all_nodes.extend(nodes)
+            if not has_next:
+                break
+        except Exception as e:
+            print(f'  Board {org} page {page} failed: {e}')
+            break
+
+    print(f'  Board {org}: fetched {len(all_nodes)} items across {page} pages')
+
     items_out = []
-    try:
-        proj  = result['data']['organization']['projectV2']
-        nodes = proj['items']['nodes']
-        total = proj['items']['totalCount']
-        print(f'  Board {org} "{proj.get("title","")}" : {total} items, {len(nodes)} fetched')
-        for node in nodes:
-            status = None
+    for node in all_nodes:
+        # Find status field — prefer field named "Status", else first single-select
+        status = None
+        for fv in node.get('fieldValues', {}).get('nodes', []):
+            if fv and 'name' in fv and isinstance(fv.get('field'), dict):
+                fn = fv['field'].get('name', '')
+                if 'status' in fn.lower():
+                    status = fv.get('name')
+                    break
+        if status is None:
             for fv in node.get('fieldValues', {}).get('nodes', []):
                 if fv and 'name' in fv and isinstance(fv.get('field'), dict):
-                    fn = fv['field'].get('name', '')
-                    if 'status' in fn.lower():
-                        status = fv.get('name')
-                        break
-            if status is None:
-                for fv in node.get('fieldValues', {}).get('nodes', []):
-                    if fv and 'name' in fv and isinstance(fv.get('field'), dict):
-                        status = fv.get('name')
-                        break
-            c = node.get('content')
-            if not c:
-                continue
-            repo   = c.get('repository', {}).get('name', '')
-            number = c.get('number')
-            is_pr  = 'isDraft' in c or 'mergedAt' in c
-            item   = {
-                'status':    status or 'No Status',
-                'type':      'pr' if is_pr else 'issue',
-                'number':    number, 'repo': repo,
-                'title':     c.get('title', ''), 'url': c.get('url', ''),
-                'state':     c.get('state', ''), 'merged_at': c.get('mergedAt'),
-                'is_draft':  c.get('isDraft', False),
-            }
-            items_out.append(item)
-            if repo and number:
-                board_keys.add((repo, number))
-        boards[org] = items_out
-    except Exception as e:
-        print(f'  Board fetch failed for {org}: {e}')
-        boards[org] = []
+                    status = fv.get('name')
+                    break
 
-# ── 7. Board comparison ───────────────────────────────────────────────────────
-IN_DEV_STATUSES = {'In Dev','In Development','In Progress','In Review','Review','Test','Testing','Blocked','In Prod'}
-board_issues    = []
+        c = node.get('content')
+        if not c:
+            continue
+
+        repo   = c.get('repository', {}).get('name', '')
+        number = c.get('number')
+        is_pr  = 'isDraft' in c or 'mergedAt' in c
+        status = status or 'No Status'
+
+        # Count all statuses for the summary header
+        status_counts[status] = status_counts.get(status, 0) + 1
+
+        # Add to board_keys regardless of status (needed for "not on board" check)
+        if repo and number:
+            board_keys.add((repo, number))
+
+        # Only keep non-Done items for comparison checks
+        if status.lower() in ('done', 'closed', 'complete', 'completed', 'shipped'):
+            continue
+
+        item = {
+            'status':    status,
+            'type':      'pr' if is_pr else 'issue',
+            'number':    number, 'repo': repo,
+            'title':     c.get('title', ''), 'url': c.get('url', ''),
+            'state':     c.get('state', ''), 'merged_at': c.get('mergedAt'),
+            'is_draft':  c.get('isDraft', False),
+        }
+        items_out.append(item)
+
+    boards[org]       = items_out
+    board_counts[org] = status_counts
+    non_done = len(items_out)
+    print(f'  Board {org}: {non_done} non-Done items | counts: {dict(sorted(status_counts.items()))}')
+
+# ── 6. Board comparison ───────────────────────────────────────────────────────
+# Active statuses where a merged PR should NOT still be sitting
+IN_DEV_STATUSES = {
+    'In Dev','In Development','In Progress','In Review','Review',
+    'Test','Testing','Blocked','In Prod','Ready','Todo','Backlog'
+}
+board_issues = []
 
 for org, items in boards.items():
     label = ORG_LABELS.get(org, org)
     for item in items:
-        repo, num, status, title, url = item['repo'], item['number'], item['status'], item['title'], item['url']
+        repo, num, status, title, url = (
+            item['repo'], item['number'], item['status'],
+            item['title'], item['url']
+        )
+        # Stale: PR is MERGED but board still shows an active/in-progress status
         if item['type'] == 'pr' and status in IN_DEV_STATUSES:
             if item['state'] == 'MERGED' or item.get('merged_at'):
                 board_issues.append({'org': label, 'sev': 'stale',
                     'msg': f'Stuck in \u201c{status}\u201d \u2014 PR already merged',
                     'title': title, 'url': url, 'ref': f'{repo} #{num}'})
+        # No Status assigned on non-Done item
         if status == 'No Status':
             board_issues.append({'org': label, 'sev': 'nostatus',
-                'msg': 'No Status assigned', 'title': title, 'url': url, 'ref': f'{repo} #{num}'})
+                'msg': 'No Status assigned',
+                'title': title, 'url': url, 'ref': f'{repo} #{num}'})
 
+# Open long-standing PRs not tracked on any board at all
 for pr in long_prs:
     repo = pr['repository_url'].split('/')[-1]
     if (repo, pr['number']) not in board_keys:
         pr_org = next((o for o in ORGS if f'/{o}/' in pr['repository_url']), '')
         board_issues.append({'org': ORG_LABELS.get(pr_org, 'Unknown'), 'sev': 'missing',
             'msg': 'Open PR not tracked on any board',
-            'title': pr['title'], 'url': pr['html_url'], 'ref': f'{repo} #{pr["number"]}'})
+            'title': pr['title'], 'url': pr['html_url'],
+            'ref': f'{repo} #{pr["number"]}'})
 
 print(f'Board issues: {len(board_issues)}')
+
+# ── 7. involves sweep — runs AFTER long PRs to protect rate limit budget
+#       2s sleep per call = max 30 calls/min, safe within GitHub Search API limit
+member_data     = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
+seen_per_member = {m: set() for m in MEMBERS}
+
+for member in MEMBERS:
+    for org in ORGS:
+        for kind in ('pr', 'issue'):
+            items = gh_search(f'involves:{member} updated:>={window_start} is:{kind} org:{org}')
+            time.sleep(2)
+            for item in items:
+                uid = (item['number'], item['repository_url'])
+                if uid in seen_per_member[member]:
+                    continue
+                seen_per_member[member].add(uid)
+                is_author = item['user']['login'].lower() == member.lower()
+                is_merged = bool(item.get('pull_request', {}).get('merged_at'))
+                is_open   = item['state'] == 'open'
+                if is_author and is_merged:
+                    member_data[member]['authored_merged'].append(item)
+                elif is_author and is_open:
+                    member_data[member]['authored_open'].append(item)
+                else:
+                    member_data[member]['involved'].append(item)
+
+print('Involves sweep done')
 
 # ── 8. Claude thematic summaries ─────────────────────────────────────────────
 def pr_lines(prs, limit=60):
@@ -262,7 +320,7 @@ For each org with activity, group PRs into 1-4 meaningful themes.
 Each theme:
 - title: punchy, specific, max 10 words (name the actual capability or change)
 - repos: comma-separated short repo names
-- description: 3-5 plain English sentences. Be SPECIFIC: name the actual repo, what changed, why it matters, what it unlocks. Mention specific PR titles or technical terms. Write for a technical manager.
+- description: 3-5 plain English sentences. Be SPECIFIC: name the actual repo, what changed, why it matters, what it unlocks. Mention specific PR numbers or technical terms. Write for a technical manager.
 
 Good example: "astrid #507 extracts the kernel daemon and capsule build tooling into standalone binaries (astrid-daemon, astrid-build), making the CLI a pure socket client. This unblocks parallel development of CLI, daemon, and build tooling independently. Users get three new lifecycle commands: astrid start, astrid stop, astrid status."
 Bad example: "Several improvements were made to the codebase."
@@ -320,31 +378,22 @@ def pr_dot_class(title):
     return 'tl-done'
 
 def fmt_time(ts):
-    """Format merged_at ISO string to short day+time label e.g. 'Mon 10:02'"""
     try:
         dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
-        # Convert to EET (UTC+2 in winter, UTC+3 in summer — approximate with +2)
         dt_eet = dt + timedelta(hours=2)
         return dt_eet.strftime('%a %H:%M')
     except Exception:
         return ''
 
 def build_timeline(prs):
-    """Build chronological timeline HTML for an org's merged PRs.
-    Groups PRs that merged within 5 minutes of each other into one entry."""
     if not prs:
         return ''
 
-    # Sort by merged_at; fall back to closed_at
     def get_ts(pr):
         return pr.get('pull_request', {}).get('merged_at') or pr.get('closed_at') or pr.get('updated_at') or ''
 
     sorted_prs = sorted(prs, key=get_ts)
-
-    # Group PRs within a 5-minute window
-    groups = []
-    current_group = []
-    current_ts    = None
+    groups, current_group, current_ts = [], [], None
 
     for pr in sorted_prs:
         ts_str = get_ts(pr)
@@ -361,8 +410,7 @@ def build_timeline(prs):
         else:
             if current_group:
                 groups.append(current_group)
-            current_group = [(ts, pr)]
-            current_ts    = ts
+            current_group, current_ts = [(ts, pr)], ts
 
     if current_group:
         groups.append(current_group)
@@ -373,36 +421,25 @@ def build_timeline(prs):
         t_start = fmt_time(times[0].strftime('%Y-%m-%dT%H:%M:%SZ'))
         if len(times) > 1:
             t_end   = fmt_time(times[-1].strftime('%Y-%m-%dT%H:%M:%SZ'))
-            # Only show end time if different
             t_label = t_start if t_start == t_end else f'{t_start.split(" ")[0]} {t_start.split(" ")[1]}\u2013{t_end.split(" ")[1]}'
         else:
             t_label = t_start
 
         prs_in_group = [pr for _, pr in group]
-
         if len(prs_in_group) == 1:
             pr   = prs_in_group[0]
             repo = pr['repository_url'].split('/')[-1]
             dot  = pr_dot_class(pr['title'])
             label = f'<a href="{esc(pr["html_url"])}" class="tl-link">{esc(repo)} #{pr["number"]}</a> \u2014 {esc(pr["title"])}'
-            out += f'''<div class="tl-item {dot}">
-  <span class="tl-time">{esc(t_label)}</span>
-  <span class="tl-label">{label}</span>
-</div>'''
+            out += f'<div class="tl-item {dot}"><span class="tl-time">{esc(t_label)}</span><span class="tl-label">{label}</span></div>'
         else:
-            # Multiple PRs in same window — list inline
-            items_html = []
-            for pr in prs_in_group:
-                repo = pr['repository_url'].split('/')[-1]
-                items_html.append(
-                    f'<a href="{esc(pr["html_url"])}" class="tl-link">{esc(repo)} #{pr["number"]}</a> ({esc(pr["title"])})'
-                )
+            items_html = [
+                f'<a href="{esc(pr["html_url"])}" class="tl-link">{esc(pr["repository_url"].split("/")[-1])} #{pr["number"]}</a> ({esc(pr["title"])})'
+                for pr in prs_in_group
+            ]
             dot   = pr_dot_class(prs_in_group[0]['title'])
             label = ' &middot; '.join(items_html)
-            out += f'''<div class="tl-item {dot}">
-  <span class="tl-time">{esc(t_label)}</span>
-  <span class="tl-label">{label}</span>
-</div>'''
+            out += f'<div class="tl-item {dot}"><span class="tl-time">{esc(t_label)}</span><span class="tl-label">{label}</span></div>'
 
     out += '</div>'
     return out
@@ -422,23 +459,55 @@ def theme_cards(tlist, color):
     return out
 
 def org_card(org_key, badge_class, border_color, dot_color, theme_key, n_prs):
-    """Renders an org card: theme summaries + timeline (if >5 PRs)."""
-    prs    = org_prs.get(org_key, [])
-    tlist  = themes.get(theme_key, [])
-    label  = ORG_LABELS.get(org_key, org_key)
-
+    prs   = org_prs.get(org_key, [])
+    tlist = themes.get(theme_key, [])
+    label = ORG_LABELS.get(org_key, org_key)
     html  = f'<div class="card" style="border-color:{border_color}">'
     html += f'<div class="org-header"><span class="badge {badge_class}">{esc(label)}</span>'
     html += f'<span style="font-size:13px;color:#666">{n_prs} PRs merged</span></div>'
     html += theme_cards(tlist, dot_color)
-
     if len(prs) >= 5:
-        section_label = window_label if weekday == 0 else window_label
-        html += f'<p class="section-title" style="margin-top:14px">Timeline \u2014 {esc(section_label)}</p>'
+        html += f'<p class="section-title" style="margin-top:14px">Timeline \u2014 {esc(window_label)}</p>'
         html += build_timeline(prs)
-
     html += '</div>'
     return html
+
+def board_status_summary(org):
+    counts = board_counts.get(org, {})
+    if not counts:
+        return ''
+    # Format as "Todo 74 · In Dev 25 · Blocked 3 · Done 241" with Done last
+    done_val = counts.get('Done', 0)
+    parts = [f'{k} {v}' for k, v in sorted(counts.items()) if k.lower() not in ('done','closed','complete','completed','shipped')]
+    if done_val:
+        parts.append(f'Done {done_val}')
+    return ' &middot; '.join(parts)
+
+def board_rows(issues):
+    if not issues:
+        return '<p style="font-size:13px;color:#888;padding:8px 0">No board issues detected \u2014 all active items correctly tracked.</p>'
+    sev_chip = {
+        'stale':    '<span class="chip chip-stale">STALE STATUS</span>',
+        'nostatus': '<span class="chip chip-nostatus">NO STATUS</span>',
+        'missing':  '<span class="chip chip-miss">NOT ON BOARD</span>',
+    }
+    # Group by org
+    by_org = {}
+    for issue in issues[:40]:
+        by_org.setdefault(issue['org'], []).append(issue)
+
+    out = ''
+    for org_label, org_issues in by_org.items():
+        out += f'<p class="section-title">{esc(org_label)}</p>'
+        for issue in org_issues:
+            chip = sev_chip.get(issue['sev'], '<span class="chip">?</span>')
+            out += f'''<div class="board-row">
+  {chip}
+  <div class="board-body">
+    <div class="board-title"><a href="{esc(issue['url'])}" class="pr-link">{esc(issue['title'])}</a></div>
+    <div class="board-detail"><code>{esc(issue['ref'])}</code> &middot; {esc(issue['msg'])}</div>
+  </div></div>'''
+    return out
 
 def long_pr_rows(prs):
     if not prs:
@@ -454,25 +523,6 @@ def long_pr_rows(prs):
     <div class="pr-repo">{esc(repo)} #{pr['number']}</div></td>
   <td class="pr-author">@{esc(pr['user']['login'])}</td></tr>'''
     return rows
-
-def board_rows(issues):
-    if not issues:
-        return '<p style="font-size:13px;color:#888;padding:8px 0">No board issues detected.</p>'
-    sev_chip = {
-        'stale':    '<span class="chip chip-stale">STALE STATUS</span>',
-        'nostatus': '<span class="chip chip-nostatus">NO STATUS</span>',
-        'missing':  '<span class="chip chip-miss">NOT ON BOARD</span>',
-    }
-    out = ''
-    for issue in issues[:30]:
-        chip = sev_chip.get(issue['sev'], '<span class="chip">?</span>')
-        out += f'''<div class="board-row">
-  {chip}
-  <div class="board-body">
-    <div class="board-title"><a href="{esc(issue['url'])}" class="pr-link">{esc(issue['title'])}</a></div>
-    <div class="board-detail"><code>{esc(issue['ref'])}</code> &middot; {esc(issue['org'])} &middot; {esc(issue['msg'])}</div>
-  </div></div>'''
-    return out
 
 def member_cards():
     active, inactive = [], []
@@ -522,6 +572,11 @@ n_sphere  = len(org_prs.get('unicity-sphere', []))
 n_network = len(org_prs.get('unicitynetwork', []))
 boards_ok = any(boards.values())
 
+# Board header per org: shows status counts
+board_header_astrid  = board_status_summary('unicity-astrid')
+board_header_sphere  = board_status_summary('unicity-sphere')
+board_header_network = board_status_summary('unicitynetwork')
+
 CSS = '''*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
@@ -548,18 +603,16 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .window-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#E6F1FB;color:#0C447C}
 .updated-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#F1EFE8;color:#444}
 .org-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.section-title{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px}
+.section-title{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
+.section-title:first-child{margin-top:0}
 .timeline{position:relative;padding-left:14px}
 .timeline::before{content:'';position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:rgba(0,0,0,0.1)}
 .tl-item{position:relative;padding:3px 0 4px 12px;font-size:12px;color:#444;line-height:1.55}
 .tl-item::before{content:'';position:absolute;left:-3px;top:9px;width:7px;height:7px;border-radius:50%;background:#ccc}
-.tl-done::before{background:#1D9E75}
-.tl-feat::before{background:#1D9E75}
-.tl-fix::before{background:#E24B4A}
-.tl-rel::before{background:#D97706}
-.tl-chore::before{background:#888}
-.tl-refactor::before{background:#378ADD}
-.tl-time{font-family:'SF Mono',Monaco,monospace;font-size:10.5px;color:#aaa;margin-right:8px;min-width:76px;display:inline-block}
+.tl-done::before{background:#1D9E75}.tl-feat::before{background:#1D9E75}
+.tl-fix::before{background:#E24B4A}.tl-rel::before{background:#D97706}
+.tl-chore::before{background:#888}.tl-refactor::before{background:#378ADD}
+.tl-time{font-family:'SF Mono',Monaco,monospace;font-size:10.5px;color:#aaa;margin-right:8px;min-width:80px;display:inline-block}
 .tl-label{color:#1a1a18}
 .tl-link{color:#1a1a18;text-decoration:none;font-weight:500}
 .tl-link:hover{text-decoration:underline}
@@ -575,9 +628,9 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .pr-repo{font-size:11px;font-family:'SF Mono',Monaco,monospace;color:#888;margin-top:1px}
 .pr-author{font-size:11px;font-family:'SF Mono',Monaco,monospace;color:#666}
 .draft-tag{display:inline-block;font-size:10px;padding:1px 5px;border-radius:3px;background:#F1EFE8;color:#888;margin-left:4px;font-style:italic}
-.board-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);font-size:12px}
+.board-row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);font-size:12px}
 .board-row:last-child{border-bottom:none}
-.chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;min-width:80px;text-align:center;margin-top:1px}
+.chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;min-width:88px;text-align:center;margin-top:1px}
 .chip-stale{background:#FAEEDA;color:#633806}
 .chip-nostatus{background:#EEEDFE;color:#3C3489}
 .chip-miss{background:#FCEBEB;color:#791F1F}
@@ -629,8 +682,11 @@ HTML = f'''<!DOCTYPE html>
 <div class="card" style="border-color:#E24B4A">
   <div class="org-header">
     <span class="badge" style="background:#FCEBEB;color:#791F1F">Project board comparison</span>
-    <span style="font-size:12px;color:#666">Stale statuses &middot; missing items &middot; untracked PRs{"" if boards_ok else " &mdash; board fetch failed (check read:project scope on GH_PAT)"}</span>
+    <span style="font-size:12px;color:#666">Stale statuses &middot; No Status &middot; open PRs not tracked{"" if boards_ok else " &mdash; board fetch failed"}</span>
   </div>
+  {f'<p style="font-size:11px;color:#888;margin-bottom:8px">unicity-astrid: {board_header_astrid}</p>' if board_header_astrid else ''}
+  {f'<p style="font-size:11px;color:#888;margin-bottom:8px">unicity-sphere: {board_header_sphere}</p>' if board_header_sphere else ''}
+  {f'<p style="font-size:11px;color:#888;margin-bottom:10px">unicitynetwork: {board_header_network}</p>' if board_header_network else ''}
   {board_rows(board_issues)}
 </div>
 
