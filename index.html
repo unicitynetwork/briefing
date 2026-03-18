@@ -3,27 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unicity Briefing — Wednesday 18 March 2026 (v3)</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
+<title>Unicity Briefing &mdash; Wednesday, 18 March 2026</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
 .badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px}
 .badge-purple{background:#EEEDFE;color:#3C3489}.badge-teal{background:#E1F5EE;color:#085041}
-.badge-blue{background:#E6F1FB;color:#0C447C}.badge-amber{background:#FAEEDA;color:#633806}
-.badge-green{background:#EAF3DE;color:#27500A}.badge-release{background:#FDF3C7;color:#92400E}.badge-red{background:#FCEBEB;color:#791F1F}
+.badge-blue{background:#E6F1FB;color:#0C447C}.badge-release{background:#FDF3C7;color:#92400E}
 .metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:16px}
 .metric{background:#f5f4f0;border-radius:8px;padding:12px}
 .metric-label{font-size:12px;color:#666;margin-bottom:4px}
 .metric-val{font-size:22px;font-weight:500}
 .metric-val.hi{color:#1D9E75}.metric-val.pu{color:#7F77DD}.metric-val.am{color:#D97706}.metric-val.re{color:#E24B4A}
-.section-title{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
-.section-title:first-child{margin-top:0}
 .event-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:0.5px solid rgba(0,0,0,0.08)}
 .event-row:last-child{border-bottom:none}
 .event-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:6px}
 .event-body{flex:1;min-width:0}
-.event-title{font-size:13px;line-height:1.5;margin-bottom:3px}
+.event-title{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:3px}
 .event-detail{font-size:12px;color:#666;line-height:1.6}
 .event-meta{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:5px}
 code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;padding:1px 5px;border-radius:4px}
@@ -32,48 +28,10 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .header p{font-size:13px;color:#666;margin-top:3px}
 .window-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#E6F1FB;color:#0C447C;margin-top:5px}
 .org-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.divider{border:none;border-top:0.5px solid rgba(0,0,0,0.08);margin:12px 0}
-.dot-green{background:#639922}.dot-teal{background:#1D9E75}.dot-blue{background:#378ADD}
-.dot-amber{background:#EF9F27}.dot-purple{background:#7F77DD}.dot-red{background:#E24B4A}
-.timeline{position:relative;padding-left:14px}
-.timeline::before{content:'';position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:rgba(0,0,0,0.1)}
-.tl-item{position:relative;padding:3px 0 3px 12px;font-size:12px;color:#666;line-height:1.5}
-.tl-item::before{content:'';position:absolute;left:-3px;top:9px;width:7px;height:7px;border-radius:50%;background:#ccc}
-.tl-item.done::before{background:#1D9E75}
-.tl-item.open::before{background:#EF9F27}
-.tl-item.rel::before{background:#D97706}
-.tl-item.fix::before{background:#E24B4A}
-.tl-item.commit::before{background:#7F77DD}
-.tl-time{font-family:'SF Mono',Monaco,monospace;font-size:10.5px;color:#aaa;margin-right:6px;min-width:72px;display:inline-block}
-.tl-label{color:#1a1a18}
-.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
-.member-card{background:#f5f4f0;border-radius:8px;padding:10px 12px;border-left:3px solid #1D9E75}
-.member-card.quiet{border-left-color:rgba(0,0,0,0.12)}
-.mc-name{font-size:13px;font-weight:500}
-.mc-handle{font-family:'SF Mono',Monaco,monospace;font-size:11px;color:#888;margin-left:5px}
-.mc-detail{font-size:12px;color:#666;margin-top:5px;line-height:1.5}
-.tag{font-size:11px;color:#666;background:#fff;padding:1px 6px;border-radius:4px;display:inline-block;margin:2px 2px 0 0}
-.board-wrap{border:0.5px solid rgba(0,0,0,0.1);border-radius:8px;overflow:hidden;margin-bottom:8px}
-.board-head{background:#f5f4f0;padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:0.5px solid rgba(0,0,0,0.08)}
-.board-row{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border-bottom:0.5px solid rgba(0,0,0,0.06);font-size:12px}
-.board-row:last-child{border-bottom:none}
-.chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;min-width:72px;text-align:center;margin-top:1px}
-.chip-ok{background:#E1F5EE;color:#085041}
-.chip-stale{background:#FAEEDA;color:#633806}
-.chip-miss{background:#FCEBEB;color:#791F1F}
-.chip-nostatus{background:#EEEDFE;color:#3C3489}
-.board-body{flex:1}
-.board-title{font-size:12px;color:#1a1a18;line-height:1.4}
-.board-detail{font-size:11.5px;color:#666;margin-top:2px;line-height:1.4}
-.col-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;font-weight:500;margin-left:4px}
-.col-indev{background:#E6F1FB;color:#0C447C}.col-test{background:#FAEEDA;color:#633806}
-.col-inprog{background:#E6F1FB;color:#0C447C}.col-inrev{background:#EEEDFE;color:#3C3489}
-.col-backlog{background:#F1EFE8;color:#444}.col-ready{background:#E1F5EE;color:#085041}.col-done{background:#EAF3DE;color:#27500A}
 .pr-table{width:100%;border-collapse:collapse;font-size:12px}
 .pr-table th{font-size:10.5px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em;padding:6px 10px;background:#f5f4f0;border-bottom:0.5px solid rgba(0,0,0,0.1);text-align:left}
 .pr-table td{padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);vertical-align:top}
 .pr-table tr:last-child td{border-bottom:none}
-.pr-table tr:hover td{background:#f9f8f5}
 .age-pill{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:10px;white-space:nowrap}
 .age-critical{background:#FCEBEB;color:#791F1F}.age-high{background:#FAEEDA;color:#633806}
 .age-medium{background:#FDF3C7;color:#92400E}.age-low{background:#F1EFE8;color:#444}
@@ -81,150 +39,148 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .pr-link:hover{text-decoration:underline}
 .pr-repo{font-size:11px;font-family:'SF Mono',Monaco,monospace;color:#888;margin-top:1px}
 .pr-author{font-size:11px;font-family:'SF Mono',Monaco,monospace;color:#666}
-.action-badge{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px}
-.action-review{background:#EEEDFE;color:#3C3489}.action-close{background:#FCEBEB;color:#791F1F}
-.action-decide{background:#FAEEDA;color:#633806}.action-unblock{background:#E1F5EE;color:#085041}
 .draft-tag{display:inline-block;font-size:10px;padding:1px 5px;border-radius:3px;background:#F1EFE8;color:#888;margin-left:4px;font-style:italic}
-.commit-hash{font-family:'SF Mono',Monaco,monospace;font-size:10.5px;background:#f5f4f0;padding:1px 5px;border-radius:3px;margin-right:4px}
+.board-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);font-size:12px}
+.board-row:last-child{border-bottom:none}
+.chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;min-width:80px;text-align:center;margin-top:1px}
+.chip-stale{background:#FAEEDA;color:#633806}
+.chip-nostatus{background:#EEEDFE;color:#3C3489}
+.chip-miss{background:#FCEBEB;color:#791F1F}
+.board-body{flex:1}
+.board-title{font-size:12px;color:#1a1a18;line-height:1.4}
+.board-detail{font-size:11.5px;color:#666;margin-top:2px}
+.member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.member-card{background:#f5f4f0;border-radius:8px;padding:10px 12px;border-left:3px solid #1D9E75}
+.mc-name{font-size:13px;font-weight:500}
+.mc-handle{font-family:'SF Mono',Monaco,monospace;font-size:11px;color:#888;margin-left:5px}
+.mc-detail{font-size:12px;color:#666;margin-top:5px;line-height:1.5}
+.tag{font-size:11px;color:#666;background:#fff;padding:1px 6px;border-radius:4px;display:inline-block;margin:2px 2px 0 0}
 .method-note{font-size:11px;color:#666;background:#f5f4f0;border-radius:8px;padding:8px 12px;margin-top:12px;border-left:3px solid #7F77DD;line-height:1.5}
-</style>
+.generated-note{font-size:11px;color:#aaa;margin-top:16px;text-align:center}</style>
 </head>
 <body>
 <div style="max-width:960px;margin:0 auto;padding:1.25rem 0">
 
 <div class="header">
-  <h2>Unicity project &#8212; daily brief</h2>
+  <h2>Unicity project &mdash; daily brief</h2>
   <p>Wednesday, 18 March 2026</p>
-  <span class="window-badge">Tue 17 Mar 00:00 &#8211; Wed 18 Mar ~10:00 EET &middot; GitHub API (author + involves sweep) + browser commits + boards</span>
-  <div style="margin-top:6px;font-size:11.5px;color:#666">Tracking: ristik/ndsmt-experiments added &middot; astralis-private + rfcs dropped</div>
+  <span class="window-badge">Coverage: Tuesday, 17 March 2026 &middot; GitHub API (author + involves sweep)</span>
+  
 </div>
 
 <div class="metric-grid">
-  <div class="metric"><div class="metric-label">PRs / commits merged</div><div class="metric-val hi">42</div></div>
-  <div class="metric"><div class="metric-label">Releases shipped</div><div class="metric-val am">2</div></div>
-  <div class="metric"><div class="metric-label">Long-standing PRs cleared</div><div class="metric-val hi">3</div></div>
-  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">8</div></div>
-  <div class="metric"><div class="metric-label">Members active</div><div class="metric-val pu">9</div></div>
+  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">40</div></div>
+  <div class="metric"><div class="metric-label">Releases</div><div class="metric-val am">0</div></div>
+  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">0</div></div>
+  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">5</div></div>
+  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">34 / 3 / 3</div></div>
 </div>
 
 <div class="card" style="border-color:#7F77DD">
-  <div class="org-header"><span class="badge badge-purple">unicity-astrid</span><span class="badge badge-release">sdk-rust v0.3.0</span><span style="font-size:13px;color:#666">35 PRs merged &middot; 4 open this morning &middot; overnight bug-fix run continuing</span></div>
-  <p class="section-title">Timeline &#8212; Tue 17 Mar through Wed 18 early hours</p>
-  <div class="timeline">
-    <div class="tl-item done"><span class="tl-time">Tue 10:02</span><span class="tl-label">astrid #513 &#8212; boot pipeline fixes + headless mode + onboarding</span></div>
-    <div class="tl-item done"><span class="tl-time">Tue 10:38&#8211;42</span><span class="tl-label">sdk-rust #7 &#8212; doc comments as tool descriptions &middot; 7 capsule doc PRs (shell, skills, identity, fs, http, openai-compat x2)</span></div>
-    <div class="tl-item rel"><span class="tl-time">Tue 11:43</span><span class="tl-label"><strong>sdk-rust v0.3.0 released</strong> (sdk-rust #8)</span></div>
-    <div class="tl-item done"><span class="tl-time">Tue 12:00&#8211;13:38</span><span class="tl-label">16 capsule repos bumped to sdk 0.3.0 &#8212; cli, fs, http, identity, openai-compat, react, registry, router, session, shell, skills, anthropic, context-engine, hook-bridge, memory, prompt-builder</span></div>
-    <div class="tl-item done"><span class="tl-time">Tue 23:41&#8211;43</span><span class="tl-label">capsule-skills #4 (remove redundant [[tool]] entries) &middot; capsule-cli #3 (remove agent.v1.stream.delta subscription)</span></div>
-    <div class="tl-item open"><span class="tl-time">Tue 23:11&#8211;14</span><span class="tl-label">3 PRs opened: sdk-rust #10 (capsule state, SysError, streaming) &middot; capsule-memory #3 (KV memory + add_memory) &middot; capsule-identity #4 (self-contained identity + KV + onboarding)</span></div>
-    <div class="tl-item fix"><span class="tl-time">Wed 02:41</span><span class="tl-label">astrid #529 &#8212; fix(capsule): broken pipe WASM trap on headless client</span></div>
-    <div class="tl-item fix"><span class="tl-time">Wed 02:53</span><span class="tl-label">astrid #523 &#8212; fix: create ~/.astrid/shared/ on boot</span></div>
-    <div class="tl-item fix"><span class="tl-time">Wed 03:21</span><span class="tl-label">astrid #521 &#8212; fix: preserve .env.json on reinstall + bump WASM timeout</span></div>
-    <div class="tl-item fix"><span class="tl-time">Wed 03:33</span><span class="tl-label">astrid #525 &#8212; fix(ipc): ordered per-capsule dispatch + monotonic seq on reconnect</span></div>
-    <div class="tl-item fix"><span class="tl-time">Wed 03:48</span><span class="tl-label">capsule-openai-compat #4 (base URL without /v1) &middot; capsule-react #4 (batch response + silence log spam)</span></div>
-    <div class="tl-item done"><span class="tl-time">Wed 03:49</span><span class="tl-label">astrid #527 &#8212; feat: ephemeral shutdown on last disconnect + rename plugin&#8594;capsule</span></div>
-  </div>
-  <hr class="divider">
-  <p class="section-title">4 open PRs &#8212; sdk-rust #10 gates the others</p>
-  <div class="event-row"><div class="event-dot" style="background:#EF9F27"></div><div class="event-body"><div class="event-title">sdk-rust #10 &#8212; capsule(state) support, SysError dispatch, streaming &middot; @joshuajbouw, Tue 23:14</div><div class="event-detail">Needed by capsule-memory #3 and capsule-identity #4. Review this first.</div><div class="event-meta"><span class="badge badge-amber">open &middot; needs review &middot; gates other PRs</span></div></div></div>
-  <div class="event-row"><div class="event-dot" style="background:#EF9F27"></div><div class="event-body"><div class="event-title">capsule-memory #3 &#8212; KV-backed memory with add_memory tool and /memory-export</div><div class="event-meta"><span class="badge badge-amber">open &middot; blocked on sdk-rust #10</span></div></div></div>
-  <div class="event-row"><div class="event-dot" style="background:#EF9F27"></div><div class="event-body"><div class="event-title">capsule-identity #4 &#8212; self-contained identity with KV state, onboarding</div><div class="event-meta"><span class="badge badge-amber">open &middot; blocked on sdk-rust #10</span></div></div></div>
-  <div class="event-row"><div class="event-dot" style="background:#EF9F27"></div><div class="event-body"><div class="event-title">capsule-react #2 &#8212; add tool descriptions &middot; straggler from Tue morning doc wave</div><div class="event-meta"><span class="badge badge-amber">open</span></div></div></div>
+  <div class="org-header"><span class="badge badge-purple">unicity-astrid</span><span style="font-size:13px;color:#666">34 PRs merged</span></div>
+  <div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">SDK 0.3.0 Release with Documentation Features</div>
+    <div class="event-detail">Released astrid-sdk 0.3.0 with doc comments as tool descriptions and inline mutable flags. Added release workflow for automated GitHub releases and changelog extraction.</div>
+    <div class="event-meta"><code>sdk-rust</code></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">Capsule Ecosystem SDK Upgrade Rollout</div>
+    <div class="event-detail">Systematically upgraded all capsules to astrid-sdk 0.3.0 and fixed WASM compatibility issues. Multiple capsules added uuid rng-getrandom feature and updated CI targets to wasm32-wasip1.</div>
+    <div class="event-meta"><code>capsule-skills, capsule-shell, capsule-session, capsule-router, capsule-registry, capsule-react, capsule-prompt-builder, capsule-openai-compat, capsule-memory, capsule-identity, capsule-http, capsule-hook-bridge, capsule-fs, capsule-context-engine, capsule-cli, capsule-anthropic</code></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">Tool Descriptions and Documentation Across Capsules</div>
+    <div class="event-detail">Added doc comments to tool methods and capsule impl blocks enabling LLM tool selection via descriptions. Leverages new SDK 0.3.0 feature for automatic schema documentation.</div>
+    <div class="event-meta"><code>capsule-openai-compat, capsule-identity, capsule-skills, capsule-shell, capsule-http, capsule-fs</code></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">Boot Pipeline and CLI Architecture Improvements</div>
+    <div class="event-detail">Extracted daemon and build tooling into standalone binaries and released astrid 0.4.0. Added streaming HTTP airlock and boot pipeline fixes for end-to-end capsule execution.</div>
+    <div class="event-meta"><code>astrid, sdk-rust</code></div>
+  </div></div>
 </div>
 
-<div class="card">
-  <div class="org-header"><span class="badge badge-teal">unicity-sphere</span><span style="font-size:13px;color:#666">@KruGoL clears 3 PRs &middot; @ahtotruu sparks sphere #267 discussion &middot; sphere-sdk #87 still waiting</span></div>
-  <div class="event-row"><div class="event-dot dot-green"></div><div class="event-body"><div class="event-title">sphere-sdk #92 merged Tue 07:40 &middot; sphere-quest #6 merged Tue 08:32 &middot; sphere #284 merged Tue 10:26 &#8212; all @KruGoL</div><div class="event-meta"><span class="badge badge-green">3 merges</span></div></div></div>
-  <div class="event-row"><div class="event-dot dot-blue"></div><div class="event-body"><div class="event-title">sphere #267 &#8212; @ahtotruu commented Tue 09:20 triggering discussion &middot; now assigned @igmahl + @KruGoL</div><div class="event-detail">@ahtotruu's comment was the catalyst that activated this previously-dormant backlog item and led to the assignment.</div><div class="event-meta"><span class="badge badge-blue">@ahtotruu comment &middot; issue now assigned</span></div></div></div>
-  <div class="event-row"><div class="event-dot" style="background:#EF9F27"></div><div class="event-body"><div class="event-title">sphere-sdk #87 &#8212; eliminate TOCTOU race in concurrent send() &middot; @vrogojin, 5 days open, 2093 tests green, no reviewer, not on board</div><div class="event-meta"><span class="badge badge-amber">critical &middot; 5 days &middot; needs review</span></div></div></div>
+<div class="card" style="border-color:#1D9E75">
+  <div class="org-header"><span class="badge badge-teal">unicity-sphere</span><span style="font-size:13px;color:#666">3 PRs merged</span></div>
+  <div class="event-row">
+  <div class="event-dot" style="background:#1D9E75"></div>
+  <div class="event-body">
+    <div class="event-title">Wallet Management and dApp Notifications</div>
+    <div class="event-detail">Enhanced wallet switching and logout notifications to dApps with identity-aware connect protocol. Added video background poster feature to improve UI experience.</div>
+    <div class="event-meta"><code>sphere, sphere-sdk</code></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#1D9E75"></div>
+  <div class="event-body">
+    <div class="event-title">On-Chain Achievement Synchronization</div>
+    <div class="event-detail">Implemented on-chain achievement sync functionality enabling persistent achievement tracking across the blockchain network.</div>
+    <div class="event-meta"><code>sphere-quest</code></div>
+  </div></div>
 </div>
 
-<div class="card">
-  <div class="org-header"><span class="badge badge-blue">unicitynetwork</span><span style="font-size:13px;color:#666">@lploom closes out receipt work &middot; @martti007 launches java-sdk rewrite</span></div>
-  <div class="event-row"><div class="event-dot dot-green"></div><div class="event-body"><div class="event-title">aggregator-go #127 &#8212; @lploom closed Tue 09:47. Their own issue, filed and self-assigned in Feb. Closed as companion PR #128 merged.</div><div class="event-meta"><span class="badge badge-green">issue closed &middot; @lploom</span></div></div></div>
-  <div class="event-row"><div class="event-dot dot-green"></div><div class="event-body"><div class="event-title">aggregator-go #128 &#8212; @lploom's original PR, merged Tue 11:48 by @b3y0urs3lf (reviewer). 36 days from open to merge.</div><div class="event-meta"><span class="badge badge-green">merged after 36 days &middot; authored @lploom &middot; reviewed @b3y0urs3lf</span></div></div></div>
-  <div class="event-row"><div class="event-dot dot-green"></div><div class="event-body"><div class="event-title">state-transition-sdk #101 merged Tue 11:49 (@martti007) &middot; tracking issue #92 closed</div><div class="event-meta"><span class="badge badge-green">merged after 15 days</span></div></div></div>
-  <div class="event-row"><div class="event-dot dot-green"></div><div class="event-body"><div class="event-title">unicity-relay #4 "Metrics" merged Tue 16:22 (@MastaP) &#8212; flagged missing from board yesterday, now Done</div><div class="event-meta"><span class="badge badge-green">merged</span></div></div></div>
-  <div class="event-row"><div class="event-dot dot-blue"></div><div class="event-body"><div class="event-title">java-state-transition-sdk #48 "Rewrite Java SDK based on academic paper" &#8212; @martti007, Tue evening. Sub-issues: #49 minting (closed &#8212; done), #50 V2 Unicity ID + #51 V2 payments/splits (open)</div><div class="event-meta"><span class="badge badge-blue">new initiative &middot; 2 sub-issues open</span></div></div></div>
-  <div class="event-row"><div class="event-dot" style="background:#EF9F27"></div><div class="event-body"><div class="event-title">aggregator-go #136 &#8212; @jait91, open since Mon, no reviewer yet</div><div class="event-meta"><span class="badge badge-amber">open 2 days &middot; needs review</span></div></div></div>
-</div>
-
-<div class="card" style="border-color:#7F77DD">
-  <div class="org-header"><span class="badge badge-purple">ristik/ndsmt-experiments</span><span style="font-size:13px;color:#666">1 commit in window &middot; 5 commits total since Mon &middot; checked via browser commit log</span></div>
-  <div class="timeline">
-    <div class="tl-item commit"><span class="tl-time">Mon 12:39</span><span class="tl-label"><span class="commit-hash">dabf3d5</span>init &#8212; repo created</span></div>
-    <div class="tl-item commit"><span class="tl-time">Mon 13:04</span><span class="tl-label"><span class="commit-hash">9e7de96</span><strong>sync with go aggr</strong> &#8212; Python modelling aligned with aggregator-go</span></div>
-    <div class="tl-item commit"><span class="tl-time">Mon 17:00</span><span class="tl-label"><span class="commit-hash">7b654b2</span>trivial option</span></div>
-    <div class="tl-item commit"><span class="tl-time">Mon 22:02</span><span class="tl-label"><span class="commit-hash">8a27a2e</span>illustrative plots</span></div>
-    <div class="tl-item commit" style="border-left:2px solid #7F77DD;padding-left:10px;margin-left:2px"><span class="tl-time" style="color:#7F77DD">Tue 09:52</span><span class="tl-label" style="color:#7F77DD"><strong><span class="commit-hash">0754a7a</span>more plots</strong> &#8212; in-window commit</span></div>
-  </div>
+<div class="card" style="border-color:#378ADD">
+  <div class="org-header"><span class="badge badge-blue">unicitynetwork</span><span style="font-size:13px;color:#666">3 PRs merged</span></div>
+  <div class="event-row">
+  <div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Receipt Removal from Certification Flow</div>
+    <div class="event-detail">Removed receipt from certification request and response structures in both SDK and aggregator implementations. Simplifies certification protocol across the relay network.</div>
+    <div class="event-meta"><code>state-transition-sdk, aggregator-go</code></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Relay Metrics and Observability</div>
+    <div class="event-detail">Added metrics collection to the unicity-relay enabling better monitoring and observability of relay network performance.</div>
+    <div class="event-meta"><code>unicity-relay</code></div>
+  </div></div>
 </div>
 
 <div class="card" style="border-color:#E24B4A">
-  <div class="org-header"><span class="badge badge-red">Long-standing open PRs</span><span style="font-size:12px;color:#666">All open PRs older than 7 days &#8212; sorted oldest first &middot; Wed 18 Mar</span><span class="badge badge-green">3 cleared since yesterday</span></div>
+  <div class="org-header">
+    <span class="badge" style="background:#FCEBEB;color:#791F1F">Project board comparison</span>
+    <span style="font-size:12px;color:#666">Stale statuses &middot; missing items &middot; untracked PRs</span>
+  </div>
+  <p style="font-size:13px;color:#888;padding:8px 0">No board issues detected.</p>
+</div>
+
+<div class="card" style="border-color:#1D9E75">
+  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
+  <div class="member-grid"><div class="member-card">
+  <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
+  <div class="mc-detail">34 PRs merged, 7 open PRs, involved in 5 items</div>
+  <div style="margin-top:6px"><span class="tag">astrid</span><span class="tag">capsule-anthropic</span><span class="tag">capsule-cli</span><span class="tag">capsule-context-engine</span><span class="tag">capsule-fs</span></div>
+</div><div class="member-card">
+  <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
+  <div class="mc-detail">1 PR merged, 1 open PR, involved in 1 item</div>
+  <div style="margin-top:6px"><span class="tag">sphere</span><span class="tag">state-transition-sdk</span><span class="tag">unicity-relay</span></div>
+</div><div class="member-card">
+  <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
+  <div class="mc-detail">involved in 2 items</div>
+  <div style="margin-top:6px"><span class="tag">sphere</span></div>
+</div><div class="member-card">
+  <div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div>
+  <div class="mc-detail">3 PRs merged, involved in 1 item</div>
+  <div style="margin-top:6px"><span class="tag">sphere</span><span class="tag">sphere-quest</span><span class="tag">sphere-sdk</span></div>
+</div></div><p style="font-size:11.5px;color:#888;margin-top:10px;line-height:1.6"><strong>No activity this window:</strong> @ristik, @martti007, @jvsteiner, @ahtotruu, @b3y0urs3lf, @jait91, @lploom, @vrogojin, @0xt1mo</p><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
+<code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
+Catches closes, reviews, comments, and assignments — not just authored items.</div>
+</div>
+
+<div class="card" style="border-color:#E24B4A">
+  <div class="org-header"><span class="badge" style="background:#FCEBEB;color:#791F1F">Long-standing open PRs</span><span style="font-size:12px;color:#666">All open PRs older than 7 days &mdash; sorted oldest first</span></div>
   <div style="overflow-x:auto">
   <table class="pr-table">
-    <thead><tr><th>Age</th><th>PR</th><th>Author</th><th>Assigned to</th><th>Action needed</th></tr></thead>
-    <tbody>
-      <tr><td><span class="age-pill age-critical">149 days</span></td><td><a href="https://github.com/unicitynetwork/java-state-transition-sdk/pull/26" class="pr-link">[WIP] Java SDK cucumber test amendments</a><span class="draft-tag">WIP</span><div class="pr-repo">java-state-transition-sdk #26</div></td><td class="pr-author">@b3y0urs3lf</td><td class="pr-author">&#8212;</td><td><span class="action-badge action-close">Close or revive</span><div style="font-size:11px;color:#666;margin-top:3px">5 months stale. SDK rewrite (#48) underway &#8212; likely superseded.</div></td></tr>
-      <tr><td><span class="age-pill age-critical">107 days</span></td><td><a href="https://github.com/unicitynetwork/java-state-transition-sdk/pull/43" class="pr-link">#40 Rename request id to state id, secure state id</a><div class="pr-repo">java-state-transition-sdk #43</div></td><td class="pr-author">@martti007</td><td class="pr-author">&#8212;</td><td><span class="action-badge action-decide">Review or supersede</span><div style="font-size:11px;color:#666;margin-top:3px">SDK rewrite (#48) underway &#8212; confirm if this still applies or close.</div></td></tr>
-      <tr><td><span class="age-pill age-critical">107 days</span></td><td><a href="https://github.com/unicitynetwork/java-state-transition-sdk/pull/44" class="pr-link">Add user defined mint reasons</a><div class="pr-repo">java-state-transition-sdk #44</div></td><td class="pr-author">@martti007</td><td class="pr-author">&#8212;</td><td><span class="action-badge action-decide">Review or supersede</span><div style="font-size:11px;color:#666;margin-top:3px">Same as #43 &#8212; @martti007 to decide against rewrite scope.</div></td></tr>
-      <tr><td><span class="age-pill age-critical">58 days</span></td><td><a href="https://github.com/unicitynetwork/bft-core/pull/11" class="pr-link">EVM</a><span class="draft-tag">Draft</span><div class="pr-repo">bft-core #11</div></td><td class="pr-author">@MastaP</td><td class="pr-author">&#8212;</td><td><span class="action-badge action-decide">Decision needed</span><div style="font-size:11px;color:#666;margin-top:3px">Draft, no description, last touched Feb 28. Still planned?</div></td></tr>
-      <tr><td><span class="age-pill age-high">41 days</span></td><td><a href="https://github.com/unicitynetwork/nostr-js-sdk/pull/4" class="pr-link">test: add comprehensive unit tests (324 new)</a><div class="pr-repo">nostr-js-sdk #4</div></td><td class="pr-author">@b3y0urs3lf</td><td class="pr-author">&#8212;</td><td><span class="action-badge action-review">Review needed</span><div style="font-size:11px;color:#666;margin-top:3px">41 days. Test-only. Easy win to merge.</div></td></tr>
-      <tr><td><span class="age-pill age-high">41 days</span></td><td><a href="https://github.com/unicitynetwork/nostr-sdk/pull/4" class="pr-link">Add comprehensive unit tests (366 new tests)</a><div class="pr-repo">nostr-sdk #4</div></td><td class="pr-author">@b3y0urs3lf</td><td class="pr-author">&#8212;</td><td><span class="action-badge action-review">Review needed</span><div style="font-size:11px;color:#666;margin-top:3px">41 days. Test-only. Documents security findings.</div></td></tr>
-      <tr><td><span class="age-pill age-medium">20 days</span></td><td><a href="https://github.com/unicity-astrid/astrid/pull/189" class="pr-link">Discord capsule implementation</a><div class="pr-repo">astrid #189</div></td><td class="pr-author">@MastaP</td><td class="pr-author">&#8212;</td><td><span class="action-badge action-unblock">Unblock #332</span><div style="font-size:11px;color:#666;margin-top:3px">20 days. 236 tests. In Progress on board. Blocker: issue #332. @joshuajbouw to fix.</div></td></tr>
-      <tr><td><span class="age-pill age-medium">20 days</span></td><td><a href="https://github.com/unicitynetwork/state-transition-sdk/pull/100" class="pr-link">#95 Change split logic to return splits info only</a><div class="pr-repo">state-transition-sdk #100</div></td><td class="pr-author">@martti007</td><td class="pr-author">&#8212;</td><td><span class="action-badge action-review">Review needed</span><div style="font-size:11px;color:#666;margin-top:3px">20 days. Companion #101 merged yesterday &#8212; assign reviewer now.</div></td></tr>
-      <tr><td><span class="age-pill age-low">5 days</span></td><td><a href="https://github.com/unicity-sphere/sphere-sdk/pull/87" class="pr-link">fix(payments): eliminate TOCTOU race in concurrent send()</a><div class="pr-repo">sphere-sdk #87</div></td><td class="pr-author">@vrogojin</td><td class="pr-author">&#8212;</td><td><span class="action-badge action-review">Review needed</span><div style="font-size:11px;color:#666;margin-top:3px">5 days. Critical race condition fix, 2093 tests. Not on board.</div></td></tr>
-    </tbody>
+    <thead><tr><th>Age</th><th>PR</th><th>Author</th></tr></thead>
+    <tbody><tr><td colspan="3" style="padding:12px;font-size:13px;color:#888;text-align:center">No open PRs older than 7 days.</td></tr></tbody>
   </table>
   </div>
-  <p style="font-size:11.5px;color:#666;margin-top:10px;line-height:1.6"><strong>Cleared since yesterday:</strong> aggregator-go #128 (36 days, @lploom authored) &#10003; &middot; state-transition-sdk #101 (15 days) &#10003; &middot; unicity-relay #4 &#10003;</p>
 </div>
 
-<div class="card" style="border-color:#EF9F27">
-  <div class="org-header"><span class="badge badge-amber">Needs attention</span></div>
-  <div class="event-row"><div class="event-dot dot-purple"></div><div class="event-body"><div class="event-title">sdk-rust #10 &#8212; review first, then capsule-memory #3 + capsule-identity #4 can proceed</div><div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review order matters</span></div></div></div>
-  <div class="event-row"><div class="event-dot" style="background:#EF9F27"></div><div class="event-body"><div class="event-title">sphere-sdk #87 TOCTOU race fix &#8212; 5 days, 2093 tests, critical, no reviewer, not on sphere board</div><div class="event-meta"><span class="badge badge-amber">critical &middot; assign reviewer</span></div></div></div>
-  <div class="event-row"><div class="event-dot" style="background:#EF9F27"></div><div class="event-body"><div class="event-title">state-transition-sdk #100 &#8212; companion to #101 (merged yesterday). 20 days, no reviewer.</div><div class="event-meta"><span class="badge badge-amber">assign reviewer</span></div></div></div>
-  <div class="event-row"><div class="event-dot" style="background:#EF9F27"></div><div class="event-body"><div class="event-title">astrid #189 Discord capsule &#8212; 20 days, blocked on #332. @joshuajbouw shipped 35 PRs yesterday &#8212; #332 needs a slot.</div><div class="event-meta"><span class="badge badge-amber">one fix needed &middot; @joshuajbouw</span></div></div></div>
-  <div class="event-row"><div class="event-dot dot-blue"></div><div class="event-body"><div class="event-title">java-sdk #48 rewrite &#8212; #49 closed. #50 + #51 open. No timeline or reviewer yet.</div><div class="event-meta"><span class="badge badge-blue">new initiative &middot; triage needed</span></div></div></div>
-</div>
-
-<div class="card" style="border-color:#E24B4A">
-  <div class="org-header"><span class="badge badge-red">Project board comparison</span><span style="font-size:12px;color:#666">Verified live via browser &middot; Wed 18 Mar</span></div>
-  <p class="section-title">unicitynetwork &middot; <a href="https://github.com/orgs/unicitynetwork/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',Monaco,monospace">projects/1</a> <span style="font-size:11px;color:#666;margin-left:6px">No Status 2 &middot; Todo 74 &middot; In Dev 25 &middot; Blocked 3 &middot; Test 3 &middot; Done 241</span></p>
-  <div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">&#9888; STATUS WRONG</span></div><div class="board-row"><span class="chip chip-stale">IN DEV&#8594;DONE</span><div class="board-body"><div class="board-title">aggregator-go #133 "Add Prometheus/Grafana monitoring" <span class="col-badge col-indev">In Dev</span></div><div class="board-detail">PR #134 merged 3 days ago. Close the tracking issue and move to Done.</div></div></div></div>
-  <div class="board-wrap" style="margin-top:6px"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#3C3489">&#8856; NO STATUS</span></div><div class="board-row"><span class="chip chip-nostatus">NO STATUS</span><div class="board-body"><div class="board-title">java-state-transition-sdk #50 + #51 &#8212; part of @martti007's SDK rewrite. Assign to In Dev or Backlog.</div></div></div></div>
-  <div class="board-wrap" style="margin-top:6px"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#1D9E75">&#10003; CONFIRMED / UPDATED</span></div><div class="board-row"><span class="chip chip-ok">OK</span><div class="board-body"><div class="board-title">unicity-relay #4 <span class="col-badge col-done">Done</span> &middot; aggregator-go #136 <span class="col-badge col-indev">In Dev</span> &middot; bft-core #15 <span class="col-badge" style="background:#FAEEDA;color:#633806">Test</span> &middot; Done 241 (+3 since yesterday)</div></div></div></div>
-  <p class="section-title" style="margin-top:14px">unicity-sphere &middot; <a href="https://github.com/orgs/unicity-sphere/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',Monaco,monospace">projects/1</a> <span style="font-size:11px;color:#666;margin-left:6px">Backlog 25 &middot; Ready 2 &middot; In Progress 2 &middot; In Review 5 &middot; Done 11</span></p>
-  <div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">&#9888; NOT UPDATED</span></div><div class="board-row"><span class="chip chip-stale">STALE COUNT</span><div class="board-body"><div class="board-title">Done still at 11 despite 3 merges yesterday (sphere-sdk #92, sphere-quest #6, sphere #284)</div><div class="board-detail">Recommend moving all 3 to Done.</div></div></div></div>
-  <div class="board-wrap" style="margin-top:6px"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">&#10007; NOT ON BOARD</span></div><div class="board-row"><span class="chip chip-miss">MISSING</span><div class="board-body"><div class="board-title">sphere-sdk #87 TOCTOU race fix &middot; sphere-infra #2 "Migrate tokens relay + monitoring"</div><div class="board-detail">sphere-sdk #87 most urgent &#8212; critical bug fix, 5 days, no QA visibility.</div></div></div></div>
-  <div class="board-wrap" style="margin-top:6px"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#1D9E75">&#10003; CONFIRMED PRESENT</span></div><div class="board-row"><span class="chip chip-ok">OK</span><div class="board-body"><div class="board-title">sphere #283 <span class="col-badge col-inprog">In Progress</span> &middot; sphere #110 <span class="col-badge col-inprog">In Progress</span> &middot; #270 + #273 <span class="col-badge col-ready">Ready</span> &middot; #233 + #267 <span class="col-badge col-backlog">Backlog</span> (#267 assigned @igmahl + @KruGoL &#10003;)</div></div></div></div>
-  <p class="section-title" style="margin-top:14px">unicity-astrid &middot; <a href="https://github.com/orgs/unicity-astrid/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',Monaco,monospace">projects/1</a> <span style="font-size:11px;color:#666;margin-left:6px">Backlog 114 &middot; Ready 0 &middot; In Progress 8 &middot; In Review 0 &middot; Done 213</span></p>
-  <div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#1D9E75">&#10003; BOARD ACTIVELY UPDATED</span></div><div class="board-row"><span class="chip chip-ok">OK</span><div class="board-body"><div class="board-title">Done 213 (+7 since yesterday) &middot; Discord capsule #189 <span class="col-badge col-inprog">In Progress</span></div></div></div></div>
-  <div class="board-wrap" style="margin-top:6px"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">&#10007; NOT ON BOARD</span></div><div class="board-row"><span class="chip chip-miss">MISSING</span><div class="board-body"><div class="board-title">sdk-rust #10 &middot; capsule-memory #3 &middot; capsule-identity #4 &middot; capsule-react #2 &#8212; all 4 current open PRs</div></div></div></div>
-</div>
-
-<div class="card">
-  <div class="org-header"><span class="badge badge-green">Team activity</span><span style="font-size:12px;color:#666">All members with any activity &#8212; verified via author + involves sweep</span></div>
-  <div class="member-grid">
-    <div class="member-card"><div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div><div class="mc-detail">35 PRs merged: sdk-rust #7 + 7 capsule doc PRs + v0.3.0 + 16 sdk-bump PRs + 7 overnight bug-fix PRs. 4 PRs open this morning targeting state support and richer capsule memory/identity.</div><div style="margin-top:6px"><span class="tag">35 merged</span><span class="tag">4 open</span><span class="tag">sdk-rust v0.3.0</span><span class="tag">all capsule repos</span></div></div>
-    <div class="member-card"><div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div><div class="mc-detail">Three merges Tue morning &#8212; sphere-sdk #92, sphere-quest #6, sphere #284. Assigned to sphere #267 alongside @igmahl.</div><div style="margin-top:6px"><span class="tag">3 merges</span><span class="tag">1 issue assigned</span><span class="tag">sphere &middot; sphere-sdk &middot; sphere-quest</span></div></div>
-    <div class="member-card"><div class="mc-name">Risto Laanoja <span class="mc-handle">@ristik</span></div><div class="mc-detail">"more plots" committed Tue 09:52. 5 commits total since Mon &#8212; Python modelling sprint tracking aggregator-go. Visible via browser commit log only.</div><div style="margin-top:6px"><span class="tag">1 commit in window</span><span class="tag">ndsmt-experiments</span></div></div>
-    <div class="member-card"><div class="mc-name">@lploom</div><div class="mc-detail">Closed aggregator-go #127 Tue 09:47 &#8212; their own issue, filed and self-assigned in Feb. PR #128 (authored Feb 9) merged simultaneously by @b3y0urs3lf. Clean conclusion of a 36-day effort.</div><div style="margin-top:6px"><span class="tag">issue closed</span><span class="tag">PR #128 authored</span><span class="tag">aggregator-go</span></div></div>
-    <div class="member-card"><div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div><div class="mc-detail">state-transition-sdk #101 merged. Closed issue #92. Launched java-sdk rewrite #48 &#8212; #49 done, #50 + #51 open.</div><div style="margin-top:6px"><span class="tag">1 PR merged</span><span class="tag">new initiative</span><span class="tag">state-sdk &middot; java-sdk</span></div></div>
-    <div class="member-card"><div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div><div class="mc-detail">unicity-relay #4 "Metrics" merged Tue 16:22. PR #189 still waiting on #332.</div><div style="margin-top:6px"><span class="tag">1 PR merged</span><span class="tag">unicity-relay</span></div></div>
-    <div class="member-card"><div class="mc-name">@b3y0urs3lf</div><div class="mc-detail">aggregator-go #128 merged Tue 11:48 &#8212; @lploom's original PR, reviewed by @b3y0urs3lf. 36 days from open to merge.</div><div style="margin-top:6px"><span class="tag">1 PR merged (review)</span><span class="tag">aggregator-go</span></div></div>
-    <div class="member-card"><div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div><div class="mc-detail">Assigned to sphere #267 alongside @KruGoL following @ahtotruu's comment.</div><div style="margin-top:6px"><span class="tag">issue assigned</span><span class="tag">sphere</span></div></div>
-    <div class="member-card"><div class="mc-name">@ahtotruu</div><div class="mc-detail">Commented on sphere #267 Tue 09:20 &#8212; the catalyst that activated the issue from backlog and led to assignment of @igmahl + @KruGoL.</div><div style="margin-top:6px"><span class="tag">comment on sphere #267</span><span class="tag">sphere</span></div></div>
-  </div>
-  <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)">
-    <p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window &#8212; confirmed via author + involves sweep</p>
-    <p style="font-size:11.5px;color:#888;line-height:1.7">@vrogojin &#8212; sphere-sdk #87 open 5 days, no new activity &middot; @jvsteiner &#8212; 0 &middot; @jait91 &#8212; aggregator-go #136 open, no update &middot; @0xt1mo &#8212; 0</p>
-  </div>
-  <div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps. Catches closes, reviews, comments, and assignments &#8212; not just authored items. ristik/ndsmt-experiments checked via browser commit log each run.</div>
-  <p style="font-size:11.5px;color:#888;margin-top:10px;line-height:1.6"><strong>Repos tracked:</strong> astrid &middot; sdk-rust &middot; 17 capsule repos &middot; sphere-sdk &middot; sphere &middot; sphere-quest &middot; sphere-infra &middot; aggregator-go &middot; state-transition-sdk &middot; java-state-transition-sdk &middot; bft-core &middot; bft-go-base &middot; unicity-relay &middot; webwallet &middot; unicity-node &middot; uniclaw &middot; nostr-js-sdk &middot; nostr-sdk &middot; unicity-orchestrator &middot; openclaw-unicity &middot; <strong>ristik/ndsmt-experiments</strong> [browser commits] &middot; <em>astralis-private [dropped] &middot; rfcs [dropped]</em></p>
-</div>
+<p class="generated-note">Auto-generated 2026-03-18 13:06 UTC &mdash; ristik/ndsmt-experiments commits require manual check</p>
 
 </div>
 </body>
