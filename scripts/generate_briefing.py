@@ -31,8 +31,7 @@ def gh_search(q, per_page=50):
     })
     try:
         with urllib.request.urlopen(req) as r:
-            data = json.loads(r.read())
-            return data.get('items', [])
+            return json.loads(r.read()).get('items', [])
     except Exception as e:
         print(f'Search error ({q[:80]}): {e}')
         return []
@@ -81,7 +80,7 @@ contributors = set()
 merged_keys  = set()
 
 for org in ORGS:
-    prs = gh_search(f'org:{org} is:pr is:merged merged:{date_range}')
+    prs = gh_search(f'org:{org} is:pr is:merged merged:{date_range}', per_page=100)
     org_prs[org] = prs
     all_prs.extend(prs)
     for pr in prs:
@@ -96,15 +95,13 @@ for org in ORGS:
 total_merged = len(all_prs)
 print(f'Merged PRs: {total_merged}')
 
-# ── 4. involves sweep — use open-ended date (>=window_start) to match manual methodology
-# This catches reviews, comments, assignments, closes — not just authored items.
+# ── 4. involves sweep ─────────────────────────────────────────────────────────
 member_data     = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
 seen_per_member = {m: set() for m in MEMBERS}
 
 for member in MEMBERS:
     for org in ORGS:
         for kind in ('pr', 'issue'):
-            # Use >= window_start (open-ended) rather than strict range — matches manual sweep
             items = gh_search(f'involves:{member} updated:>={window_start} is:{kind} org:{org}')
             for item in items:
                 uid = (item['number'], item['repository_url'])
@@ -130,12 +127,10 @@ long_prs = []
 for org in ORGS:
     results = gh_search(f'org:{org} is:pr is:open created:<{cutoff}', per_page=50)
     long_prs.extend(results)
-    print(f'  Long PRs {org}: {len(results)}')
 long_prs.sort(key=lambda p: p['created_at'])
-print(f'Long-standing open PRs total: {len(long_prs)}')
+print(f'Long-standing open PRs: {len(long_prs)}')
 
 # ── 6. Board fetch via GraphQL ────────────────────────────────────────────────
-# Fetches all board items and their status column value (any single-select field)
 BOARD_Q = '''
 query($org: String!, $num: Int!) {
   organization(login: $org) {
@@ -149,10 +144,6 @@ query($org: String!, $num: Int!) {
               ... on ProjectV2ItemFieldSingleSelectValue {
                 name
                 field { ... on ProjectV2SingleSelectField { name } }
-              }
-              ... on ProjectV2ItemFieldTextValue {
-                text
-                field { ... on ProjectV2Field { name } }
               }
             }
           }
@@ -182,26 +173,20 @@ for org in ORGS:
         proj  = result['data']['organization']['projectV2']
         nodes = proj['items']['nodes']
         total = proj['items']['totalCount']
-        print(f'  Board {org} "{proj.get("title","")}" : {total} items total, {len(nodes)} fetched')
-        if total > 100:
-            print(f'    Warning: only first 100 fetched')
+        print(f'  Board {org} "{proj.get("title","")}" : {total} items, {len(nodes)} fetched')
         for node in nodes:
-            # Grab the first single-select field value as status (works regardless of field name)
             status = None
             for fv in node.get('fieldValues', {}).get('nodes', []):
                 if fv and 'name' in fv and isinstance(fv.get('field'), dict):
-                    field_name = fv['field'].get('name', '')
-                    # Accept any field named "Status" or containing "status" case-insensitive
-                    if 'status' in field_name.lower() or field_name == 'Status':
+                    fn = fv['field'].get('name', '')
+                    if 'status' in fn.lower():
                         status = fv.get('name')
                         break
-            # Fallback: take the first single-select value if no Status field found
             if status is None:
                 for fv in node.get('fieldValues', {}).get('nodes', []):
                     if fv and 'name' in fv and isinstance(fv.get('field'), dict):
                         status = fv.get('name')
                         break
-
             c = node.get('content')
             if not c:
                 continue
@@ -211,12 +196,9 @@ for org in ORGS:
             item   = {
                 'status':    status or 'No Status',
                 'type':      'pr' if is_pr else 'issue',
-                'number':    number,
-                'repo':      repo,
-                'title':     c.get('title', ''),
-                'url':       c.get('url', ''),
-                'state':     c.get('state', ''),
-                'merged_at': c.get('mergedAt'),
+                'number':    number, 'repo': repo,
+                'title':     c.get('title', ''), 'url': c.get('url', ''),
+                'state':     c.get('state', ''), 'merged_at': c.get('mergedAt'),
                 'is_draft':  c.get('isDraft', False),
             }
             items_out.append(item)
@@ -225,58 +207,36 @@ for org in ORGS:
         boards[org] = items_out
     except Exception as e:
         print(f'  Board fetch failed for {org}: {e}')
-        print(f'  GraphQL response keys: {list(result.keys()) if result else "empty"}')
         boards[org] = []
 
 # ── 7. Board comparison ───────────────────────────────────────────────────────
-IN_DEV_STATUSES = {
-    'In Dev','In Development','In Progress','In Review','Review',
-    'Test','Testing','Blocked','In Prod'
-}
-board_issues = []
+IN_DEV_STATUSES = {'In Dev','In Development','In Progress','In Review','Review','Test','Testing','Blocked','In Prod'}
+board_issues    = []
 
 for org, items in boards.items():
     label = ORG_LABELS.get(org, org)
     for item in items:
-        repo, num, status, title, url = (
-            item['repo'], item['number'], item['status'],
-            item['title'], item['url']
-        )
-        # Stale: PR is merged but still shown as In Dev / In Review / etc
+        repo, num, status, title, url = item['repo'], item['number'], item['status'], item['title'], item['url']
         if item['type'] == 'pr' and status in IN_DEV_STATUSES:
             if item['state'] == 'MERGED' or item.get('merged_at'):
-                board_issues.append({
-                    'org': label, 'sev': 'stale',
+                board_issues.append({'org': label, 'sev': 'stale',
                     'msg': f'Stuck in \u201c{status}\u201d \u2014 PR already merged',
-                    'title': title, 'url': url, 'ref': f'{repo} #{num}'
-                })
-        # No Status assigned
+                    'title': title, 'url': url, 'ref': f'{repo} #{num}'})
         if status == 'No Status':
-            board_issues.append({
-                'org': label, 'sev': 'nostatus',
-                'msg': 'No Status assigned',
-                'title': title, 'url': url, 'ref': f'{repo} #{num}'
-            })
+            board_issues.append({'org': label, 'sev': 'nostatus',
+                'msg': 'No Status assigned', 'title': title, 'url': url, 'ref': f'{repo} #{num}'})
 
-# Long-standing open PRs not tracked on any board
 for pr in long_prs:
     repo = pr['repository_url'].split('/')[-1]
     if (repo, pr['number']) not in board_keys:
-        pr_org = next(
-            (o for o in ORGS if f'/{o}/' in pr['repository_url']),
-            ''
-        )
-        board_issues.append({
-            'org': ORG_LABELS.get(pr_org, 'Unknown'),
-            'sev': 'missing',
+        pr_org = next((o for o in ORGS if f'/{o}/' in pr['repository_url']), '')
+        board_issues.append({'org': ORG_LABELS.get(pr_org, 'Unknown'), 'sev': 'missing',
             'msg': 'Open PR not tracked on any board',
-            'title': pr['title'], 'url': pr['html_url'],
-            'ref': f'{repo} #{pr["number"]}'
-        })
+            'title': pr['title'], 'url': pr['html_url'], 'ref': f'{repo} #{pr["number"]}'})
 
 print(f'Board issues: {len(board_issues)}')
 
-# ── 8. Claude thematic summaries (claude-sonnet-4-6 for richer output) ────────
+# ── 8. Claude thematic summaries ─────────────────────────────────────────────
 def pr_lines(prs, limit=60):
     lines = []
     for pr in prs[:limit]:
@@ -285,7 +245,7 @@ def pr_lines(prs, limit=60):
         lines.append(f'- [{repo}] #{pr["number"]} "{pr["title"]}" by @{pr["user"]["login"]} | {body}')
     return '\n'.join(lines)
 
-prompt = f"""You are writing the daily engineering briefing for the Unicity project (three orgs: unicity-astrid, unicity-sphere, unicitynetwork).
+prompt = f"""You are writing the daily engineering briefing for the Unicity project (orgs: unicity-astrid, unicity-sphere, unicitynetwork).
 Period: {window_label} | Date range: {date_range} | Total PRs merged: {total_merged}
 Releases: {', '.join(releases) if releases else 'none'}
 
@@ -298,54 +258,42 @@ Releases: {', '.join(releases) if releases else 'none'}
 === unicitynetwork ({len(org_prs.get('unicitynetwork',[]))} PRs) ===
 {pr_lines(org_prs.get('unicitynetwork',[])) or 'No activity'}
 
-For each org that had activity, group the PRs into 1-4 meaningful themes.
+For each org with activity, group PRs into 1-4 meaningful themes.
+Each theme:
+- title: punchy, specific, max 10 words (name the actual capability or change)
+- repos: comma-separated short repo names
+- description: 3-5 plain English sentences. Be SPECIFIC: name the actual repo, what changed, why it matters, what it unlocks. Mention specific PR titles or technical terms. Write for a technical manager.
 
-For each theme write:
-- title: punchy, specific, max 10 words (name the actual capability or change, not vague praise)
-- repos: comma-separated short repo names involved
-- description: 3-5 plain English sentences. Be SPECIFIC: name the actual repo, what exactly changed, why it matters, what it unlocks. Mention specific PR titles or technical terms where helpful. Write for a technical manager who knows the project but doesn't read commit messages.
+Good example: "astrid #507 extracts the kernel daemon and capsule build tooling into standalone binaries (astrid-daemon, astrid-build), making the CLI a pure socket client. This unblocks parallel development of CLI, daemon, and build tooling independently. Users get three new lifecycle commands: astrid start, astrid stop, astrid status."
+Bad example: "Several improvements were made to the codebase."
 
-Good example description:
-"astrid #507 extracts the kernel daemon and capsule build tooling into standalone binaries (astrid-daemon, astrid-build), making the CLI a pure socket client. This unblocks parallel development of the CLI, daemon, and build tooling independently. Users get three new lifecycle commands: astrid start, astrid stop, astrid status. The ephemeral daemon mode is preserved for quick one-shot prompts."
-
-Bad example (too vague):
-"Several improvements were made to the codebase. The team worked on various features and fixes."
-
-Respond ONLY with valid JSON, no markdown fences, no preamble:
+Respond ONLY with valid JSON, no fences:
 {{"astrid":[{{"title":"...","repos":"...","description":"..."}}],"sphere":[...],"network":[...]}}"""
 
 try:
-    payload = json.dumps({
-        'model': 'claude-sonnet-4-6',
-        'max_tokens': 3000,
-        'messages': [{'role': 'user', 'content': prompt}]
-    }).encode()
+    payload = json.dumps({'model': 'claude-sonnet-4-6', 'max_tokens': 3000,
+        'messages': [{'role': 'user', 'content': prompt}]}).encode()
     req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=payload,
-        headers={'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01',
-                 'content-type': 'application/json'})
+        headers={'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'})
     with urllib.request.urlopen(req) as r:
         resp = json.loads(r.read())
     raw    = re.sub(r'^```[a-z]*\n?', '', resp['content'][0]['text'].strip()).rstrip('`').strip()
     themes = json.loads(raw)
-    print(f'Claude themes OK (sonnet-4-6)')
+    print('Claude themes OK (sonnet-4-6)')
 except Exception as e:
-    print(f'Claude sonnet error: {e}, falling back to haiku')
+    print(f'Claude sonnet error: {e}, trying haiku')
     try:
-        payload = json.dumps({
-            'model': 'claude-haiku-4-5-20251001',
-            'max_tokens': 2000,
-            'messages': [{'role': 'user', 'content': prompt}]
-        }).encode()
+        payload = json.dumps({'model': 'claude-haiku-4-5-20251001', 'max_tokens': 2000,
+            'messages': [{'role': 'user', 'content': prompt}]}).encode()
         req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=payload,
-            headers={'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01',
-                     'content-type': 'application/json'})
+            headers={'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json'})
         with urllib.request.urlopen(req) as r:
             resp = json.loads(r.read())
         raw    = re.sub(r'^```[a-z]*\n?', '', resp['content'][0]['text'].strip()).rstrip('`').strip()
         themes = json.loads(raw)
         print('Claude themes OK (haiku fallback)')
     except Exception as e2:
-        print(f'Claude haiku also failed: {e2}')
+        print(f'Claude failed: {e2}')
         themes = {'astrid': [], 'sphere': [], 'network': []}
 
 # ── 9. HTML helpers ───────────────────────────────────────────────────────────
@@ -362,6 +310,103 @@ def age_class(ts):
     if d >= 14: return 'age-medium'
     return 'age-low'
 
+def pr_dot_class(title):
+    t = title.lower()
+    if re.search(r'chore:\s*release|release\s+v\d', t): return 'tl-rel'
+    if t.startswith('fix') or t.startswith('revert'): return 'tl-fix'
+    if t.startswith('feat') or t.startswith('add '): return 'tl-feat'
+    if t.startswith('chore') or t.startswith('ci') or t.startswith('bump'): return 'tl-chore'
+    if t.startswith('refactor'): return 'tl-refactor'
+    return 'tl-done'
+
+def fmt_time(ts):
+    """Format merged_at ISO string to short day+time label e.g. 'Mon 10:02'"""
+    try:
+        dt = datetime.fromisoformat(ts.replace('Z', '+00:00'))
+        # Convert to EET (UTC+2 in winter, UTC+3 in summer — approximate with +2)
+        dt_eet = dt + timedelta(hours=2)
+        return dt_eet.strftime('%a %H:%M')
+    except Exception:
+        return ''
+
+def build_timeline(prs):
+    """Build chronological timeline HTML for an org's merged PRs.
+    Groups PRs that merged within 5 minutes of each other into one entry."""
+    if not prs:
+        return ''
+
+    # Sort by merged_at; fall back to closed_at
+    def get_ts(pr):
+        return pr.get('pull_request', {}).get('merged_at') or pr.get('closed_at') or pr.get('updated_at') or ''
+
+    sorted_prs = sorted(prs, key=get_ts)
+
+    # Group PRs within a 5-minute window
+    groups = []
+    current_group = []
+    current_ts    = None
+
+    for pr in sorted_prs:
+        ts_str = get_ts(pr)
+        if not ts_str:
+            continue
+        try:
+            ts = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+        except Exception:
+            continue
+        if current_ts is None or (ts - current_ts).total_seconds() <= 300:
+            current_group.append((ts, pr))
+            if current_ts is None:
+                current_ts = ts
+        else:
+            if current_group:
+                groups.append(current_group)
+            current_group = [(ts, pr)]
+            current_ts    = ts
+
+    if current_group:
+        groups.append(current_group)
+
+    out = '<div class="timeline">'
+    for group in groups:
+        times = [t for t, _ in group]
+        t_start = fmt_time(times[0].strftime('%Y-%m-%dT%H:%M:%SZ'))
+        if len(times) > 1:
+            t_end   = fmt_time(times[-1].strftime('%Y-%m-%dT%H:%M:%SZ'))
+            # Only show end time if different
+            t_label = t_start if t_start == t_end else f'{t_start.split(" ")[0]} {t_start.split(" ")[1]}\u2013{t_end.split(" ")[1]}'
+        else:
+            t_label = t_start
+
+        prs_in_group = [pr for _, pr in group]
+
+        if len(prs_in_group) == 1:
+            pr   = prs_in_group[0]
+            repo = pr['repository_url'].split('/')[-1]
+            dot  = pr_dot_class(pr['title'])
+            label = f'<a href="{esc(pr["html_url"])}" class="tl-link">{esc(repo)} #{pr["number"]}</a> \u2014 {esc(pr["title"])}'
+            out += f'''<div class="tl-item {dot}">
+  <span class="tl-time">{esc(t_label)}</span>
+  <span class="tl-label">{label}</span>
+</div>'''
+        else:
+            # Multiple PRs in same window — list inline
+            items_html = []
+            for pr in prs_in_group:
+                repo = pr['repository_url'].split('/')[-1]
+                items_html.append(
+                    f'<a href="{esc(pr["html_url"])}" class="tl-link">{esc(repo)} #{pr["number"]}</a> ({esc(pr["title"])})'
+                )
+            dot   = pr_dot_class(prs_in_group[0]['title'])
+            label = ' &middot; '.join(items_html)
+            out += f'''<div class="tl-item {dot}">
+  <span class="tl-time">{esc(t_label)}</span>
+  <span class="tl-label">{label}</span>
+</div>'''
+
+    out += '</div>'
+    return out
+
 def theme_cards(tlist, color):
     if not tlist:
         return '<p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p>'
@@ -375,6 +420,25 @@ def theme_cards(tlist, color):
     <div class="event-meta"><code>{esc(t.get("repos",""))}</code></div>
   </div></div>'''
     return out
+
+def org_card(org_key, badge_class, border_color, dot_color, theme_key, n_prs):
+    """Renders an org card: theme summaries + timeline (if >5 PRs)."""
+    prs    = org_prs.get(org_key, [])
+    tlist  = themes.get(theme_key, [])
+    label  = ORG_LABELS.get(org_key, org_key)
+
+    html  = f'<div class="card" style="border-color:{border_color}">'
+    html += f'<div class="org-header"><span class="badge {badge_class}">{esc(label)}</span>'
+    html += f'<span style="font-size:13px;color:#666">{n_prs} PRs merged</span></div>'
+    html += theme_cards(tlist, dot_color)
+
+    if len(prs) >= 5:
+        section_label = window_label if weekday == 0 else window_label
+        html += f'<p class="section-title" style="margin-top:14px">Timeline \u2014 {esc(section_label)}</p>'
+        html += build_timeline(prs)
+
+    html += '</div>'
+    return html
 
 def long_pr_rows(prs):
     if not prs:
@@ -428,32 +492,24 @@ def member_cards():
         n_merge = len(d['authored_merged'])
         n_open  = len(d['authored_open'])
         n_inv   = len(d['involved'])
-
         repos_touched = set()
         for item in d['authored_merged'] + d['authored_open'] + d['involved']:
             r = item.get('repository_url', '').split('/')[-1]
-            if r:
-                repos_touched.add(r)
-
+            if r: repos_touched.add(r)
         details = []
         if n_merge: details.append(f'{n_merge} PR{"s" if n_merge!=1 else ""} merged')
         if n_open:  details.append(f'{n_open} open PR{"s" if n_open!=1 else ""}')
         if n_inv:   details.append(f'involved in {n_inv} item{"s" if n_inv!=1 else ""}')
-
-        repos_html = ''.join(
-            f'<span class="tag">{esc(r)}</span>' for r in sorted(repos_touched)[:6]
-        )
+        repos_html = ''.join(f'<span class="tag">{esc(r)}</span>' for r in sorted(repos_touched)[:6])
         out += f'''<div class="member-card">
   <div class="mc-name">{esc(name) if name else ""} <span class="mc-handle">@{esc(member)}</span></div>
   <div class="mc-detail">{esc(", ".join(details))}</div>
   <div style="margin-top:6px">{repos_html}</div>
 </div>'''
     out += '</div>'
-
     if inactive:
         quiet = ', '.join(f'@{m}' for m in inactive)
         out += f'<p style="font-size:11.5px;color:#888;margin-top:10px;line-height:1.6"><strong>No activity this window:</strong> {esc(quiet)}</p>'
-
     out += '''<div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments \u2014 not just authored items.</div>'''
@@ -492,6 +548,21 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .window-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#E6F1FB;color:#0C447C}
 .updated-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#F1EFE8;color:#444}
 .org-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.section-title{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px}
+.timeline{position:relative;padding-left:14px}
+.timeline::before{content:'';position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:rgba(0,0,0,0.1)}
+.tl-item{position:relative;padding:3px 0 4px 12px;font-size:12px;color:#444;line-height:1.55}
+.tl-item::before{content:'';position:absolute;left:-3px;top:9px;width:7px;height:7px;border-radius:50%;background:#ccc}
+.tl-done::before{background:#1D9E75}
+.tl-feat::before{background:#1D9E75}
+.tl-fix::before{background:#E24B4A}
+.tl-rel::before{background:#D97706}
+.tl-chore::before{background:#888}
+.tl-refactor::before{background:#378ADD}
+.tl-time{font-family:'SF Mono',Monaco,monospace;font-size:10.5px;color:#aaa;margin-right:8px;min-width:76px;display:inline-block}
+.tl-label{color:#1a1a18}
+.tl-link{color:#1a1a18;text-decoration:none;font-weight:500}
+.tl-link:hover{text-decoration:underline}
 .pr-table{width:100%;border-collapse:collapse;font-size:12px}
 .pr-table th{font-size:10.5px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em;padding:6px 10px;background:#f5f4f0;border-bottom:0.5px solid rgba(0,0,0,0.1);text-align:left}
 .pr-table td{padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);vertical-align:top}
@@ -551,20 +622,9 @@ HTML = f'''<!DOCTYPE html>
   <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">{n_astrid} / {n_sphere} / {n_network}</div></div>
 </div>
 
-<div class="card" style="border-color:#7F77DD">
-  <div class="org-header"><span class="badge badge-purple">unicity-astrid</span><span style="font-size:13px;color:#666">{n_astrid} PRs merged</span></div>
-  {theme_cards(themes.get('astrid', []), '#7F77DD')}
-</div>
-
-<div class="card" style="border-color:#1D9E75">
-  <div class="org-header"><span class="badge badge-teal">unicity-sphere</span><span style="font-size:13px;color:#666">{n_sphere} PRs merged</span></div>
-  {theme_cards(themes.get('sphere', []), '#1D9E75')}
-</div>
-
-<div class="card" style="border-color:#378ADD">
-  <div class="org-header"><span class="badge badge-blue">unicitynetwork</span><span style="font-size:13px;color:#666">{n_network} PRs merged</span></div>
-  {theme_cards(themes.get('network', []), '#378ADD')}
-</div>
+{org_card('unicity-astrid', 'badge-purple', '#7F77DD', '#7F77DD', 'astrid', n_astrid)}
+{org_card('unicity-sphere', 'badge-teal',   '#1D9E75', '#1D9E75', 'sphere', n_sphere)}
+{org_card('unicitynetwork', 'badge-blue',   '#378ADD', '#378ADD', 'network', n_network)}
 
 <div class="card" style="border-color:#E24B4A">
   <div class="org-header">
@@ -619,17 +679,9 @@ push_body = {
 if current_sha:
     push_body['sha'] = current_sha
 
-req = urllib.request.Request(
-    sha_url,
-    data=json.dumps(push_body).encode(),
-    headers={
-        'Authorization': f'token {GH_TOKEN}',
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'unicity-briefing'
-    },
-    method='PUT'
-)
+req = urllib.request.Request(sha_url, data=json.dumps(push_body).encode(),
+    headers={'Authorization': f'token {GH_TOKEN}', 'Accept': 'application/vnd.github.v3+json',
+             'Content-Type': 'application/json', 'User-Agent': 'unicity-briefing'}, method='PUT')
 with urllib.request.urlopen(req) as r:
     result = json.loads(r.read())
     print(f'Pushed: {result["commit"]["sha"]}')
