@@ -1,0 +1,17 @@
+name: Generate daily briefing page
+
+on:
+  schedule:
+    - cron: '0 7 * * 1-5'  # 09:00 EET Mon–Fri
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate and push briefing
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python3 scripts/generate_briefing.py
