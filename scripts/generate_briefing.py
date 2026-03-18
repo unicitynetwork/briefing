@@ -15,9 +15,10 @@ else:
     window_start = (now - timedelta(days=1)).strftime('%Y-%m-%d')
     window_label = (now - timedelta(days=1)).strftime('%A, %-d %B %Y')
 
-window_end  = (now - timedelta(days=1)).strftime('%Y-%m-%d')
-date_range  = f'{window_start}..{window_end}'
-report_date = now.strftime('%A, %-d %B %Y')
+window_end   = (now - timedelta(days=1)).strftime('%Y-%m-%d')
+date_range   = f'{window_start}..{window_end}'
+report_date  = now.strftime('%A, %-d %B %Y')
+generated_at = now.strftime('%-d %B %Y, %H:%M UTC')
 print(f'Window: {date_range} ({window_label})')
 
 # ── 2. Helpers ────────────────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ org_prs      = {}
 all_prs      = []
 releases     = []
 contributors = set()
-merged_keys  = set()   # (repo, number)
+merged_keys  = set()
 
 for org in ORGS:
     prs = gh_search(f'org:{org} is:pr is:merged merged:{date_range}')
@@ -94,9 +95,8 @@ for org in ORGS:
 total_merged = len(all_prs)
 print(f'Merged PRs: {total_merged}')
 
-# ── 4. involves sweep — per member, track what they did ──────────────────────
-# member -> {authored_merged, authored_open, involved}
-member_data = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
+# ── 4. involves sweep ─────────────────────────────────────────────────────────
+member_data     = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
 seen_per_member = {m: set() for m in MEMBERS}
 
 for member in MEMBERS:
@@ -117,7 +117,7 @@ for member in MEMBERS:
                     member_data[member]['authored_open'].append(item)
                 else:
                     member_data[member]['involved'].append(item)
-        time.sleep(0.5)  # gentle rate-limit buffer
+        time.sleep(0.5)
 
 # ── 5. Long-standing open PRs (>7 days) ──────────────────────────────────────
 cutoff   = (now - timedelta(days=7)).strftime('%Y-%m-%d')
@@ -128,7 +128,6 @@ long_prs.sort(key=lambda p: p['created_at'])
 print(f'Long-standing open PRs: {len(long_prs)}')
 
 # ── 6. Board fetch via GraphQL ────────────────────────────────────────────────
-# NOTE: GH_PAT token must have read:project scope for this to work.
 BOARD_Q = '''
 query($org: String!, $num: Int!) {
   organization(login: $org) {
@@ -160,11 +159,11 @@ query($org: String!, $num: Int!) {
   }
 }'''
 
-boards     = {}   # org -> list of board items
-board_keys = set()  # (repo, number) of anything on any board
+boards     = {}
+board_keys = set()
 
 for org in ORGS:
-    result = gh_graphql(BOARD_Q, {'org': org, 'num': 1})
+    result    = gh_graphql(BOARD_Q, {'org': org, 'num': 1})
     items_out = []
     try:
         nodes = result['data']['organization']['projectV2']['items']['nodes']
@@ -183,7 +182,7 @@ for org in ORGS:
             repo   = c.get('repository', {}).get('name', '')
             number = c.get('number')
             is_pr  = 'isDraft' in c or 'mergedAt' in c
-            item = {
+            item   = {
                 'status':    status or 'No Status',
                 'type':      'pr' if is_pr else 'issue',
                 'number':    number,
@@ -203,9 +202,9 @@ for org in ORGS:
         print(f'  Board fetch failed for {org}: {e}')
         boards[org] = []
 
-# ── 7. Board comparison logic ─────────────────────────────────────────────────
+# ── 7. Board comparison ───────────────────────────────────────────────────────
 IN_DEV_STATUSES = {'In Dev','In Development','In Progress','In Review','Review','Test','Testing'}
-board_issues = []
+board_issues    = []
 
 for org, items in boards.items():
     label = ORG_LABELS.get(org, org)
@@ -214,19 +213,16 @@ for org, items in boards.items():
             item['repo'], item['number'], item['status'],
             item['title'], item['url']
         )
-        # Stale In Dev: PR is actually merged
         if item['type'] == 'pr' and status in IN_DEV_STATUSES:
             if item['state'] == 'MERGED' or item.get('merged_at'):
                 board_issues.append({'org': label, 'sev': 'stale',
                     'msg': f'Stuck in \u201c{status}\u201d \u2014 PR already merged',
                     'title': title, 'url': url, 'ref': f'{repo} #{num}'})
-        # No Status
         if status == 'No Status':
             board_issues.append({'org': label, 'sev': 'nostatus',
                 'msg': 'No Status assigned',
                 'title': title, 'url': url, 'ref': f'{repo} #{num}'})
 
-# Open PRs older than 7 days not on any board
 for pr in long_prs:
     repo = pr['repository_url'].split('/')[-1]
     if (repo, pr['number']) not in board_keys:
@@ -274,7 +270,7 @@ try:
         headers={'x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','content-type':'application/json'})
     with urllib.request.urlopen(req) as r:
         resp = json.loads(r.read())
-    raw = re.sub(r'^```[a-z]*\n?','',resp['content'][0]['text'].strip()).rstrip('`').strip()
+    raw    = re.sub(r'^```[a-z]*\n?','',resp['content'][0]['text'].strip()).rstrip('`').strip()
     themes = json.loads(raw)
     print('Claude themes OK')
 except Exception as e:
@@ -327,13 +323,13 @@ def board_rows(issues):
     if not issues:
         return '<p style="font-size:13px;color:#888;padding:8px 0">No board issues detected.</p>'
     sev_chip = {
-        'stale':    ('<span class="chip chip-stale">STALE STATUS</span>', '#FAEEDA'),
-        'nostatus': ('<span class="chip chip-nostatus">NO STATUS</span>', '#EEEDFE'),
-        'missing':  ('<span class="chip chip-miss">NOT ON BOARD</span>', '#FCEBEB'),
+        'stale':    '<span class="chip chip-stale">STALE STATUS</span>',
+        'nostatus': '<span class="chip chip-nostatus">NO STATUS</span>',
+        'missing':  '<span class="chip chip-miss">NOT ON BOARD</span>',
     }
     out = ''
     for issue in issues[:25]:
-        chip, _ = sev_chip.get(issue['sev'], ('<span class="chip">?</span>', '#f5f4f0'))
+        chip = sev_chip.get(issue['sev'], '<span class="chip">?</span>')
         out += f'''<div class="board-row">
   {chip}
   <div class="board-body">
@@ -346,8 +342,7 @@ def member_cards():
     active, inactive = [], []
     for member in MEMBERS:
         d = member_data[member]
-        total_acts = len(d['authored_merged']) + len(d['authored_open']) + len(d['involved'])
-        if total_acts > 0:
+        if len(d['authored_merged']) + len(d['authored_open']) + len(d['involved']) > 0:
             active.append((member, d))
         else:
             inactive.append(member)
@@ -361,31 +356,24 @@ def member_cards():
         n_merge = len(d['authored_merged'])
         n_open  = len(d['authored_open'])
         n_inv   = len(d['involved'])
-
         repos_touched = set()
         for item in d['authored_merged'] + d['authored_open'] + d['involved']:
             r = item.get('repository_url','').split('/')[-1]
             if r: repos_touched.add(r)
-
         details = []
         if n_merge: details.append(f'{n_merge} PR{"s" if n_merge!=1 else ""} merged')
         if n_open:  details.append(f'{n_open} open PR{"s" if n_open!=1 else ""}')
         if n_inv:   details.append(f'involved in {n_inv} item{"s" if n_inv!=1 else ""}')
-
         repos_html = ''.join(f'<span class="tag">{esc(r)}</span>' for r in sorted(repos_touched)[:5])
-
         out += f'''<div class="member-card">
   <div class="mc-name">{esc(name) if name else ""} <span class="mc-handle">@{esc(member)}</span></div>
   <div class="mc-detail">{esc(", ".join(details))}</div>
   <div style="margin-top:6px">{repos_html}</div>
 </div>'''
     out += '</div>'
-
     if inactive:
         quiet = ', '.join(f'@{m}' for m in inactive)
         out += f'<p style="font-size:11.5px;color:#888;margin-top:10px;line-height:1.6"><strong>No activity this window:</strong> {esc(quiet)}</p>'
-
-    # Method note
     out += '''<div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments \u2014 not just authored items.</div>'''
@@ -420,7 +408,9 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .header{margin-bottom:20px;padding-bottom:14px;border-bottom:0.5px solid rgba(0,0,0,0.1)}
 .header h2{font-size:18px;font-weight:500}
 .header p{font-size:13px;color:#666;margin-top:3px}
-.window-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#E6F1FB;color:#0C447C;margin-top:5px}
+.header-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.window-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#E6F1FB;color:#0C447C}
+.updated-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#F1EFE8;color:#444}
 .org-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .pr-table{width:100%;border-collapse:collapse;font-size:12px}
 .pr-table th{font-size:10.5px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em;padding:6px 10px;background:#f5f4f0;border-bottom:0.5px solid rgba(0,0,0,0.1);text-align:left}
@@ -450,7 +440,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .mc-detail{font-size:12px;color:#666;margin-top:5px;line-height:1.5}
 .tag{font-size:11px;color:#666;background:#fff;padding:1px 6px;border-radius:4px;display:inline-block;margin:2px 2px 0 0}
 .method-note{font-size:11px;color:#666;background:#f5f4f0;border-radius:8px;padding:8px 12px;margin-top:12px;border-left:3px solid #7F77DD;line-height:1.5}
-.generated-note{font-size:11px;color:#aaa;margin-top:16px;text-align:center}'''
+.footer-note{font-size:11px;color:#aaa;margin-top:16px;text-align:center;padding-bottom:8px}'''
 
 HTML = f'''<!DOCTYPE html>
 <html lang="en">
@@ -466,8 +456,11 @@ HTML = f'''<!DOCTYPE html>
 <div class="header">
   <h2>Unicity project &mdash; daily brief</h2>
   <p>{esc(report_date)}</p>
-  <span class="window-badge">Coverage: {esc(window_label)} &middot; GitHub API (author + involves sweep)</span>
-  {f'<div style="margin-top:6px">{rel_str}</div>' if releases else ''}
+  <div class="header-meta">
+    <span class="window-badge">Coverage: {esc(window_label)} &middot; GitHub API (author + involves sweep)</span>
+    <span class="updated-badge">Updated: {esc(generated_at)}</span>
+    {rel_str}
+  </div>
 </div>
 
 <div class="metric-grid">
@@ -516,7 +509,7 @@ HTML = f'''<!DOCTYPE html>
   </div>
 </div>
 
-<p class="generated-note">Auto-generated {now.strftime('%Y-%m-%d %H:%M')} UTC &mdash; ristik/ndsmt-experiments commits require manual check</p>
+<p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
 
 </div>
 </body>
