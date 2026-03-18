@@ -30,18 +30,16 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .window-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#E6F1FB;color:#0C447C}
 .updated-badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:6px;background:#F1EFE8;color:#444}
 .org-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.section-title{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px}
+.section-title{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
+.section-title:first-child{margin-top:0}
 .timeline{position:relative;padding-left:14px}
 .timeline::before{content:'';position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:rgba(0,0,0,0.1)}
 .tl-item{position:relative;padding:3px 0 4px 12px;font-size:12px;color:#444;line-height:1.55}
 .tl-item::before{content:'';position:absolute;left:-3px;top:9px;width:7px;height:7px;border-radius:50%;background:#ccc}
-.tl-done::before{background:#1D9E75}
-.tl-feat::before{background:#1D9E75}
-.tl-fix::before{background:#E24B4A}
-.tl-rel::before{background:#D97706}
-.tl-chore::before{background:#888}
-.tl-refactor::before{background:#378ADD}
-.tl-time{font-family:'SF Mono',Monaco,monospace;font-size:10.5px;color:#aaa;margin-right:8px;min-width:76px;display:inline-block}
+.tl-done::before{background:#1D9E75}.tl-feat::before{background:#1D9E75}
+.tl-fix::before{background:#E24B4A}.tl-rel::before{background:#D97706}
+.tl-chore::before{background:#888}.tl-refactor::before{background:#378ADD}
+.tl-time{font-family:'SF Mono',Monaco,monospace;font-size:10.5px;color:#aaa;margin-right:8px;min-width:80px;display:inline-block}
 .tl-label{color:#1a1a18}
 .tl-link{color:#1a1a18;text-decoration:none;font-weight:500}
 .tl-link:hover{text-decoration:underline}
@@ -57,9 +55,9 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .pr-repo{font-size:11px;font-family:'SF Mono',Monaco,monospace;color:#888;margin-top:1px}
 .pr-author{font-size:11px;font-family:'SF Mono',Monaco,monospace;color:#666}
 .draft-tag{display:inline-block;font-size:10px;padding:1px 5px;border-radius:3px;background:#F1EFE8;color:#888;margin-left:4px;font-style:italic}
-.board-row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);font-size:12px}
+.board-row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);font-size:12px}
 .board-row:last-child{border-bottom:none}
-.chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;min-width:80px;text-align:center;margin-top:1px}
+.chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;min-width:88px;text-align:center;margin-top:1px}
 .chip-stale{background:#FAEEDA;color:#633806}
 .chip-nostatus{background:#EEEDFE;color:#3C3489}
 .chip-miss{background:#FCEBEB;color:#791F1F}
@@ -83,7 +81,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <p>Wednesday, 18 March 2026</p>
   <div class="header-meta">
     <span class="window-badge">Coverage: Tuesday, 17 March 2026 &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 18 March 2026, 13:29 UTC</span>
+    <span class="updated-badge">Updated: 18 March 2026, 13:45 UTC</span>
     
   </div>
 </div>
@@ -91,7 +89,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 <div class="metric-grid">
   <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">40</div></div>
   <div class="metric"><div class="metric-label">Releases</div><div class="metric-val am">0</div></div>
-  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">0</div></div>
+  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">7</div></div>
   <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">5</div></div>
   <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">34 / 3 / 3</div></div>
 </div>
@@ -100,90 +98,96 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
     <div class="event-title">Streaming HTTP airlock added to capsule runtime</div>
-    <div class="event-detail">astrid #509 adds a handle-based streaming HTTP airlock with three new host functions (astrid_http_stream_start, astrid_http_stream_read, astrid_http_stream_close), letting capsules consume HTTP responses chunk-by-chunk instead of buffering entire bodies. sdk-rust #4 adds the companion SDK surface — HttpStreamHandle plus stream_start/stream_read — so capsule authors can use the feature from Rust. sdk-rust #5 ships this as the 0.2.2 release. This unblocks real-time LLM streaming responses and large-payload handling inside capsules.</div>
+    <div class="event-detail">astrid #509 introduces a handle-based streaming HTTP airlock with three new host functions (astrid_http_stream_start, astrid_http_stream_read, astrid_http_stream_close), letting capsules consume HTTP responses chunk-by-chunk instead of buffering entire bodies. sdk-rust #4 adds the companion SDK surface — HttpStreamHandle, stream_start, and stream_read — so capsule authors can use the feature from Rust without touching raw host calls. sdk-rust #5 cuts release 0.2.2 to ship this API. This unblocks real-time streaming use cases such as LLM token streaming inside capsules.</div>
     <div class="event-meta"><code>astrid, sdk-rust</code></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Daemon/CLI split, boot pipeline fixes, headless mode</div>
-    <div class="event-detail">astrid #507 extracts the kernel daemon and capsule build tooling into standalone binaries (astrid-daemon, astrid-build), making the CLI a pure socket client with new lifecycle commands: start, status, stop. astrid #513 follows up with end-to-end boot pipeline bug fixes including a KV double-encoding fix in kv_get_impl, plus headless mode and post-install onboarding flow. astrid #512 bumps the full workspace from 0.3.0 to 0.4.0 to ship these changes. Together these make the daemon independently deployable and the CLI fully decoupled.</div>
+    <div class="event-title">Daemon extracted; CLI becomes pure socket client</div>
+    <div class="event-detail">astrid #507 splits the monolithic binary into astrid-daemon (kernel daemon) and astrid-build (capsule build tooling), leaving the CLI as a pure socket client with no embedded runtime. Three new lifecycle commands — start, status, stop — let operators manage the daemon process explicitly. astrid #513 follows up with end-to-end boot pipeline fixes, a headless mode, and post-install onboarding flow, closing issues #516 and #517. astrid #512 bumps the entire workspace to 0.4.0 to ship these changes.</div>
     <div class="event-meta"><code>astrid</code></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">SDK 0.3.0: doc-comment tool descriptions and mutable flag</div>
-    <div class="event-detail">sdk-rust #7 extends the #[capsule] proc macro so that /// doc comments on #[astrid::tool] methods become tool descriptions in the exported JSON schema, and adds an inline mutable flag. sdk-rust #8 releases this as 0.3.0, noting a breaking schema change: the export format moves from a plain tools map to { tools: {...}, description: '...' }. Six capsules (openai-compat, identity, skills, shell, http, fs) each land companion PRs adding doc comments so LLMs receive meaningful descriptions when selecting tools. All remaining capsules are simultaneously bumped to sdk 0.3.0, with uuid rng-getrandom and wasm32-wasip1 CI fixes applied where needed.</div>
+    <div class="event-title">Tool descriptions and SDK 0.3.0 shipped across all capsules</div>
+    <div class="event-detail">sdk-rust #7 extends the #[capsule] proc macro so that Rust doc comments (///) on #[astrid::tool] methods become tool descriptions in the exported JSON schema, and adds an inline mutable flag. sdk-rust #8 releases this as 0.3.0 with a minor version bump because the schema export format changed from a plain tools map to {tools, description}. Six capsules (openai-compat, identity, skills, shell, http, fs) each landed a feat PR adding doc comments to their tools, followed by SDK bump PRs across all 13 capsules in the org. LLMs calling these tools now receive structured descriptions to guide tool selection.</div>
     <div class="event-meta"><code>sdk-rust, capsule-openai-compat, capsule-identity, capsule-skills, capsule-shell, capsule-http, capsule-fs</code></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Capsule housekeeping: duplicate tools and dead IPC subscription removed</div>
-    <div class="event-detail">capsule-skills #4 removes duplicate [[tool]] entries from Capsule.toml that were causing each skill tool to register twice in the kernel's tool registry, a silent correctness bug visible via astrid capsule list-tools. capsule-cli #3 drops the agent.v1.stream.delta IPC subscription, a dead topic that no longer exists on the event bus and was adding unnecessary overhead to every CLI proxy session. Both are small targeted fixes that clean up observable misbehaviour introduced during earlier development.</div>
+    <div class="event-title">Capsule registry deduplication and dead IPC subscription removed</div>
+    <div class="event-detail">capsule-skills #4 removes duplicate [[tool]] entries from Capsule.toml that were causing each skill tool to be registered twice in the kernel's tool registry, producing phantom duplicates visible in astrid capsule list-tools. capsule-cli #3 removes the agent.v1.stream.delta IPC subscription from the CLI proxy capsule; this event bus topic no longer exists, so the subscription was dead overhead on every CLI invocation. capsule-openai-compat #1 adds placeholder hints to all [env] fields in Capsule.toml and updates the default model from gpt-4o to gpt-5.4.</div>
     <div class="event-meta"><code>capsule-skills, capsule-cli</code></div>
-  </div></div><p class="section-title" style="margin-top:14px">Timeline — Tuesday, 17 March 2026</p><div class="timeline"><div class="tl-item tl-refactor">
-  <span class="tl-time">Tue 03:18</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/507" class="tl-link">astrid #507</a> — refactor: extract daemon and build into standalone binaries, add lifecycle commands</span>
-</div><div class="tl-item tl-feat">
-  <span class="tl-time">Tue 03:40</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/509" class="tl-link">astrid #509</a> — feat(capsule): add streaming HTTP airlock</span>
-</div><div class="tl-item tl-feat">
-  <span class="tl-time">Tue 04:05</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/4" class="tl-link">sdk-rust #4</a> — feat(sdk): add streaming HTTP API</span>
-</div><div class="tl-item tl-rel">
-  <span class="tl-time">Tue 04:54</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/5" class="tl-link">sdk-rust #5</a> — chore: release 0.2.2</span>
-</div><div class="tl-item tl-rel">
-  <span class="tl-time">Tue 05:02</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/512" class="tl-link">astrid #512</a> — chore: release 0.4.0</span>
-</div><div class="tl-item tl-chore">
-  <span class="tl-time">Tue 05:16</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/6" class="tl-link">sdk-rust #6</a> — ci: add release workflow</span>
-</div><div class="tl-item tl-fix">
-  <span class="tl-time">Tue 10:02</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/513" class="tl-link">astrid #513</a> — fix: boot pipeline fixes and new CLI features</span>
-</div><div class="tl-item tl-feat">
-  <span class="tl-time">Tue 10:38–10:42</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-shell/pull/2" class="tl-link">capsule-shell #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-skills/pull/2" class="tl-link">capsule-skills #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-identity/pull/2" class="tl-link">capsule-identity #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-openai-compat/pull/2" class="tl-link">capsule-openai-compat #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-openai-compat/pull/1" class="tl-link">capsule-openai-compat #1</a> (fix: add placeholder hints and update default model) &middot; <a href="https://github.com/unicity-astrid/sdk-rust/pull/7" class="tl-link">sdk-rust #7</a> (feat(macros): doc comments as descriptions, inline mutable flag) &middot; <a href="https://github.com/unicity-astrid/capsule-fs/pull/2" class="tl-link">capsule-fs #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-http/pull/2" class="tl-link">capsule-http #2</a> (feat: add tool descriptions and capsule-level docs)</span>
-</div><div class="tl-item tl-rel">
-  <span class="tl-time">Tue 11:43</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/8" class="tl-link">sdk-rust #8</a> — chore: release 0.3.0</span>
-</div><div class="tl-item tl-chore">
-  <span class="tl-time">Tue 12:00–12:03</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-cli/pull/2" class="tl-link">capsule-cli #2</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-fs/pull/3" class="tl-link">capsule-fs #3</a> (chore: bump astrid-sdk to 0.3.0)</span>
-</div><div class="tl-item tl-chore">
-  <span class="tl-time">Tue 12:05–12:09</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-http/pull/3" class="tl-link">capsule-http #3</a> (chore: bump astrid-sdk to 0.3.0 and fix uuid wasm compat) &middot; <a href="https://github.com/unicity-astrid/capsule-identity/pull/3" class="tl-link">capsule-identity #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-openai-compat/pull/3" class="tl-link">capsule-openai-compat #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-react/pull/3" class="tl-link">capsule-react #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-registry/pull/2" class="tl-link">capsule-registry #2</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-router/pull/2" class="tl-link">capsule-router #2</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-session/pull/2" class="tl-link">capsule-session #2</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-shell/pull/3" class="tl-link">capsule-shell #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-skills/pull/3" class="tl-link">capsule-skills #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-anthropic/pull/2" class="tl-link">capsule-anthropic #2</a> (chore: bump astrid-sdk to 0.3.0)</span>
-</div><div class="tl-item tl-chore">
-  <span class="tl-time">Tue 13:30</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-context-engine/pull/2" class="tl-link">capsule-context-engine #2</a> — chore: bump astrid-sdk to 0.3.0 and fix CI</span>
-</div><div class="tl-item tl-chore">
-  <span class="tl-time">Tue 13:36–13:38</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-hook-bridge/pull/2" class="tl-link">capsule-hook-bridge #2</a> (chore: bump astrid-sdk to 0.3.0 and fix CI) &middot; <a href="https://github.com/unicity-astrid/capsule-memory/pull/2" class="tl-link">capsule-memory #2</a> (chore: bump astrid-sdk to 0.3.0 and fix CI) &middot; <a href="https://github.com/unicity-astrid/capsule-prompt-builder/pull/2" class="tl-link">capsule-prompt-builder #2</a> (chore: bump astrid-sdk to 0.3.0 and fix CI)</span>
-</div><div class="tl-item tl-fix">
-  <span class="tl-time">Wed 01:41–01:43</span>
-  <span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-skills/pull/4" class="tl-link">capsule-skills #4</a> (fix: remove redundant [[tool]] entries from manifest) &middot; <a href="https://github.com/unicity-astrid/capsule-cli/pull/3" class="tl-link">capsule-cli #3</a> (fix: remove agent.v1.stream.delta subscription)</span>
-</div></div></div>
+  </div></div><p class="section-title" style="margin-top:14px">Timeline — Tuesday, 17 March 2026</p><div class="timeline"><div class="tl-item tl-refactor"><span class="tl-time">Tue 03:18</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/507" class="tl-link">astrid #507</a> — refactor: extract daemon and build into standalone binaries, add lifecycle commands</span></div><div class="tl-item tl-feat"><span class="tl-time">Tue 03:40</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/509" class="tl-link">astrid #509</a> — feat(capsule): add streaming HTTP airlock</span></div><div class="tl-item tl-feat"><span class="tl-time">Tue 04:05</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/4" class="tl-link">sdk-rust #4</a> — feat(sdk): add streaming HTTP API</span></div><div class="tl-item tl-rel"><span class="tl-time">Tue 04:54</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/5" class="tl-link">sdk-rust #5</a> — chore: release 0.2.2</span></div><div class="tl-item tl-rel"><span class="tl-time">Tue 05:02</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/512" class="tl-link">astrid #512</a> — chore: release 0.4.0</span></div><div class="tl-item tl-chore"><span class="tl-time">Tue 05:16</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/6" class="tl-link">sdk-rust #6</a> — ci: add release workflow</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 10:02</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/513" class="tl-link">astrid #513</a> — fix: boot pipeline fixes and new CLI features</span></div><div class="tl-item tl-feat"><span class="tl-time">Tue 10:38–10:42</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-shell/pull/2" class="tl-link">capsule-shell #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-skills/pull/2" class="tl-link">capsule-skills #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-identity/pull/2" class="tl-link">capsule-identity #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-openai-compat/pull/2" class="tl-link">capsule-openai-compat #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-openai-compat/pull/1" class="tl-link">capsule-openai-compat #1</a> (fix: add placeholder hints and update default model) &middot; <a href="https://github.com/unicity-astrid/sdk-rust/pull/7" class="tl-link">sdk-rust #7</a> (feat(macros): doc comments as descriptions, inline mutable flag) &middot; <a href="https://github.com/unicity-astrid/capsule-fs/pull/2" class="tl-link">capsule-fs #2</a> (feat: add tool descriptions and capsule-level docs) &middot; <a href="https://github.com/unicity-astrid/capsule-http/pull/2" class="tl-link">capsule-http #2</a> (feat: add tool descriptions and capsule-level docs)</span></div><div class="tl-item tl-rel"><span class="tl-time">Tue 11:43</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/8" class="tl-link">sdk-rust #8</a> — chore: release 0.3.0</span></div><div class="tl-item tl-chore"><span class="tl-time">Tue 12:00–12:03</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-cli/pull/2" class="tl-link">capsule-cli #2</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-fs/pull/3" class="tl-link">capsule-fs #3</a> (chore: bump astrid-sdk to 0.3.0)</span></div><div class="tl-item tl-chore"><span class="tl-time">Tue 12:05–12:09</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-http/pull/3" class="tl-link">capsule-http #3</a> (chore: bump astrid-sdk to 0.3.0 and fix uuid wasm compat) &middot; <a href="https://github.com/unicity-astrid/capsule-identity/pull/3" class="tl-link">capsule-identity #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-openai-compat/pull/3" class="tl-link">capsule-openai-compat #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-react/pull/3" class="tl-link">capsule-react #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-registry/pull/2" class="tl-link">capsule-registry #2</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-router/pull/2" class="tl-link">capsule-router #2</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-session/pull/2" class="tl-link">capsule-session #2</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-shell/pull/3" class="tl-link">capsule-shell #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-skills/pull/3" class="tl-link">capsule-skills #3</a> (chore: bump astrid-sdk to 0.3.0) &middot; <a href="https://github.com/unicity-astrid/capsule-anthropic/pull/2" class="tl-link">capsule-anthropic #2</a> (chore: bump astrid-sdk to 0.3.0)</span></div><div class="tl-item tl-chore"><span class="tl-time">Tue 13:30</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-context-engine/pull/2" class="tl-link">capsule-context-engine #2</a> — chore: bump astrid-sdk to 0.3.0 and fix CI</span></div><div class="tl-item tl-chore"><span class="tl-time">Tue 13:36–13:38</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-hook-bridge/pull/2" class="tl-link">capsule-hook-bridge #2</a> (chore: bump astrid-sdk to 0.3.0 and fix CI) &middot; <a href="https://github.com/unicity-astrid/capsule-memory/pull/2" class="tl-link">capsule-memory #2</a> (chore: bump astrid-sdk to 0.3.0 and fix CI) &middot; <a href="https://github.com/unicity-astrid/capsule-prompt-builder/pull/2" class="tl-link">capsule-prompt-builder #2</a> (chore: bump astrid-sdk to 0.3.0 and fix CI)</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 01:41–01:43</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-skills/pull/4" class="tl-link">capsule-skills #4</a> (fix: remove redundant [[tool]] entries from manifest) &middot; <a href="https://github.com/unicity-astrid/capsule-cli/pull/3" class="tl-link">capsule-cli #3</a> (fix: remove agent.v1.stream.delta subscription)</span></div></div></div>
 <div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">3 PRs merged</span></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Wallet switch/logout notifications, on-chain achievement sync, identity-aware connect</div>
-    <div class="event-detail">sphere #284 adds dApp notifications for wallet switch and logout events, ensuring connected dApps can react to session changes, and includes a video background poster improvement for the UI. sphere-quest #6 implements on-chain achievement sync, wiring quest completions through to on-chain state so progress is verifiable on-ledger. sphere-sdk #92 introduces an identity-aware connect protocol, meaning the SDK's connect flow now carries identity context, enabling richer permissioning and personalisation for dApps integrating with Sphere.</div>
+    <div class="event-title">Wallet events, onchain achievements, and identity-aware connect</div>
+    <div class="event-detail">sphere #284 adds dApp notifications on wallet switch and logout events, and introduces a video background poster for the UI. sphere-quest #6 implements onchain achievement sync, enabling quest completions to be recorded and verified on-chain. sphere-sdk #92 introduces an identity-aware connect protocol, so dApps connecting through the SDK can incorporate identity context directly in the handshake. Together these three PRs push the wallet and quest layers toward a more tightly coupled on-chain identity model.</div>
     <div class="event-meta"><code>sphere, sphere-quest, sphere-sdk</code></div>
   </div></div></div>
 <div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">3 PRs merged</span></div><div class="event-row">
   <div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
     <div class="event-title">Receipt removed from certification request/response pipeline</div>
-    <div class="event-detail">state-transition-sdk #101 and aggregator-go #128 jointly remove the receipt field from certification requests and responses, simplifying the certification protocol and reducing payload size across the aggregation layer. unicity-relay #4 lands metrics instrumentation, adding observability to the relay so operators can monitor throughput and error rates in production. These changes together tighten the core network protocol and improve operational visibility for node operators.</div>
-    <div class="event-meta"><code>state-transition-sdk, aggregator-go, unicity-relay</code></div>
+    <div class="event-detail">state-transition-sdk #101 and aggregator-go #128 coordinate to strip the receipt field from both the certification request and response structures, tracking issue #92. This simplifies the certification protocol by removing an artifact that is no longer needed at the request/response boundary. The change touches both the Go aggregator and the SDK in tandem, so consumers of either must update to the new schema. unicity-relay #4 lands a Metrics implementation alongside these changes, adding observability instrumentation to the relay layer.</div>
+    <div class="event-meta"><code>state-transition-sdk, aggregator-go</code></div>
   </div></div></div>
 
 <div class="card" style="border-color:#E24B4A">
   <div class="org-header">
     <span class="badge" style="background:#FCEBEB;color:#791F1F">Project board comparison</span>
-    <span style="font-size:12px;color:#666">Stale statuses &middot; missing items &middot; untracked PRs</span>
+    <span style="font-size:12px;color:#666">Stale statuses &middot; No Status &middot; open PRs not tracked</span>
   </div>
-  <p style="font-size:13px;color:#888;padding:8px 0">No board issues detected.</p>
+  <p style="font-size:11px;color:#888;margin-bottom:8px">unicity-astrid: Backlog 114 &middot; In progress 10 &middot; Done 213</p>
+  <p style="font-size:11px;color:#888;margin-bottom:8px">unicity-sphere: Backlog 24 &middot; In progress 3 &middot; In review 5 &middot; Ready 2 &middot; Done 13</p>
+  <p style="font-size:11px;color:#888;margin-bottom:10px">unicitynetwork: Blocked 7 &middot; In Dev 21 &middot; Test 2 &middot; Todo 65 &middot; Done 246</p>
+  <p class="section-title">Sphere</p><div class="board-row">
+  <span class="chip chip-stale">STALE STATUS</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/90" class="pr-link">Feat/auto connect</a></div>
+    <div class="board-detail"><code>sphere-sdk #90</code> &middot; Stuck in “Backlog” — PR already merged</div>
+  </div></div><p class="section-title">Unicity Network</p><div class="board-row">
+  <span class="chip chip-stale">STALE STATUS</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicitynetwork/aggregator-go/pull/51" class="pr-link">Streaming round processing with adaptive timing</a></div>
+    <div class="board-detail"><code>aggregator-go #51</code> &middot; Stuck in “Todo” — PR already merged</div>
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">NOT ON BOARD</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicitynetwork/java-state-transition-sdk/pull/26" class="pr-link">[WIP] Java SDK cucumber test amendments</a></div>
+    <div class="board-detail"><code>java-state-transition-sdk #26</code> &middot; Open PR not tracked on any board</div>
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">NOT ON BOARD</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicitynetwork/java-state-transition-sdk/pull/43" class="pr-link">#40 Rename request id to state id, secure state id</a></div>
+    <div class="board-detail"><code>java-state-transition-sdk #43</code> &middot; Open PR not tracked on any board</div>
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">NOT ON BOARD</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicitynetwork/java-state-transition-sdk/pull/44" class="pr-link">Add user defined mint reasons</a></div>
+    <div class="board-detail"><code>java-state-transition-sdk #44</code> &middot; Open PR not tracked on any board</div>
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">NOT ON BOARD</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicitynetwork/bft-core/pull/11" class="pr-link">EVM</a></div>
+    <div class="board-detail"><code>bft-core #11</code> &middot; Open PR not tracked on any board</div>
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">NOT ON BOARD</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicitynetwork/nostr-js-sdk/pull/4" class="pr-link">test: add comprehensive unit tests for uncovered modules</a></div>
+    <div class="board-detail"><code>nostr-js-sdk #4</code> &middot; Open PR not tracked on any board</div>
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">NOT ON BOARD</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicitynetwork/nostr-sdk/pull/4" class="pr-link">Add comprehensive unit tests (366 new tests)</a></div>
+    <div class="board-detail"><code>nostr-sdk #4</code> &middot; Open PR not tracked on any board</div>
+  </div></div><p class="section-title">Astrid</p><div class="board-row">
+  <span class="chip chip-miss">NOT ON BOARD</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicity-astrid/astrid/pull/189" class="pr-link">Discord capsule implementation</a></div>
+    <div class="board-detail"><code>astrid #189</code> &middot; Open PR not tracked on any board</div>
+  </div></div>
 </div>
 
 <div class="card" style="border-color:#1D9E75">
@@ -204,7 +208,31 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div>
   <div class="mc-detail">4 PRs merged, involved in 2 items</div>
   <div style="margin-top:6px"><span class="tag">sphere</span><span class="tag">sphere-quest</span><span class="tag">sphere-sdk</span></div>
-</div></div><p style="font-size:11.5px;color:#888;margin-top:10px;line-height:1.6"><strong>No activity this window:</strong> @ristik, @martti007, @jvsteiner, @ahtotruu, @b3y0urs3lf, @jait91, @lploom, @vrogojin, @0xt1mo</p><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
+</div><div class="member-card">
+  <div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div>
+  <div class="mc-detail">2 PRs merged, 3 open PRs, involved in 3 items</div>
+  <div style="margin-top:6px"><span class="tag">java-state-transition-sdk</span><span class="tag">state-transition-sdk</span></div>
+</div><div class="member-card">
+  <div class="mc-name"> <span class="mc-handle">@ahtotruu</span></div>
+  <div class="mc-detail">involved in 1 item</div>
+  <div style="margin-top:6px"><span class="tag">sphere</span></div>
+</div><div class="member-card">
+  <div class="mc-name"> <span class="mc-handle">@b3y0urs3lf</span></div>
+  <div class="mc-detail">involved in 5 items</div>
+  <div style="margin-top:6px"><span class="tag">aggregator-go</span><span class="tag">sphere</span><span class="tag">state-transition-sdk</span></div>
+</div><div class="member-card">
+  <div class="mc-name"> <span class="mc-handle">@jait91</span></div>
+  <div class="mc-detail">involved in 1 item</div>
+  <div style="margin-top:6px"><span class="tag">aggregator-go</span></div>
+</div><div class="member-card">
+  <div class="mc-name"> <span class="mc-handle">@lploom</span></div>
+  <div class="mc-detail">1 PR merged, involved in 2 items</div>
+  <div style="margin-top:6px"><span class="tag">aggregator-go</span><span class="tag">state-transition-sdk</span></div>
+</div><div class="member-card">
+  <div class="mc-name"> <span class="mc-handle">@vrogojin</span></div>
+  <div class="mc-detail">involved in 1 item</div>
+  <div style="margin-top:6px"><span class="tag">state-transition-sdk</span></div>
+</div></div><p style="font-size:11.5px;color:#888;margin-top:10px;line-height:1.6"><strong>No activity this window:</strong> @ristik, @jvsteiner, @0xt1mo</p><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments — not just authored items.</div>
 </div>
@@ -214,7 +242,35 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <div style="overflow-x:auto">
   <table class="pr-table">
     <thead><tr><th>Age</th><th>PR</th><th>Author</th></tr></thead>
-    <tbody><tr><td colspan="3" style="padding:12px;font-size:13px;color:#888;text-align:center">No open PRs older than 7 days.</td></tr></tbody>
+    <tbody><tr>
+  <td><span class="age-pill age-critical">148d</span></td>
+  <td><a href="https://github.com/unicitynetwork/java-state-transition-sdk/pull/26" class="pr-link">[WIP] Java SDK cucumber test amendments</a>
+    <div class="pr-repo">java-state-transition-sdk #26</div></td>
+  <td class="pr-author">@b3y0urs3lf</td></tr><tr>
+  <td><span class="age-pill age-critical">106d</span></td>
+  <td><a href="https://github.com/unicitynetwork/java-state-transition-sdk/pull/43" class="pr-link">#40 Rename request id to state id, secure state id</a>
+    <div class="pr-repo">java-state-transition-sdk #43</div></td>
+  <td class="pr-author">@martti007</td></tr><tr>
+  <td><span class="age-pill age-critical">106d</span></td>
+  <td><a href="https://github.com/unicitynetwork/java-state-transition-sdk/pull/44" class="pr-link">Add user defined mint reasons</a>
+    <div class="pr-repo">java-state-transition-sdk #44</div></td>
+  <td class="pr-author">@martti007</td></tr><tr>
+  <td><span class="age-pill age-high">58d</span></td>
+  <td><a href="https://github.com/unicitynetwork/bft-core/pull/11" class="pr-link">EVM</a><span class="draft-tag">Draft</span>
+    <div class="pr-repo">bft-core #11</div></td>
+  <td class="pr-author">@MastaP</td></tr><tr>
+  <td><span class="age-pill age-high">40d</span></td>
+  <td><a href="https://github.com/unicitynetwork/nostr-js-sdk/pull/4" class="pr-link">test: add comprehensive unit tests for uncovered modules</a>
+    <div class="pr-repo">nostr-js-sdk #4</div></td>
+  <td class="pr-author">@b3y0urs3lf</td></tr><tr>
+  <td><span class="age-pill age-high">40d</span></td>
+  <td><a href="https://github.com/unicitynetwork/nostr-sdk/pull/4" class="pr-link">Add comprehensive unit tests (366 new tests)</a>
+    <div class="pr-repo">nostr-sdk #4</div></td>
+  <td class="pr-author">@b3y0urs3lf</td></tr><tr>
+  <td><span class="age-pill age-medium">20d</span></td>
+  <td><a href="https://github.com/unicity-astrid/astrid/pull/189" class="pr-link">Discord capsule implementation</a>
+    <div class="pr-repo">astrid #189</div></td>
+  <td class="pr-author">@MastaP</td></tr></tbody>
   </table>
   </div>
 </div>
