@@ -31,9 +31,10 @@ def gh_search(q, per_page=50):
     })
     try:
         with urllib.request.urlopen(req) as r:
-            return json.loads(r.read()).get('items', [])
+            data = json.loads(r.read())
+            return data.get('items', [])
     except Exception as e:
-        print(f'Search error ({q[:60]}): {e}')
+        print(f'Search error ({q[:80]}): {e}')
         return []
 
 def gh_graphql(query, variables=None):
@@ -95,14 +96,16 @@ for org in ORGS:
 total_merged = len(all_prs)
 print(f'Merged PRs: {total_merged}')
 
-# ── 4. involves sweep ─────────────────────────────────────────────────────────
+# ── 4. involves sweep — use open-ended date (>=window_start) to match manual methodology
+# This catches reviews, comments, assignments, closes — not just authored items.
 member_data     = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
 seen_per_member = {m: set() for m in MEMBERS}
 
 for member in MEMBERS:
     for org in ORGS:
         for kind in ('pr', 'issue'):
-            items = gh_search(f'involves:{member} updated:{date_range} is:{kind} org:{org}')
+            # Use >= window_start (open-ended) rather than strict range — matches manual sweep
+            items = gh_search(f'involves:{member} updated:>={window_start} is:{kind} org:{org}')
             for item in items:
                 uid = (item['number'], item['repository_url'])
                 if uid in seen_per_member[member]:
@@ -117,29 +120,39 @@ for member in MEMBERS:
                     member_data[member]['authored_open'].append(item)
                 else:
                     member_data[member]['involved'].append(item)
-        time.sleep(0.5)
+        time.sleep(0.3)
+
+print('Involves sweep done')
 
 # ── 5. Long-standing open PRs (>7 days) ──────────────────────────────────────
 cutoff   = (now - timedelta(days=7)).strftime('%Y-%m-%d')
 long_prs = []
 for org in ORGS:
-    long_prs.extend(gh_search(f'org:{org} is:pr is:open created:<{cutoff}', per_page=50))
+    results = gh_search(f'org:{org} is:pr is:open created:<{cutoff}', per_page=50)
+    long_prs.extend(results)
+    print(f'  Long PRs {org}: {len(results)}')
 long_prs.sort(key=lambda p: p['created_at'])
-print(f'Long-standing open PRs: {len(long_prs)}')
+print(f'Long-standing open PRs total: {len(long_prs)}')
 
 # ── 6. Board fetch via GraphQL ────────────────────────────────────────────────
+# Fetches all board items and their status column value (any single-select field)
 BOARD_Q = '''
 query($org: String!, $num: Int!) {
   organization(login: $org) {
     projectV2(number: $num) {
+      title
       items(first: 100) {
         totalCount
         nodes {
-          fieldValues(first: 10) {
+          fieldValues(first: 15) {
             nodes {
               ... on ProjectV2ItemFieldSingleSelectValue {
                 name
                 field { ... on ProjectV2SingleSelectField { name } }
+              }
+              ... on ProjectV2ItemFieldTextValue {
+                text
+                field { ... on ProjectV2Field { name } }
               }
             }
           }
@@ -166,16 +179,29 @@ for org in ORGS:
     result    = gh_graphql(BOARD_Q, {'org': org, 'num': 1})
     items_out = []
     try:
-        nodes = result['data']['organization']['projectV2']['items']['nodes']
-        total = result['data']['organization']['projectV2']['items']['totalCount']
+        proj  = result['data']['organization']['projectV2']
+        nodes = proj['items']['nodes']
+        total = proj['items']['totalCount']
+        print(f'  Board {org} "{proj.get("title","")}" : {total} items total, {len(nodes)} fetched')
         if total > 100:
-            print(f'  Warning: {org} board has {total} items, only first 100 fetched')
+            print(f'    Warning: only first 100 fetched')
         for node in nodes:
+            # Grab the first single-select field value as status (works regardless of field name)
             status = None
             for fv in node.get('fieldValues', {}).get('nodes', []):
-                if isinstance(fv.get('field'), dict) and fv['field'].get('name') == 'Status':
-                    status = fv.get('name')
-                    break
+                if fv and 'name' in fv and isinstance(fv.get('field'), dict):
+                    field_name = fv['field'].get('name', '')
+                    # Accept any field named "Status" or containing "status" case-insensitive
+                    if 'status' in field_name.lower() or field_name == 'Status':
+                        status = fv.get('name')
+                        break
+            # Fallback: take the first single-select value if no Status field found
+            if status is None:
+                for fv in node.get('fieldValues', {}).get('nodes', []):
+                    if fv and 'name' in fv and isinstance(fv.get('field'), dict):
+                        status = fv.get('name')
+                        break
+
             c = node.get('content')
             if not c:
                 continue
@@ -197,14 +223,17 @@ for org in ORGS:
             if repo and number:
                 board_keys.add((repo, number))
         boards[org] = items_out
-        print(f'  Board {org}: {len(items_out)} items')
     except Exception as e:
         print(f'  Board fetch failed for {org}: {e}')
+        print(f'  GraphQL response keys: {list(result.keys()) if result else "empty"}')
         boards[org] = []
 
 # ── 7. Board comparison ───────────────────────────────────────────────────────
-IN_DEV_STATUSES = {'In Dev','In Development','In Progress','In Review','Review','Test','Testing'}
-board_issues    = []
+IN_DEV_STATUSES = {
+    'In Dev','In Development','In Progress','In Review','Review',
+    'Test','Testing','Blocked','In Prod'
+}
+board_issues = []
 
 for org, items in boards.items():
     label = ORG_LABELS.get(org, org)
@@ -213,39 +242,51 @@ for org, items in boards.items():
             item['repo'], item['number'], item['status'],
             item['title'], item['url']
         )
+        # Stale: PR is merged but still shown as In Dev / In Review / etc
         if item['type'] == 'pr' and status in IN_DEV_STATUSES:
             if item['state'] == 'MERGED' or item.get('merged_at'):
-                board_issues.append({'org': label, 'sev': 'stale',
+                board_issues.append({
+                    'org': label, 'sev': 'stale',
                     'msg': f'Stuck in \u201c{status}\u201d \u2014 PR already merged',
-                    'title': title, 'url': url, 'ref': f'{repo} #{num}'})
+                    'title': title, 'url': url, 'ref': f'{repo} #{num}'
+                })
+        # No Status assigned
         if status == 'No Status':
-            board_issues.append({'org': label, 'sev': 'nostatus',
+            board_issues.append({
+                'org': label, 'sev': 'nostatus',
                 'msg': 'No Status assigned',
-                'title': title, 'url': url, 'ref': f'{repo} #{num}'})
+                'title': title, 'url': url, 'ref': f'{repo} #{num}'
+            })
 
+# Long-standing open PRs not tracked on any board
 for pr in long_prs:
     repo = pr['repository_url'].split('/')[-1]
     if (repo, pr['number']) not in board_keys:
-        board_issues.append({'org': ORG_LABELS.get(
-            next((o for o in ORGS if pr['repository_url'].startswith(f'https://api.github.com/repos/{o}')), ''), 'Unknown'),
+        pr_org = next(
+            (o for o in ORGS if f'/{o}/' in pr['repository_url']),
+            ''
+        )
+        board_issues.append({
+            'org': ORG_LABELS.get(pr_org, 'Unknown'),
             'sev': 'missing',
             'msg': 'Open PR not tracked on any board',
             'title': pr['title'], 'url': pr['html_url'],
-            'ref': f'{repo} #{pr["number"]}'})
+            'ref': f'{repo} #{pr["number"]}'
+        })
 
 print(f'Board issues: {len(board_issues)}')
 
-# ── 8. Claude themes ──────────────────────────────────────────────────────────
+# ── 8. Claude thematic summaries (claude-sonnet-4-6 for richer output) ────────
 def pr_lines(prs, limit=60):
     lines = []
     for pr in prs[:limit]:
         repo = pr['repository_url'].split('/')[-1]
-        body = (pr.get('body') or '')[:200].replace('\n', ' ')
+        body = (pr.get('body') or '')[:300].replace('\n', ' ')
         lines.append(f'- [{repo}] #{pr["number"]} "{pr["title"]}" by @{pr["user"]["login"]} | {body}')
     return '\n'.join(lines)
 
-prompt = f"""You are generating the daily engineering briefing for the Unicity project.
-Period: {window_label}  |  Date range: {date_range}  |  Total PRs merged: {total_merged}
+prompt = f"""You are writing the daily engineering briefing for the Unicity project (three orgs: unicity-astrid, unicity-sphere, unicitynetwork).
+Period: {window_label} | Date range: {date_range} | Total PRs merged: {total_merged}
 Releases: {', '.join(releases) if releases else 'none'}
 
 === unicity-astrid ({len(org_prs.get('unicity-astrid',[]))} PRs) ===
@@ -257,31 +298,62 @@ Releases: {', '.join(releases) if releases else 'none'}
 === unicitynetwork ({len(org_prs.get('unicitynetwork',[]))} PRs) ===
 {pr_lines(org_prs.get('unicitynetwork',[])) or 'No activity'}
 
-For each org with activity produce 1-4 themes.
-Each theme: title (max 10 words), repos (comma-separated short names), description (2-4 plain English sentences max 400 chars mentioning repo names).
+For each org that had activity, group the PRs into 1-4 meaningful themes.
 
-Respond ONLY with valid JSON no fences:
+For each theme write:
+- title: punchy, specific, max 10 words (name the actual capability or change, not vague praise)
+- repos: comma-separated short repo names involved
+- description: 3-5 plain English sentences. Be SPECIFIC: name the actual repo, what exactly changed, why it matters, what it unlocks. Mention specific PR titles or technical terms where helpful. Write for a technical manager who knows the project but doesn't read commit messages.
+
+Good example description:
+"astrid #507 extracts the kernel daemon and capsule build tooling into standalone binaries (astrid-daemon, astrid-build), making the CLI a pure socket client. This unblocks parallel development of the CLI, daemon, and build tooling independently. Users get three new lifecycle commands: astrid start, astrid stop, astrid status. The ephemeral daemon mode is preserved for quick one-shot prompts."
+
+Bad example (too vague):
+"Several improvements were made to the codebase. The team worked on various features and fixes."
+
+Respond ONLY with valid JSON, no markdown fences, no preamble:
 {{"astrid":[{{"title":"...","repos":"...","description":"..."}}],"sphere":[...],"network":[...]}}"""
 
 try:
-    payload = json.dumps({'model':'claude-haiku-4-5-20251001','max_tokens':2000,
-        'messages':[{'role':'user','content':prompt}]}).encode()
+    payload = json.dumps({
+        'model': 'claude-sonnet-4-6',
+        'max_tokens': 3000,
+        'messages': [{'role': 'user', 'content': prompt}]
+    }).encode()
     req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=payload,
-        headers={'x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','content-type':'application/json'})
+        headers={'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01',
+                 'content-type': 'application/json'})
     with urllib.request.urlopen(req) as r:
         resp = json.loads(r.read())
-    raw    = re.sub(r'^```[a-z]*\n?','',resp['content'][0]['text'].strip()).rstrip('`').strip()
+    raw    = re.sub(r'^```[a-z]*\n?', '', resp['content'][0]['text'].strip()).rstrip('`').strip()
     themes = json.loads(raw)
-    print('Claude themes OK')
+    print(f'Claude themes OK (sonnet-4-6)')
 except Exception as e:
-    print(f'Claude error: {e}')
-    themes = {'astrid':[],'sphere':[],'network':[]}
+    print(f'Claude sonnet error: {e}, falling back to haiku')
+    try:
+        payload = json.dumps({
+            'model': 'claude-haiku-4-5-20251001',
+            'max_tokens': 2000,
+            'messages': [{'role': 'user', 'content': prompt}]
+        }).encode()
+        req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=payload,
+            headers={'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01',
+                     'content-type': 'application/json'})
+        with urllib.request.urlopen(req) as r:
+            resp = json.loads(r.read())
+        raw    = re.sub(r'^```[a-z]*\n?', '', resp['content'][0]['text'].strip()).rstrip('`').strip()
+        themes = json.loads(raw)
+        print('Claude themes OK (haiku fallback)')
+    except Exception as e2:
+        print(f'Claude haiku also failed: {e2}')
+        themes = {'astrid': [], 'sphere': [], 'network': []}
 
 # ── 9. HTML helpers ───────────────────────────────────────────────────────────
-def esc(s): return str(s).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
+def esc(s):
+    return str(s).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
 def age_days(ts):
-    return (now - datetime.fromisoformat(ts.replace('Z','+00:00'))).days
+    return (now - datetime.fromisoformat(ts.replace('Z', '+00:00'))).days
 
 def age_class(ts):
     d = age_days(ts)
@@ -308,7 +380,7 @@ def long_pr_rows(prs):
     if not prs:
         return '<tr><td colspan="3" style="padding:12px;font-size:13px;color:#888;text-align:center">No open PRs older than 7 days.</td></tr>'
     rows = ''
-    for pr in prs[:20]:
+    for pr in prs[:25]:
         repo  = pr['repository_url'].split('/')[-1]
         days  = age_days(pr['created_at'])
         draft = '<span class="draft-tag">Draft</span>' if pr.get('draft') else ''
@@ -328,7 +400,7 @@ def board_rows(issues):
         'missing':  '<span class="chip chip-miss">NOT ON BOARD</span>',
     }
     out = ''
-    for issue in issues[:25]:
+    for issue in issues[:30]:
         chip = sev_chip.get(issue['sev'], '<span class="chip">?</span>')
         out += f'''<div class="board-row">
   {chip}
@@ -356,24 +428,32 @@ def member_cards():
         n_merge = len(d['authored_merged'])
         n_open  = len(d['authored_open'])
         n_inv   = len(d['involved'])
+
         repos_touched = set()
         for item in d['authored_merged'] + d['authored_open'] + d['involved']:
-            r = item.get('repository_url','').split('/')[-1]
-            if r: repos_touched.add(r)
+            r = item.get('repository_url', '').split('/')[-1]
+            if r:
+                repos_touched.add(r)
+
         details = []
         if n_merge: details.append(f'{n_merge} PR{"s" if n_merge!=1 else ""} merged')
         if n_open:  details.append(f'{n_open} open PR{"s" if n_open!=1 else ""}')
         if n_inv:   details.append(f'involved in {n_inv} item{"s" if n_inv!=1 else ""}')
-        repos_html = ''.join(f'<span class="tag">{esc(r)}</span>' for r in sorted(repos_touched)[:5])
+
+        repos_html = ''.join(
+            f'<span class="tag">{esc(r)}</span>' for r in sorted(repos_touched)[:6]
+        )
         out += f'''<div class="member-card">
   <div class="mc-name">{esc(name) if name else ""} <span class="mc-handle">@{esc(member)}</span></div>
   <div class="mc-detail">{esc(", ".join(details))}</div>
   <div style="margin-top:6px">{repos_html}</div>
 </div>'''
     out += '</div>'
+
     if inactive:
         quiet = ', '.join(f'@{m}' for m in inactive)
         out += f'<p style="font-size:11.5px;color:#888;margin-top:10px;line-height:1.6"><strong>No activity this window:</strong> {esc(quiet)}</p>'
+
     out += '''<div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments \u2014 not just authored items.</div>'''
@@ -381,9 +461,9 @@ Catches closes, reviews, comments, and assignments \u2014 not just authored item
 
 # ── 10. Build HTML ────────────────────────────────────────────────────────────
 rel_str   = ' &middot; '.join(f'<span class="badge badge-release">{esc(r)}</span>' for r in releases)
-n_astrid  = len(org_prs.get('unicity-astrid',[]))
-n_sphere  = len(org_prs.get('unicity-sphere',[]))
-n_network = len(org_prs.get('unicitynetwork',[]))
+n_astrid  = len(org_prs.get('unicity-astrid', []))
+n_sphere  = len(org_prs.get('unicity-sphere', []))
+n_network = len(org_prs.get('unicitynetwork', []))
 boards_ok = any(boards.values())
 
 CSS = '''*{box-sizing:border-box;margin:0;padding:0}
@@ -473,23 +553,23 @@ HTML = f'''<!DOCTYPE html>
 
 <div class="card" style="border-color:#7F77DD">
   <div class="org-header"><span class="badge badge-purple">unicity-astrid</span><span style="font-size:13px;color:#666">{n_astrid} PRs merged</span></div>
-  {theme_cards(themes.get('astrid',[]), '#7F77DD')}
+  {theme_cards(themes.get('astrid', []), '#7F77DD')}
 </div>
 
 <div class="card" style="border-color:#1D9E75">
   <div class="org-header"><span class="badge badge-teal">unicity-sphere</span><span style="font-size:13px;color:#666">{n_sphere} PRs merged</span></div>
-  {theme_cards(themes.get('sphere',[]), '#1D9E75')}
+  {theme_cards(themes.get('sphere', []), '#1D9E75')}
 </div>
 
 <div class="card" style="border-color:#378ADD">
   <div class="org-header"><span class="badge badge-blue">unicitynetwork</span><span style="font-size:13px;color:#666">{n_network} PRs merged</span></div>
-  {theme_cards(themes.get('network',[]), '#378ADD')}
+  {theme_cards(themes.get('network', []), '#378ADD')}
 </div>
 
 <div class="card" style="border-color:#E24B4A">
   <div class="org-header">
     <span class="badge" style="background:#FCEBEB;color:#791F1F">Project board comparison</span>
-    <span style="font-size:12px;color:#666">Stale statuses &middot; missing items &middot; untracked PRs{"" if boards_ok else " &mdash; board fetch failed (token may need read:project scope)"}</span>
+    <span style="font-size:12px;color:#666">Stale statuses &middot; missing items &middot; untracked PRs{"" if boards_ok else " &mdash; board fetch failed (check read:project scope on GH_PAT)"}</span>
   </div>
   {board_rows(board_issues)}
 </div>
@@ -531,16 +611,25 @@ try:
 except Exception:
     current_sha = None
 
-push_body = {'message': f'briefing: auto-report {report_date} ({window_label})',
-             'content': base64.b64encode(HTML.encode()).decode(), 'branch': 'main'}
+push_body = {
+    'message': f'briefing: auto-report {report_date} ({window_label})',
+    'content': base64.b64encode(HTML.encode()).decode(),
+    'branch': 'main'
+}
 if current_sha:
     push_body['sha'] = current_sha
 
-req = urllib.request.Request(sha_url, data=json.dumps(push_body).encode(),
-    headers={'Authorization': f'token {GH_TOKEN}',
-             'Accept': 'application/vnd.github.v3+json',
-             'Content-Type': 'application/json',
-             'User-Agent': 'unicity-briefing'}, method='PUT')
+req = urllib.request.Request(
+    sha_url,
+    data=json.dumps(push_body).encode(),
+    headers={
+        'Authorization': f'token {GH_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'unicity-briefing'
+    },
+    method='PUT'
+)
 with urllib.request.urlopen(req) as r:
     result = json.loads(r.read())
     print(f'Pushed: {result["commit"]["sha"]}')
