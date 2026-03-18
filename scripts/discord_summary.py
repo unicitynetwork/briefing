@@ -64,22 +64,22 @@ Here are all the merged PRs:
 
 Write a concise executive summary grouped by THEME (not by repo or org).
 Each theme should have:
-1. A short, punchy title (max 10 words)
-2. Two to four sentences of plain-English explanation of what changed, why it matters,
-   what it unlocks. No bullet points. No jargon. Write for a technical but non-engineering audience.
+1. A short title (max 8 words)
+2. Two to three sentences explaining what changed and why it matters. Plain English, no jargon.
 
 Respond ONLY with a valid JSON array, no markdown fences, no preamble. Format:
 [
-  {{"title": "Theme title here", "description": "Two to four sentence explanation here."}},
+  {{"title": "Theme title", "description": "Two to three sentence explanation."}},
   ...
 ]
 
 Rules:
-- Group related PRs into one theme (e.g. all sdk bumps = one theme)
+- Group related PRs into one theme
 - Skip pure chore/bump PRs unless they represent a meaningful version milestone
-- Max 6 themes
-- Keep each description under 300 characters
-- Be specific: name the actual capability or change, not vague praise"""
+- Max 5 themes
+- Title max 80 characters
+- Description max 280 characters
+- No markdown formatting inside the JSON strings (no **, no `)"""
 
 # 3. Call Anthropic API
 
@@ -104,39 +104,55 @@ with urllib.request.urlopen(req) as r:
 raw = resp['content'][0]['text'].strip()
 raw = re.sub(r'^```[a-z]*\n?', '', raw).rstrip('`').strip()
 themes = json.loads(raw)
+print(f'Claude generated {len(themes)} themes')
 
 # 4. Build Discord embeds
+# Discord limits: title <= 256, description <= 4096, total all embeds <= 6000
 
-rel_str = f' | **{" | ".join(releases)}**' if releases else ''
-header  = f'**{total} PRs merged**{rel_str} | **{len(contributors)} contributor{"s" if len(contributors)!=1 else ""}**'
+def cap(s, n):
+    s = str(s)
+    return s if len(s) <= n else s[:n-1] + '\u2026'
 
-THEME_COLORS = [0x1D9E75, 0x7F77DD, 0x378ADD, 0xEF9F27, 0xD85A30, 0x639922]
+rel_str = f' | {", ".join(releases)}' if releases else ''
+header  = f'{total} PRs merged{rel_str} | {len(contributors)} contributor{"s" if len(contributors)!=1 else ""}'
+
+THEME_COLORS = [1941621, 8353757, 3639005, 15704871, 14177840, 6529314]
+# decimal equivalents of 0x1D9E75, 0x7F77DD, 0x378ADD, 0xEF9F27, 0xD85A30, 0x639922
 
 embeds = []
 
 embeds.append({
-    'title': 'Unicity \u2014 what shipped',
-    'description': f'*{date_disp}*\n\n{header}',
-    'color': 0x1D9E75,
+    'title': cap('Unicity \u2014 what shipped', 256),
+    'description': cap(f'{date_disp}\n\n{header}', 4096),
+    'color': 1941621,
     'url': 'https://unicitynetwork.github.io/briefing/'
 })
 
-for i, theme in enumerate(themes[:6]):
+for i, theme in enumerate(themes[:5]):
     embeds.append({
-        'title': theme['title'],
-        'description': theme['description'],
+        'title': cap(theme.get('title', 'Update'), 256),
+        'description': cap(theme.get('description', ''), 4096),
         'color': THEME_COLORS[i % len(THEME_COLORS)]
     })
 
 embeds.append({
-    'description': '[View full daily briefing](https://unicitynetwork.github.io/briefing/)',
-    'color': 0x444441
+    'description': 'View full daily briefing: https://unicitynetwork.github.io/briefing/',
+    'color': 4473921
 })
+
+# Verify total character count stays under 6000
+total_chars = sum(
+    len(e.get('title', '')) + len(e.get('description', ''))
+    for e in embeds
+)
+print(f'Total embed chars: {total_chars}')
 
 discord_payload = json.dumps({
     'username': 'Unicity Briefing',
-    'embeds': embeds[:10]
+    'embeds': embeds
 }).encode()
+
+print(f'Payload size: {len(discord_payload)} bytes')
 
 req = urllib.request.Request(
     DISCORD_WEBHOOK,
@@ -144,6 +160,11 @@ req = urllib.request.Request(
     headers={'Content-Type': 'application/json'},
     method='POST'
 )
-with urllib.request.urlopen(req) as r:
-    print(f'Discord response: {r.status}')
-    print(f'Posted {len(embeds)} embeds for {date_disp}')
+try:
+    with urllib.request.urlopen(req) as r:
+        print(f'Discord response: {r.status}')
+        print(f'Posted {len(embeds)} embeds for {date_disp}')
+except urllib.error.HTTPError as e:
+    body = e.read().decode('utf-8', errors='replace')
+    print(f'Discord error {e.code}: {body}')
+    raise
