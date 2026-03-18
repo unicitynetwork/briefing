@@ -5,7 +5,6 @@ GH_TOKEN        = os.environ['GH_TOKEN'].strip()
 DISCORD_WEBHOOK = os.environ['DISCORD_WEBHOOK'].strip()
 ANTHROPIC_KEY   = os.environ['ANTHROPIC_API_KEY'].strip()
 
-print(f'Webhook URL starts with: {DISCORD_WEBHOOK[:40]}')
 print(f'Webhook URL length: {len(DISCORD_WEBHOOK)}')
 print(f'Anthropic key length: {len(ANTHROPIC_KEY)} (first 8 chars: {ANTHROPIC_KEY[:8]})')
 
@@ -20,7 +19,10 @@ def discord_post(payload_dict):
     req = urllib.request.Request(
         DISCORD_WEBHOOK,
         data=data,
-        headers={'Content-Type': 'application/json'},
+        headers={
+            'Content-Type': 'application/json',
+            'User-Agent': 'DiscordBot (https://github.com/unicitynetwork/briefing, 1.0)'
+        },
         method='POST'
     )
     try:
@@ -104,9 +106,9 @@ Rules:
 - Title: plain text, max 60 chars, no special characters
 - Description: plain text, max 250 chars, no special characters, no backticks, no asterisks"""
 
-# 3. Call Anthropic API — claude-haiku-4-5 is fast and cheap for this task
+# 3. Call Anthropic API
 
-print('Calling Anthropic API with model claude-haiku-4-5-20251001...')
+print('Calling Anthropic API...')
 payload = json.dumps({
     'model': 'claude-haiku-4-5-20251001',
     'max_tokens': 1000,
@@ -133,9 +135,9 @@ except urllib.error.HTTPError as e:
 
 raw = resp['content'][0]['text'].strip()
 raw = re.sub(r'^```[a-z]*\n?', '', raw).rstrip('`').strip()
-print(f'Claude raw output: {raw[:300]}')
+print(f'Claude generated themes: {raw[:200]}')
 themes = json.loads(raw)
-print(f'Claude generated {len(themes)} themes')
+print(f'Theme count: {len(themes)}')
 
 # 4. Build Discord embeds
 
