@@ -104,11 +104,11 @@ Rules:
 - Title: plain text, max 60 chars, no special characters
 - Description: plain text, max 250 chars, no special characters, no backticks, no asterisks"""
 
-# 3. Call Anthropic API
+# 3. Call Anthropic API — claude-haiku-4-5 is fast and cheap for this task
 
-print('Calling Anthropic API with model claude-3-5-sonnet-20241022...')
+print('Calling Anthropic API with model claude-haiku-4-5-20251001...')
 payload = json.dumps({
-    'model': 'claude-3-5-sonnet-20241022',
+    'model': 'claude-haiku-4-5-20251001',
     'max_tokens': 1000,
     'messages': [{'role': 'user', 'content': prompt}]
 }).encode()
