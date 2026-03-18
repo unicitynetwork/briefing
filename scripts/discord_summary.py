@@ -1,4 +1,4 @@
-import urllib.request, urllib.parse, json, os, re, sys
+import urllib.request, urllib.parse, json, os, re
 from datetime import datetime, timedelta, timezone
 
 GH_TOKEN        = os.environ['GH_TOKEN'].strip()
@@ -7,6 +7,7 @@ ANTHROPIC_KEY   = os.environ['ANTHROPIC_API_KEY'].strip()
 
 print(f'Webhook URL starts with: {DISCORD_WEBHOOK[:40]}')
 print(f'Webhook URL length: {len(DISCORD_WEBHOOK)}')
+print(f'Anthropic key length: {len(ANTHROPIC_KEY)} (first 8 chars: {ANTHROPIC_KEY[:8]})')
 
 now       = datetime.now(timezone.utc)
 yesterday = now - timedelta(days=1)
@@ -28,7 +29,7 @@ def discord_post(payload_dict):
             return True
     except urllib.error.HTTPError as e:
         body = e.read().decode('utf-8', errors='replace')
-        print(f'Discord error {e.code}: {body}', file=sys.stderr)
+        print(f'DISCORD ERROR {e.code}: {body}')
         raise
 
 # 1. Fetch PRs from GitHub
@@ -103,9 +104,9 @@ Rules:
 - Title: plain text, max 60 chars, no special characters
 - Description: plain text, max 250 chars, no special characters, no backticks, no asterisks"""
 
-# 3. Call Anthropic API — using claude-3-5-sonnet (stable, widely available model)
+# 3. Call Anthropic API
 
-print('Calling Anthropic API...')
+print('Calling Anthropic API with model claude-3-5-sonnet-20241022...')
 payload = json.dumps({
     'model': 'claude-3-5-sonnet-20241022',
     'max_tokens': 1000,
@@ -124,14 +125,15 @@ req = urllib.request.Request(
 try:
     with urllib.request.urlopen(req) as r:
         resp = json.loads(r.read())
+        print('Anthropic API call succeeded')
 except urllib.error.HTTPError as e:
     body = e.read().decode('utf-8', errors='replace')
-    print(f'Anthropic error {e.code}: {body}', file=sys.stderr)
+    print(f'ANTHROPIC ERROR {e.code}: {body}')
     raise
 
 raw = resp['content'][0]['text'].strip()
 raw = re.sub(r'^```[a-z]*\n?', '', raw).rstrip('`').strip()
-print(f'Claude raw output: {raw[:200]}')
+print(f'Claude raw output: {raw[:300]}')
 themes = json.loads(raw)
 print(f'Claude generated {len(themes)} themes')
 
