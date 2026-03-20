@@ -2,7 +2,7 @@ name: Daily summary to Discord
 
 on:
   schedule:
-    - cron: '7 7 * * *'  # 09:07 EET (UTC+2) every day including weekends
+    - cron: '17 8 * * *'  # 10:17 EET (UTC+2) every day including weekends
   workflow_dispatch:
 
 jobs:
