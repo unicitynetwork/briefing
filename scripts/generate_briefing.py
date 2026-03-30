@@ -201,6 +201,31 @@ for pr in long_prs:
 
 print(f'Board issues: {len(board_issues)}')
 
+# ── 6b. Blocked items — all items with status "Blocked" across all boards ─────
+BLOCKED_STATUSES = {'blocked', 'blocking'}
+BOARD_URLS = {
+    'unicity-astrid':  'https://github.com/orgs/unicity-astrid/projects/1/views/1',
+    'unicity-sphere':  'https://github.com/orgs/unicity-sphere/projects/1/views/1',
+    'unicitynetwork':  'https://github.com/orgs/unicitynetwork/projects/1/views/17',
+}
+blocked_items = []
+for org, items in boards.items():
+    label = ORG_LABELS.get(org, org)
+    for item in items:
+        if item['status'].lower() in BLOCKED_STATUSES:
+            blocked_items.append({
+                'org':       label,
+                'board_url': BOARD_URLS.get(org, ''),
+                'type':      item['type'],
+                'repo':      item['repo'],
+                'number':    item['number'],
+                'title':     item['title'],
+                'url':       item['url'],
+                'is_draft':  item.get('is_draft', False),
+            })
+
+print(f'Blocked items: {len(blocked_items)}')
+
 # ── 7. involves sweep — 2s sleep per call stays under 30/min
 member_data = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
 seen_per_member = {m: set() for m in MEMBERS}
@@ -422,7 +447,6 @@ def board_status_line(org):
     return ' \u00b7 '.join(parts)
 
 def render_board_section():
-    """Render board comparison using board-wrap/board-head structure, grouped by org then severity."""
     if not board_issues and not any(board_counts.values()):
         return '<p style="font-size:13px;color:#888;padding:8px 0">No board issues detected \u2014 all active items correctly tracked.</p>'
 
@@ -452,7 +476,6 @@ def render_board_section():
         board_url   = board_urls.get(org_label, '')
         org_issues  = by_org.get(org_label, [])
 
-        # Org section header with status counts
         link_html = f' <a href="{board_url}" style="font-size:11px;color:#378ADD;font-family:\'SF Mono\',monospace;text-decoration:none">board \u2197</a>' if board_url else ''
         status_html = f'<span style="font-size:11px;color:#888;margin-left:8px">{status_line}</span>' if status_line else ''
         out += f'<p class="section-title">{esc(org_label)}{link_html}{status_html}</p>'
@@ -461,7 +484,6 @@ def render_board_section():
             out += '<p style="font-size:12px;color:#888;margin-bottom:10px">\u2713 No issues detected.</p>'
             continue
 
-        # Group by severity within org
         by_sev = {}
         for issue in org_issues:
             by_sev.setdefault(issue['sev'], []).append(issue)
@@ -479,7 +501,37 @@ def render_board_section():
     <div class="board-title"><a href="{esc(issue['url'])}" class="pr-link">{esc(issue['title'])}</a></div>
     <div class="board-detail"><code>{esc(issue['ref'])}</code> \u00b7 {esc(issue['msg'])}</div>
   </div></div>'''
-            out += '</div>'  # close board-wrap
+            out += '</div>'
+
+    return out
+
+def render_blocked_items():
+    if not blocked_items:
+        return ''
+
+    org_order = ['Astrid', 'Sphere', 'Unicity Network']
+    by_org = {}
+    for item in blocked_items:
+        by_org.setdefault(item['org'], []).append(item)
+
+    out = ''
+    for org_label in org_order:
+        items = by_org.get(org_label, [])
+        if not items: continue
+        board_url = items[0]['board_url']
+        link_html = f' <a href="{board_url}" style="font-size:11px;color:#378ADD;font-family:\'SF Mono\',monospace;text-decoration:none">board \u2197</a>' if board_url else ''
+        out += f'<p class="section-title">{esc(org_label)}{link_html}</p>'
+        out += '<div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">\u26d4 BLOCKED</span></div>'
+        for item in items:
+            kind  = 'PR' if item['type'] == 'pr' else 'Issue'
+            draft = ' <span class="draft-tag">Draft</span>' if item.get('is_draft') else ''
+            out += f'''<div class="board-row">
+  <span class="chip chip-blocked">{kind}</span>
+  <div class="board-body">
+    <div class="board-title"><a href="{esc(item['url'])}" class="pr-link">{esc(item['title'])}</a>{draft}</div>
+    <div class="board-detail"><code>{esc(item['repo'])} #{item['number']}</code></div>
+  </div></div>'''
+        out += '</div>'
 
     return out
 
@@ -527,7 +579,6 @@ def render_member_cards():
         name = MEMBER_NAMES.get(member, '')
         narr = member_narratives.get(member, {})
 
-        # Use Claude narrative if available, else fall back to counts
         detail = narr.get('detail', '')
         tags   = narr.get('tags', [])
 
@@ -584,7 +635,8 @@ n_sphere  = len(org_prs.get('unicity-sphere', []))
 n_network = len(org_prs.get('unicitynetwork', []))
 rel_str   = ' &middot; '.join(f'<span class="badge badge-release">{esc(r)}</span>' for r in releases)
 boards_ok = any(board_counts.values())
-needs_html = render_needs_attention()
+needs_html   = render_needs_attention()
+blocked_html = render_blocked_items()
 
 CSS = '''*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
@@ -634,6 +686,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .chip-stale{background:#FAEEDA;color:#633806}
 .chip-nostatus{background:#EEEDFE;color:#3C3489}
 .chip-miss{background:#FCEBEB;color:#791F1F}
+.chip-blocked{background:#FCEBEB;color:#791F1F}
 .board-body{flex:1}
 .board-title{font-size:12px;color:#1a1a18;line-height:1.4}
 .board-detail{font-size:11.5px;color:#666;margin-top:2px}
@@ -698,6 +751,8 @@ HTML = f'''<!DOCTYPE html>
   </div>
   {render_board_section()}
 </div>
+
+{"<div class='card' style='border-color:#E24B4A'><div class='org-header'><span class='badge' style='background:#FCEBEB;color:#791F1F'>&#x26D4; Blocked items</span><span style='font-size:12px;color:#666'>All items in Blocked column across all project boards</span></div>" + blocked_html + "</div>" if blocked_html else ""}
 
 {"<div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div>" + needs_html + "</div>" if needs_html else ""}
 
