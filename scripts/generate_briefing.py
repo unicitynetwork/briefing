@@ -48,6 +48,20 @@ def gh_graphql(query, variables=None):
         print(f'  graphql error: {e}')
         return {}
 
+def gh_rest(path):
+    """Simple GET against the GitHub REST API."""
+    req = urllib.request.Request(f'https://api.github.com{path}', headers={
+        'Authorization': f'token {GH_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'unicity-briefing'
+    })
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read())
+    except Exception as e:
+        print(f'  REST error {path}: {e}')
+        return []
+
 def claude(prompt, max_tokens=3000):
     for model in ('claude-sonnet-4-6', 'claude-haiku-4-5-20251001'):
         try:
@@ -104,6 +118,7 @@ long_prs.sort(key=lambda p: p['created_at'])
 print(f'Long-standing open PRs: {len(long_prs)}')
 
 # ── 5. Board fetch — paginated, board_keys = ALL items, boards = non-Done only
+# Also fetches item body and text fields to support blocker reason detection
 BOARD_Q = '''
 query($org: String!, $num: Int!, $cursor: String) {
   organization(login: $org) {
@@ -119,11 +134,15 @@ query($org: String!, $num: Int!, $cursor: String) {
                 name
                 field { ... on ProjectV2SingleSelectField { name } }
               }
+              ... on ProjectV2ItemFieldTextValue {
+                text
+                field { ... on ProjectV2Field { name } }
+              }
             }
           }
           content {
-            ... on PullRequest { number title url state mergedAt isDraft repository { name } }
-            ... on Issue        { number title url state closedAt          repository { name } }
+            ... on PullRequest { number title url state mergedAt isDraft body repository { name } }
+            ... on Issue        { number title url state closedAt body          repository { name } }
           }
         }
       }
@@ -151,6 +170,7 @@ for org in ORGS:
 
     items_out = []
     for node in all_nodes:
+        # Find status (single-select field named *status*)
         status = None
         for fv in node.get('fieldValues',{}).get('nodes',[]):
             if fv and 'name' in fv and isinstance(fv.get('field'), dict):
@@ -160,6 +180,15 @@ for org in ORGS:
             for fv in node.get('fieldValues',{}).get('nodes',[]):
                 if fv and 'name' in fv and isinstance(fv.get('field'), dict):
                     status = fv.get('name'); break
+
+        # Collect text fields (e.g. a "Blocked by" custom text field on the board)
+        text_fields = {}
+        for fv in node.get('fieldValues',{}).get('nodes',[]):
+            if fv and 'text' in fv and isinstance(fv.get('field'), dict):
+                fname = fv['field'].get('name', '').strip()
+                if fname and fv['text']:
+                    text_fields[fname.lower()] = fv['text']
+
         c = node.get('content')
         if not c: continue
         repo = c.get('repository',{}).get('name',''); number = c.get('number')
@@ -168,10 +197,19 @@ for org in ORGS:
         status_counts[status] = status_counts.get(status, 0) + 1
         if repo and number: board_keys.add((repo, number))
         if status.lower() not in DONE_STATUSES:
-            items_out.append({'status': status, 'type': 'pr' if is_pr else 'issue',
-                'number': number, 'repo': repo, 'title': c.get('title',''),
-                'url': c.get('url',''), 'state': c.get('state',''),
-                'merged_at': c.get('mergedAt'), 'is_draft': c.get('isDraft', False)})
+            items_out.append({
+                'status':      status,
+                'type':        'pr' if is_pr else 'issue',
+                'number':      number,
+                'repo':        repo,
+                'title':       c.get('title',''),
+                'url':         c.get('url',''),
+                'state':       c.get('state',''),
+                'merged_at':   c.get('mergedAt'),
+                'is_draft':    c.get('isDraft', False),
+                'body':        (c.get('body') or ''),
+                'text_fields': text_fields,
+            })
     boards[org] = items_out; board_counts[org] = status_counts
     print(f'  Board {org}: {len(items_out)} non-Done | {dict(sorted(status_counts.items()))}')
 
@@ -201,18 +239,62 @@ for pr in long_prs:
 
 print(f'Board issues: {len(board_issues)}')
 
-# ── 6b. Blocked items — all items with status "Blocked" across all boards ─────
+# ── 6b. Blocked items — collect + fetch blocker reasons ──────────────────────
 BLOCKED_STATUSES = {'blocked', 'blocking'}
 BOARD_URLS = {
     'unicity-astrid':  'https://github.com/orgs/unicity-astrid/projects/1/views/1',
     'unicity-sphere':  'https://github.com/orgs/unicity-sphere/projects/1/views/1',
     'unicitynetwork':  'https://github.com/orgs/unicitynetwork/projects/1/views/17',
 }
+
+def fetch_blocker_reason(org, repo, number, body='', text_fields=None):
+    """Return a short blocker reason string by checking:
+    1. Board text field named "blocked by" or "blocker"
+    2. Issue/PR body for "blocked by ..." text
+    3. Issue/PR comments for "blocked by ..." text
+    Returns '' if nothing found.
+    """
+    reasons = []
+
+    # 1. Board text field (e.g. custom "Blocked by" field on the project)
+    if text_fields:
+        for key in ('blocked by', 'blocker', 'blocking reason', 'blocked_by'):
+            val = text_fields.get(key, '').strip()
+            if val:
+                reasons.append(val[:200])
+                break
+
+    # 2. Issue/PR body
+    if body and not reasons:
+        m = re.search(r'blocked\s+by[:\s]+([^\n]{3,200})', body, re.IGNORECASE)
+        if m:
+            reasons.append(m.group(0).strip()[:200])
+
+    # 3. Comments — fetch from REST API (issues endpoint works for both PRs and issues)
+    if not reasons:
+        comments = gh_rest(f'/repos/{org}/{repo}/issues/{number}/comments?per_page=50')
+        if isinstance(comments, list):
+            for comment in comments:
+                comment_body = comment.get('body', '') or ''
+                m = re.search(r'blocked\s+by[:\s]+([^\n]{3,200})', comment_body, re.IGNORECASE)
+                if m:
+                    author = comment.get('user', {}).get('login', '')
+                    snippet = m.group(0).strip()[:180]
+                    reasons.append(f'@{author}: {snippet}' if author else snippet)
+                    break
+
+    return reasons[0] if reasons else ''
+
 blocked_items = []
 for org, items in boards.items():
     label = ORG_LABELS.get(org, org)
     for item in items:
         if item['status'].lower() in BLOCKED_STATUSES:
+            reason = fetch_blocker_reason(
+                org, item['repo'], item['number'],
+                body=item.get('body', ''),
+                text_fields=item.get('text_fields', {})
+            )
             blocked_items.append({
                 'org':       label,
                 'board_url': BOARD_URLS.get(org, ''),
@@ -222,6 +304,7 @@ for org, items in boards.items():
                 'title':     item['title'],
                 'url':       item['url'],
                 'is_draft':  item.get('is_draft', False),
+                'reason':    reason,
             })
 
 print(f'Blocked items: {len(blocked_items)}')
@@ -523,13 +606,16 @@ def render_blocked_items():
         out += f'<p class="section-title">{esc(org_label)}{link_html}</p>'
         out += '<div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">\u26d4 BLOCKED</span></div>'
         for item in items:
-            kind  = 'PR' if item['type'] == 'pr' else 'Issue'
-            draft = ' <span class="draft-tag">Draft</span>' if item.get('is_draft') else ''
+            kind   = 'PR' if item['type'] == 'pr' else 'Issue'
+            draft  = ' <span class="draft-tag">Draft</span>' if item.get('is_draft') else ''
+            reason = item.get('reason', '').strip()
+            reason_html = f'<div class="board-reason">\u26a0\ufe0f Blocked by: {esc(reason)}</div>' if reason else ''
             out += f'''<div class="board-row">
   <span class="chip chip-blocked">{kind}</span>
   <div class="board-body">
     <div class="board-title"><a href="{esc(item['url'])}" class="pr-link">{esc(item['title'])}</a>{draft}</div>
     <div class="board-detail"><code>{esc(item['repo'])} #{item['number']}</code></div>
+    {reason_html}
   </div></div>'''
         out += '</div>'
 
@@ -690,6 +776,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .board-body{flex:1}
 .board-title{font-size:12px;color:#1a1a18;line-height:1.4}
 .board-detail{font-size:11.5px;color:#666;margin-top:2px}
+.board-reason{font-size:11.5px;color:#791F1F;margin-top:4px;line-height:1.4}
 .pr-table{width:100%;border-collapse:collapse;font-size:12px}
 .pr-table th{font-size:10.5px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em;padding:6px 10px;background:#f5f4f0;border-bottom:0.5px solid rgba(0,0,0,0.1);text-align:left}
 .pr-table td{padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);vertical-align:top}
