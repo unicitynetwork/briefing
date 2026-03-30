@@ -56,6 +56,8 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .board-body{flex:1}
 .board-title{font-size:12px;color:#1a1a18;line-height:1.4}
 .board-detail{font-size:11.5px;color:#666;margin-top:2px}
+.board-reason{font-size:11.5px;color:#791F1F;margin-top:4px;line-height:1.4}
+.board-reason a{color:#791F1F;font-weight:500}
 .pr-table{width:100%;border-collapse:collapse;font-size:12px}
 .pr-table th{font-size:10.5px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em;padding:6px 10px;background:#f5f4f0;border-bottom:0.5px solid rgba(0,0,0,0.1);text-align:left}
 .pr-table td{padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);vertical-align:top}
@@ -85,7 +87,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <p>Monday, 30 March 2026</p>
   <div class="header-meta">
     <span class="window-badge">Coverage: Friday – Sunday &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 30 March 2026, 12:40 UTC</span>
+    <span class="updated-badge">Updated: 30 March 2026, 13:26 UTC</span>
     
   </div>
 </div>
@@ -100,29 +102,24 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 
 <div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">8 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Capsule lifecycle and env config hardening</div>
-    <div class="event-detail">PR #646 fixes a long-standing issue where environment configuration was silently discarded when removing a capsule. A new --purge flag gives operators explicit control over whether env config is wiped on capsule removal, separating destructive from non-destructive teardown. This prevents accidental config loss during routine capsule lifecycle operations and aligns removal semantics with user intent.</div>
+    <div class="event-title">Capsule lifecycle and environment config safety</div>
+    <div class="event-detail">PR #646 fixes a regression where environment configuration was lost when removing a capsule, and introduces a --purge flag to give operators explicit control over full teardown versus soft removal. This distinction matters for production deployments where env config must survive capsule churn. The change hardens the capsule lifecycle contract and reduces the risk of silent misconfiguration after remove operations.</div>
     <div class="event-meta"><code>unicity-astrid</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Telegram capsule reliability and correctness fixes</div>
-    <div class="event-detail">PRs #11 through #19 collectively harden the capsule-telegram integration across several dimensions. PR #11 fixes multi-user approval and elicitation routing so messages reach the correct user in concurrent sessions. PR #12 introduces exponential backoff on Telegram API failures, preventing thundering-herd retries under API degradation. PRs #14 and #15 add HTTP status code validation, IPC dropped-message monitoring, and proper propagation of uplink::register errors so failures surface rather than silently pass.</div>
-    <div class="event-meta"><code>capsule-telegram</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
-  <div class="event-body">
-    <div class="event-title">Telegram capsule memory and parsing cleanup</div>
-    <div class="event-detail">PR #17 introduces TTL-based cleanup for turn state and pending_approvals, closing a memory leak that would grow unbounded in long-running sessions. PR #18 addresses enum parsing correctness, trims unnecessary fields from Capsule.toml to reduce configuration bloat, fixes double-escaping in link formatting, and removes dead code. PR #19 resolves all remaining findings from the second code review, indicating the capsule-telegram module is approaching production readiness.</div>
+    <div class="event-title">Telegram capsule reliability and correctness overhaul</div>
+    <div class="event-detail">PRs #11 through #19 represent a sustained hardening pass across the capsule-telegram integration. Core correctness fixes include multi-user approval and elicitation routing (#11), exponential backoff on Telegram API failures (#12), HTTP status code checking and IPC dropped-message monitoring (#14), and error propagation for uplink::register failures (#15). Memory safety was addressed in #17 via TTL-based cleanup for turns and pending_approvals, eliminating a long-lived leak. Code quality issues resolved in #18 cover enum parsing correctness, Capsule.toml bloat reduction, link double-escaping, and dead code removal. PR #19 closes all remaining findings from the second code review, bringing the capsule to a reviewable and shippable state.</div>
     <div class="event-meta"><code>capsule-telegram</code></div>
   </div></div><p class="section-title" style="margin-top:14px">Timeline — Friday – Sunday</p><div class="timeline"><div class="tl-item tl-fix"><span class="tl-time">Fri 14:40–14:42</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-telegram/pull/11" class="tl-link">capsule-telegram #11</a> (fix: multi-user approval/elicitation routing) &middot; <a href="https://github.com/unicity-astrid/capsule-telegram/pull/15" class="tl-link">capsule-telegram #15</a> (fix: propagate uplink::register error) &middot; <a href="https://github.com/unicity-astrid/capsule-telegram/pull/12" class="tl-link">capsule-telegram #12</a> (fix: exponential backoff on Telegram API failures)</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 14:47</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-telegram/pull/17" class="tl-link">capsule-telegram #17</a> (fix: TTL-based cleanup for turns and pending_approvals memory leak) &middot; <a href="https://github.com/unicity-astrid/capsule-telegram/pull/14" class="tl-link">capsule-telegram #14</a> (fix: check HTTP status codes and monitor IPC dropped messages)</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 14:54</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-telegram/pull/18" class="tl-link">capsule-telegram #18</a> — fix: enum parsing, Capsule.toml bloat, link double-escape, dead code</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 16:31</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-telegram/pull/19" class="tl-link">capsule-telegram #19</a> — fix: address all findings from second code review</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 19:28</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/646" class="tl-link">astrid #646</a> — fix: preserve env config on capsule remove, add --purge flag</span></div></div></div>
 <div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">2 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Chess bot capsule demo</div>
-    <div class="event-detail">PR #4 introduces a chess bot built on the agentic-chatbot framework, demonstrating turn-based game state management within a capsule conversation loop. This serves as a concrete reference implementation showing how structured multi-turn interactions can be handled by an agentic capsule. It validates the approval and elicitation routing fixes landed in capsule-telegram by exercising sequential user-driven state transitions.</div>
+    <div class="event-title">Agentic chatbot extended with chess capability</div>
+    <div class="event-detail">PR #4 adds a chess bot to the agentic-chatbot component, demonstrating the platform's ability to host structured, turn-based interactive agents alongside conversational ones. This expands the reference capability surface and serves as a concrete integration test for multi-turn agent logic within the sphere runtime.</div>
     <div class="event-meta"><code>agentic-chatbot</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Developer platform MVP launch</div>
-    <div class="event-detail">PR #22 delivers the developer platform MVP under sphere-quest, establishing the foundational surface for third-party and internal developer onboarding to the Unicity ecosystem. The feature branch introduces core platform scaffolding that will underpin future developer-facing tooling and integrations. This milestone marks the first structured developer experience investment within the sphere org and sets the baseline for iterative platform expansion.</div>
+    <div class="event-title">Developer platform MVP foundation</div>
+    <div class="event-detail">PR #22 lays the groundwork for the developer platform MVP under sphere-quest, introducing the initial feature set needed for external developers to begin building on Unicity Sphere. This is a milestone-level change that establishes the platform's public-facing developer surface and unblocks downstream integration work.</div>
     <div class="event-meta"><code>sphere-quest</code></div>
   </div></div></div>
 <div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">0 PRs merged</span></div><p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p></div>
@@ -130,9 +127,9 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 <div class="card" style="border-color:#E24B4A">
   <div class="org-header">
     <span class="badge" style="background:#FCEBEB;color:#791F1F">Project board comparison</span>
-    <span style="font-size:12px;color:#666">Stale statuses &middot; No Status &middot; open PRs not tracked</span>
+    <span style="font-size:12px;color:#666">Stale statuses &middot; No Status &middot; open PRs not tracked &mdash; board fetch failed</span>
   </div>
-  <p class="section-title">Astrid <a href="https://github.com/orgs/unicity-astrid/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 131 · In progress 11 · Done 267</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
+  <p class="section-title">Astrid <a href="https://github.com/orgs/unicity-astrid/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
   <span class="chip chip-miss">MISSING</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-astrid/capsule-memory/pull/3" class="pr-link">feat: KV-backed memory with add_memory tool and /memory-export command</a></div>
@@ -157,22 +154,12 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-astrid/rfcs/pull/23" class="pr-link">RFC: Interceptor middleware chain</a></div>
     <div class="board-detail"><code>rfcs #23</code> · Open PR not tracked on any board</div>
-  </div></div></div><p class="section-title">Sphere <a href="https://github.com/orgs/unicity-sphere/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 23 · In progress 5 · In review 7 · Ready 2 · Done 21</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
-  <span class="chip chip-stale">STALE</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/90" class="pr-link">Feat/auto connect</a></div>
-    <div class="board-detail"><code>sphere-sdk #90</code> · PR merged, still “Backlog” on board</div>
-  </div></div></div><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
+  </div></div></div><p class="section-title">Sphere <a href="https://github.com/orgs/unicity-sphere/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
   <span class="chip chip-miss">MISSING</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/87" class="pr-link">fix(payments): eliminate TOCTOU race in concurrent send() calls</a></div>
     <div class="board-detail"><code>sphere-sdk #87</code> · Open PR not tracked on any board</div>
-  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Blocked 5 · In Dev 21 · Test 3 · Todo 66 · Done 252</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
-  <span class="chip chip-stale">STALE</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/aggregator-go/pull/51" class="pr-link">Streaming round processing with adaptive timing</a></div>
-    <div class="board-detail"><code>aggregator-go #51</code> · PR merged, still “Todo” on board</div>
-  </div></div></div><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
+  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
   <span class="chip chip-miss">MISSING</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/26" class="pr-link">[WIP] Java SDK cucumber test amendments</a></div>
@@ -205,101 +192,76 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   </div></div></div>
 </div>
 
-<div class='card' style='border-color:#E24B4A'><div class='org-header'><span class='badge' style='background:#FCEBEB;color:#791F1F'>&#x26D4; Blocked items</span><span style='font-size:12px;color:#666'>All items in Blocked column across all project boards</span></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">⛔ BLOCKED</span></div><div class="board-row">
-  <span class="chip chip-blocked">Issue</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/uniclaw/issues/3" class="pr-link">Openclaw Prediction Market: Agent Wallet</a></div>
-    <div class="board-detail"><code>uniclaw #3</code></div>
-  </div></div><div class="board-row">
-  <span class="chip chip-blocked">Issue</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/uniclaw/issues/1" class="pr-link">Openclaw Prediction Market: Openclaw Plugin (Skill &amp; Tools)</a></div>
-    <div class="board-detail"><code>uniclaw #1</code></div>
-  </div></div><div class="board-row">
-  <span class="chip chip-blocked">Issue</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/uniclaw/issues/4" class="pr-link">Openclaw Prediction Market: Frontend for Humans</a></div>
-    <div class="board-detail"><code>uniclaw #4</code></div>
-  </div></div><div class="board-row">
-  <span class="chip chip-blocked">Issue</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/uniclaw/issues/2" class="pr-link">Openclaw Prediction Market: API for Bots</a></div>
-    <div class="board-detail"><code>uniclaw #2</code></div>
-  </div></div><div class="board-row">
-  <span class="chip chip-blocked">Issue</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/.github/issues/12" class="pr-link">[Permissioned MVP] Transition Flow Implementation - Ensuring single use for a nametag address by a token state</a></div>
-    <div class="board-detail"><code>.github #12</code></div>
-  </div></div></div></div>
+
 
 <div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">state-transition-sdk-java #26 — 160 days open, untracked, no board</div>
-    <div class="event-detail">Owned by @b3y0urs3lf. WIP Java SDK cucumber test amendments has been open 160 days with no board entry. No visible progress this window. Needs an explicit decision: either close as abandoned, reassign, or set a hard deadline for completion and add to the Unicity Network board immediately.</div>
+    <div class="event-title">state-transition-sdk-java #26 — Java SDK cucumber tests, 160 days open, no board</div>
+    <div class="event-detail">Owned by @b3y0urs3lf. WIP for 160 days with no board tracking and no recent activity visible. Needs an explicit decision: is this still relevant to the current SDK direction? If yes, unblock and assign a reviewer; if no, close it. Action: @b3y0urs3lf and a lead to sync and resolve this week.</div>
     <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">state-transition-sdk-java #43 &amp; #44 — 118 days open, untracked</div>
-    <div class="event-detail">Both owned by @martti007. Rename request-id→state-id (#43) and user-defined mint reasons (#44) have been open 118 days with no board tracking. With #52 now open for TGE V2, it's unclear whether these are prerequisites, superseded, or blocked. Owner needs to clarify status and add both to the board or close them.</div>
+    <div class="event-title">state-transition-sdk-java #43 &amp; #44 — rename state id + mint reasons, 118 days open, no board</div>
+    <div class="event-detail">Both owned by @martti007, open 118 days with no board tracking. #43 renames request id to state id (security impact), #44 adds user-defined mint reasons — both touch core SDK contracts. With TGE V2 (#52) now active, these may be superseded or must be rebased. Action: triage against #52 scope this sprint and either close, rebase, or fast-track to review.</div>
     <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">decision needed</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">sphere-sdk #87 TOCTOU race fix — 17 days open, no reviewer, not on board</div>
-    <div class="event-detail">Owned by @vrogojin. Concurrent send() race condition fix in sphere-sdk has sat 17 days without a reviewer assigned and is missing from all boards. This is a correctness bug in payment logic — assign a sphere-sdk reviewer and add to the Sphere board this sprint.</div>
-    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">assign reviewer</span></div>
+    <div class="event-title">bft-core #11 — EVM integration, 70 days open, no board</div>
+    <div class="event-detail">Owned by @MastaP. No board tracking. EVM support is a significant scope item; 70 days without merge or close suggests it may be blocked on design or deprioritised. Action: MastaP to post a status comment and leadership to decide whether to track it on the board or formally defer.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">close or revive</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">rfcs #20–23 — 7 days open, all untracked, owned by @joshuajbouw</div>
-    <div class="event-detail">Four foundational Astrid RFCs (capsule interface, distro system, host ABI, interceptor middleware chain) have been open 7 days with no board entries and no visible reviewers. These are architectural decisions that likely gate downstream implementation work. Assign reviewers and add to the Astrid board before they age further.</div>
+    <div class="event-title">sphere-sdk #87 — TOCTOU race in concurrent send(), 17 days open, no board, no reviewer</div>
+    <div class="event-detail">Owned by @vrogojin. A concurrency correctness fix in payments that has sat 17 days without a reviewer assigned and is not on any board. This is a correctness/safety issue that should not linger. Action: assign a sphere-sdk reviewer immediately and add to the Sphere board.</div>
     <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review needed</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">capsule-memory #3 — 12 days open, no reviewer, not on board</div>
-    <div class="event-detail">Owned by @joshuajbouw. KV-backed memory with add_memory tool and /memory-export command has been open 12 days with no board tracking and no assigned reviewer. Needs to be added to the Astrid board and a reviewer assigned — likely relevant to the RFC work also sitting unreviewed.</div>
-    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">review needed</span></div>
+    <div class="event-title">capsule-memory #3 + rfcs #20–#23 — Astrid architecture PRs, 7–12 days open, no board</div>
+    <div class="event-detail">All five PRs owned by @joshuajbouw: capsule-memory KV-backed memory (12 days) and four foundational RFCs — capsule interface, distro system, host ABI, interceptor middleware (7 days each). None are on the Astrid board. These RFCs likely gate other Astrid work; without review assignment and board tracking they will drift. Action: assign reviewers to all five this week and create tracking cards on the Astrid board.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">decision needed</span></div>
   </div></div><div class="event-row">
-  <div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">Board hygiene: 2 stale merged PRs still in Backlog/Todo</div>
-    <div class="event-detail">sphere-sdk #90 (auto-connect, merged) remains 'Backlog' on the Sphere board. aggregator-go #51 (streaming round processing, merged) remains 'Todo' on the Unicity Network board. Both should be moved to Done immediately to keep velocity metrics accurate and avoid confusion during sprint planning.</div>
-    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">decision needed</span></div>
+    <div class="event-title">nostr-sdk #4 &amp; nostr-js-sdk #4 — 366 + comprehensive unit tests, 52 days open, no board</div>
+    <div class="event-detail">Both owned by @b3y0urs3lf, unreviewed for 52 days and untracked on any board. Large test suites sitting unmerged risk diverging from main. Action: assign a reviewer to both repos, or if the test approach has changed, close and re-open scoped PRs. Either way, add to the Unicity Network board.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">close or revive</span></div>
   </div></div></div>
 
 <div class="card" style="border-color:#1D9E75">
   <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
   <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
-  <div class="mc-detail">Actively involved in astrid #646 (env config preservation on capsule remove, now merged by MastaP) and astrid #645 (reqwest::blocking async panic blocking daemon startup). Still has 4 RFC PRs open (rfcs #20–23) for 7 days covering capsule interface, distro, host ABI, and interceptor middleware, plus capsule-memory #3 open 12 days — none are tracked on any board.</div>
-  <div style="margin-top:6px"><span class="tag">2 active PRs</span><span class="tag">4 RFCs open</span><span class="tag">capsule-memory pending</span><span class="tag">board gaps</span></div>
+  <div class="mc-detail">Actively involved in astrid #646 (preserve env config on capsule remove, add --purge flag, now merged by MastaP) and astrid #645 (reqwest::blocking async panic blocking daemon startup, still open). Has 4 RFC PRs (rfcs #20–#23) open for 7 days covering capsule interface, distro system, host ABI, and interceptor middleware, plus capsule-memory #3 open 12 days — none tracked on any board.</div>
+  <div style="margin-top:6px"><span class="tag">2 active astrid PRs</span><span class="tag">4 RFC PRs open</span><span class="tag">capsule-memory open</span><span class="tag">no board tracking</span></div>
 </div><div class="member-card">
   <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
-  <div class="mc-detail">Dominant merger this window: 10 PRs merged across astrid, capsule-telegram, sphere, and agentic-chatbot — highlights include capsule-telegram #11 (multi-user approval routing), #12 (exponential backoff), #17 (TTL memory leak fix), and sphere #288 (app reload fix). Two sphere-sdk PRs open (#98 silent Nostr relay death, #99 re-subscribe fix) alongside involvement in 6 additional capsule-telegram and astrid PRs still in review.</div>
-  <div style="margin-top:6px"><span class="tag">10 merged</span><span class="tag">capsule-telegram sweep</span><span class="tag">2 open sphere-sdk PRs</span><span class="tag">Nostr reconnect fix</span></div>
+  <div class="mc-detail">Prolific merge window: landed 9 capsule-telegram PRs (#11–#19 covering backoff, routing, memory leaks, dead code, HTTP status checks, error propagation, enum parsing, and code-review findings), plus astrid #646, sphere #288, and agentic-chatbot #4 — 12 merges total. Two sphere-sdk PRs (#98 silent Nostr subscription death, #99 re-subscribe fix) are open awaiting review. Also involved in reviewing/iterating capsule-telegram #16/#13/#10/#9/#8 and astrid #647.</div>
+  <div style="margin-top:6px"><span class="tag">12 merged</span><span class="tag">capsule-telegram stabilisation</span><span class="tag">sphere-sdk #98/#99 open</span><span class="tag">Nostr reconnect fix</span></div>
 </div><div class="member-card">
   <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
-  <div class="mc-detail">Merged three sphere-sdk PRs: #22 (persist last wallet event timestamp), #20 (payment request senderNametag + docs), and #14 (price implementation). No open PRs this window.</div>
-  <div style="margin-top:6px"><span class="tag">3 merged</span><span class="tag">sphere-sdk</span><span class="tag">wallet &amp; payments</span><span class="tag">clean slate</span></div>
+  <div class="mc-detail">Merged three sphere-sdk PRs this window: #22 (persist last wallet event timestamp), #20 (payment request senderNametag + docs cleanup), and #14 (price implementation). No open PRs currently.</div>
+  <div style="margin-top:6px"><span class="tag">3 merged</span><span class="tag">sphere-sdk payments</span><span class="tag">wallet events</span></div>
 </div><div class="member-card">
   <div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div>
-  <div class="mc-detail">Merged sphere-quest #22 (developer platform MVP). Still involved in sphere-quest #20 (Docker, CI/CD, GitHub Pages deployment infra) which remains open.</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">developer platform MVP</span><span class="tag">infra PR open</span><span class="tag">sphere-quest</span></div>
+  <div class="mc-detail">Merged sphere-quest #22 (developer platform MVP). Still involved in sphere-quest #20 (deployment infra: Docker, CI/CD, GitHub Pages), which remains open.</div>
+  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">developer platform MVP</span><span class="tag">sphere-quest infra open</span></div>
 </div><div class="member-card">
   <div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div>
-  <div class="mc-detail">One open PR: state-transition-sdk-java #52 covering TGE V2 general structure, verification, and token transfers. Also owns two long-standing PRs (#43 and #44) at 118 days with no board tracking.</div>
-  <div style="margin-top:6px"><span class="tag">1 open PR</span><span class="tag">TGE V2</span><span class="tag">2 stale PRs 118d</span><span class="tag">untracked</span></div>
+  <div class="mc-detail">Has state-transition-sdk-java #52 open (TGE V2 general structure, verification and token transfers — Java SDK). Two older PRs (#43 rename request/state id, #44 user-defined mint reasons) have been open 118 days with no board tracking.</div>
+  <div style="margin-top:6px"><span class="tag">TGE V2 Java SDK</span><span class="tag">3 open PRs</span><span class="tag">118-day stale PRs</span><span class="tag">no board tracking</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@b3y0urs3lf</span></div>
-  <div class="mc-detail">One open PR in openclaw-unicity #6 addressing duplicate message handling and agent tool awareness. Also holds two long-standing untracked PRs: nostr-js-sdk #4 and nostr-sdk #4 (both 52 days, 366+ tests), plus state-transition-sdk-java #26 at 160 days.</div>
-  <div style="margin-top:6px"><span class="tag">1 active PR</span><span class="tag">3 stale untracked PRs</span><span class="tag">160d oldest PR</span><span class="tag">test coverage</span></div>
+  <div class="mc-detail">Opened openclaw-unicity #6 (agent receiving duplicate messages, unaware of agent tools). Two long-standing test PRs remain open: nostr-js-sdk #4 and nostr-sdk #4 (comprehensive unit tests, 52 days each), plus state-transition-sdk-java #26 stalled at 160 days — none on any board.</div>
+  <div style="margin-top:6px"><span class="tag">openclaw agent bug open</span><span class="tag">160-day stale PR</span><span class="tag">3 untracked PRs</span><span class="tag">unit tests pending</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@lploom</span></div>
-  <div class="mc-detail">Merged unicity-node #4 (invalid JSON fix). Has unicity-node #3 (BFT snapshots) open and was involved in #2 (getblockhash invalid JSON, now resolved via #4).</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">BFT snapshots open</span><span class="tag">unicity-node</span><span class="tag">JSON fixes</span></div>
+  <div class="mc-detail">Merged unicity-node #4 (fix invalid JSON). Has unicity-node #3 (BFT snapshots) open for review, and was involved in #2 (getblockhash invalid JSON, predecessor to the merged fix).</div>
+  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">BFT snapshots open</span><span class="tag">unicity-node JSON fixes</span></div>
 </div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@ristik, @jvsteiner, @ahtotruu, @jait91, @vrogojin, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments — not just authored items.</div>
