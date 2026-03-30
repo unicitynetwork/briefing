@@ -118,7 +118,7 @@ long_prs.sort(key=lambda p: p['created_at'])
 print(f'Long-standing open PRs: {len(long_prs)}')
 
 # ── 5. Board fetch — paginated, board_keys = ALL items, boards = non-Done only
-# Also fetches item body and text fields to support blocker reason detection
+# Fetches body, text fields, and native issueRelationships for blocker detection
 BOARD_Q = '''
 query($org: String!, $num: Int!, $cursor: String) {
   organization(login: $org) {
@@ -142,7 +142,17 @@ query($org: String!, $num: Int!, $cursor: String) {
           }
           content {
             ... on PullRequest { number title url state mergedAt isDraft body repository { name } }
-            ... on Issue        { number title url state closedAt body          repository { name } }
+            ... on Issue {
+              number title url state closedAt body
+              repository { name }
+              issueRelationships(first: 10) {
+                nodes {
+                  type
+                  sourceIssue { number title url repository { name } }
+                  targetIssue { number title url repository { name } }
+                }
+              }
+            }
           }
         }
       }
@@ -181,7 +191,7 @@ for org in ORGS:
                 if fv and 'name' in fv and isinstance(fv.get('field'), dict):
                     status = fv.get('name'); break
 
-        # Collect text fields (e.g. a "Blocked by" custom text field on the board)
+        # Collect text fields (e.g. custom "Blocked by" text field on the board)
         text_fields = {}
         for fv in node.get('fieldValues',{}).get('nodes',[]):
             if fv and 'text' in fv and isinstance(fv.get('field'), dict):
@@ -196,19 +206,47 @@ for org in ORGS:
         status = status or 'No Status'
         status_counts[status] = status_counts.get(status, 0) + 1
         if repo and number: board_keys.add((repo, number))
+
+        # Extract native GitHub relationships (Issues only — "Mark as blocked by")
+        # type BLOCKS means: sourceIssue blocks targetIssue
+        # type BLOCKED_BY means: sourceIssue is blocked by targetIssue
+        native_blockers = []
+        for rel in (c.get('issueRelationships') or {}).get('nodes', []):
+            rel_type = rel.get('type', '')
+            if rel_type == 'BLOCKED_BY':
+                # This issue is blocked by targetIssue
+                target = rel.get('targetIssue') or {}
+                if target.get('title'):
+                    t_repo = target.get('repository', {}).get('name', '')
+                    t_num  = target.get('number', '')
+                    t_url  = target.get('url', '')
+                    native_blockers.append({'title': target['title'], 'repo': t_repo,
+                        'number': t_num, 'url': t_url})
+            elif rel_type == 'BLOCKS':
+                # sourceIssue blocks this issue — check if we are the target
+                source = rel.get('sourceIssue') or {}
+                if source.get('title') and source.get('number') != number:
+                    # This node is blocked by source
+                    s_repo = source.get('repository', {}).get('name', '')
+                    s_num  = source.get('number', '')
+                    s_url  = source.get('url', '')
+                    native_blockers.append({'title': source['title'], 'repo': s_repo,
+                        'number': s_num, 'url': s_url})
+
         if status.lower() not in DONE_STATUSES:
             items_out.append({
-                'status':      status,
-                'type':        'pr' if is_pr else 'issue',
-                'number':      number,
-                'repo':        repo,
-                'title':       c.get('title',''),
-                'url':         c.get('url',''),
-                'state':       c.get('state',''),
-                'merged_at':   c.get('mergedAt'),
-                'is_draft':    c.get('isDraft', False),
-                'body':        (c.get('body') or ''),
-                'text_fields': text_fields,
+                'status':          status,
+                'type':            'pr' if is_pr else 'issue',
+                'number':          number,
+                'repo':            repo,
+                'title':           c.get('title',''),
+                'url':             c.get('url',''),
+                'state':           c.get('state',''),
+                'merged_at':       c.get('mergedAt'),
+                'is_draft':        c.get('isDraft', False),
+                'body':            (c.get('body') or ''),
+                'text_fields':     text_fields,
+                'native_blockers': native_blockers,
             })
     boards[org] = items_out; board_counts[org] = status_counts
     print(f'  Board {org}: {len(items_out)} non-Done | {dict(sorted(status_counts.items()))}')
@@ -247,43 +285,54 @@ BOARD_URLS = {
     'unicitynetwork':  'https://github.com/orgs/unicitynetwork/projects/1/views/17',
 }
 
-def fetch_blocker_reason(org, repo, number, body='', text_fields=None):
-    """Return a short blocker reason string by checking:
+def fetch_blocker_reason(org, repo, number, body='', text_fields=None, native_blockers=None):
+    """Return a short blocker reason string by checking (in priority order):
+    0. Native GitHub relationships set via "Mark as blocked by" button
     1. Board text field named "blocked by" or "blocker"
     2. Issue/PR body for "blocked by ..." text
     3. Issue/PR comments for "blocked by ..." text
     Returns '' if nothing found.
     """
-    reasons = []
+    # 0. Native GitHub issue relationships (most reliable source)
+    if native_blockers:
+        parts = []
+        for b in native_blockers[:3]:
+            ref = f'{b["repo"]} #{b["number"]}' if b.get('repo') and b.get('number') else ''
+            title = b.get('title', '')
+            if ref and title:
+                parts.append(f'<a href="{b.get("url","")}" style="color:#791F1F">{ref} \u2014 {title}</a>')
+            elif ref:
+                parts.append(ref)
+            elif title:
+                parts.append(title)
+        if parts:
+            return '__native__' + ' \u00b7 '.join(parts)
 
     # 1. Board text field (e.g. custom "Blocked by" field on the project)
     if text_fields:
         for key in ('blocked by', 'blocker', 'blocking reason', 'blocked_by'):
-            val = text_fields.get(key, '').strip()
+            val = (text_fields or {}).get(key, '').strip()
             if val:
-                reasons.append(val[:200])
-                break
+                return val[:200]
 
     # 2. Issue/PR body
-    if body and not reasons:
+    if body:
         m = re.search(r'blocked\s+by[:\s]+([^\n]{3,200})', body, re.IGNORECASE)
         if m:
-            reasons.append(m.group(0).strip()[:200])
+            return m.group(0).strip()[:200]
 
-    # 3. Comments — fetch from REST API (issues endpoint works for both PRs and issues)
-    if not reasons:
-        comments = gh_rest(f'/repos/{org}/{repo}/issues/{number}/comments?per_page=50')
-        if isinstance(comments, list):
-            for comment in comments:
-                comment_body = comment.get('body', '') or ''
-                m = re.search(r'blocked\s+by[:\s]+([^\n]{3,200})', comment_body, re.IGNORECASE)
-                if m:
-                    author = comment.get('user', {}).get('login', '')
-                    snippet = m.group(0).strip()[:180]
-                    reasons.append(f'@{author}: {snippet}' if author else snippet)
-                    break
+    # 3. Comments — REST API
+    comments = gh_rest(f'/repos/{org}/{repo}/issues/{number}/comments?per_page=50')
+    if isinstance(comments, list):
+        for comment in comments:
+            comment_body = comment.get('body', '') or ''
+            m = re.search(r'blocked\s+by[:\s]+([^\n]{3,200})', comment_body, re.IGNORECASE)
+            if m:
+                author = comment.get('user', {}).get('login', '')
+                snippet = m.group(0).strip()[:180]
+                return f'@{author}: {snippet}' if author else snippet
 
-    return reasons[0] if reasons else ''
+    return ''
 
 blocked_items = []
 for org, items in boards.items():
@@ -293,7 +342,8 @@ for org, items in boards.items():
             reason = fetch_blocker_reason(
                 org, item['repo'], item['number'],
                 body=item.get('body', ''),
-                text_fields=item.get('text_fields', {})
+                text_fields=item.get('text_fields', {}),
+                native_blockers=item.get('native_blockers', []),
             )
             blocked_items.append({
                 'org':       label,
@@ -609,7 +659,13 @@ def render_blocked_items():
             kind   = 'PR' if item['type'] == 'pr' else 'Issue'
             draft  = ' <span class="draft-tag">Draft</span>' if item.get('is_draft') else ''
             reason = item.get('reason', '').strip()
-            reason_html = f'<div class="board-reason">\u26a0\ufe0f Blocked by: {esc(reason)}</div>' if reason else ''
+            if reason.startswith('__native__'):
+                # Native GitHub relationship — contains pre-built HTML links
+                reason_html = f'<div class="board-reason">\u26a0\ufe0f Blocked by: {reason[len("__native__"):]}</div>'
+            elif reason:
+                reason_html = f'<div class="board-reason">\u26a0\ufe0f Blocked by: {esc(reason)}</div>'
+            else:
+                reason_html = ''
             out += f'''<div class="board-row">
   <span class="chip chip-blocked">{kind}</span>
   <div class="board-body">
@@ -777,6 +833,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .board-title{font-size:12px;color:#1a1a18;line-height:1.4}
 .board-detail{font-size:11.5px;color:#666;margin-top:2px}
 .board-reason{font-size:11.5px;color:#791F1F;margin-top:4px;line-height:1.4}
+.board-reason a{color:#791F1F;font-weight:500}
 .pr-table{width:100%;border-collapse:collapse;font-size:12px}
 .pr-table th{font-size:10.5px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em;padding:6px 10px;background:#f5f4f0;border-bottom:0.5px solid rgba(0,0,0,0.1);text-align:left}
 .pr-table td{padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);vertical-align:top}
