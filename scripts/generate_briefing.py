@@ -48,20 +48,6 @@ def gh_graphql(query, variables=None):
         print(f'  graphql error: {e}')
         return {}
 
-def gh_rest(path):
-    """Simple GET against the GitHub REST API."""
-    req = urllib.request.Request(f'https://api.github.com{path}', headers={
-        'Authorization': f'token {GH_TOKEN}',
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'unicity-briefing'
-    })
-    try:
-        with urllib.request.urlopen(req) as r:
-            return json.loads(r.read())
-    except Exception as e:
-        print(f'  REST error {path}: {e}')
-        return []
-
 def claude(prompt, max_tokens=3000):
     for model in ('claude-sonnet-4-6', 'claude-haiku-4-5-20251001'):
         try:
@@ -118,7 +104,6 @@ long_prs.sort(key=lambda p: p['created_at'])
 print(f'Long-standing open PRs: {len(long_prs)}')
 
 # ── 5. Board fetch — paginated, board_keys = ALL items, boards = non-Done only
-# Fetches body, text fields, and native issueRelationships for blocker detection
 BOARD_Q = '''
 query($org: String!, $num: Int!, $cursor: String) {
   organization(login: $org) {
@@ -134,25 +119,11 @@ query($org: String!, $num: Int!, $cursor: String) {
                 name
                 field { ... on ProjectV2SingleSelectField { name } }
               }
-              ... on ProjectV2ItemFieldTextValue {
-                text
-                field { ... on ProjectV2Field { name } }
-              }
             }
           }
           content {
-            ... on PullRequest { number title url state mergedAt isDraft body repository { name } }
-            ... on Issue {
-              number title url state closedAt body
-              repository { name }
-              issueRelationships(first: 10) {
-                nodes {
-                  type
-                  sourceIssue { number title url repository { name } }
-                  targetIssue { number title url repository { name } }
-                }
-              }
-            }
+            ... on PullRequest { number title url state mergedAt isDraft repository { name } }
+            ... on Issue        { number title url state closedAt          repository { name } }
           }
         }
       }
@@ -180,7 +151,6 @@ for org in ORGS:
 
     items_out = []
     for node in all_nodes:
-        # Find status (single-select field named *status*)
         status = None
         for fv in node.get('fieldValues',{}).get('nodes',[]):
             if fv and 'name' in fv and isinstance(fv.get('field'), dict):
@@ -190,15 +160,6 @@ for org in ORGS:
             for fv in node.get('fieldValues',{}).get('nodes',[]):
                 if fv and 'name' in fv and isinstance(fv.get('field'), dict):
                     status = fv.get('name'); break
-
-        # Collect text fields (e.g. custom "Blocked by" text field on the board)
-        text_fields = {}
-        for fv in node.get('fieldValues',{}).get('nodes',[]):
-            if fv and 'text' in fv and isinstance(fv.get('field'), dict):
-                fname = fv['field'].get('name', '').strip()
-                if fname and fv['text']:
-                    text_fields[fname.lower()] = fv['text']
-
         c = node.get('content')
         if not c: continue
         repo = c.get('repository',{}).get('name',''); number = c.get('number')
@@ -206,47 +167,14 @@ for org in ORGS:
         status = status or 'No Status'
         status_counts[status] = status_counts.get(status, 0) + 1
         if repo and number: board_keys.add((repo, number))
-
-        # Extract native GitHub relationships (Issues only — "Mark as blocked by")
-        # type BLOCKS means: sourceIssue blocks targetIssue
-        # type BLOCKED_BY means: sourceIssue is blocked by targetIssue
-        native_blockers = []
-        for rel in (c.get('issueRelationships') or {}).get('nodes', []):
-            rel_type = rel.get('type', '')
-            if rel_type == 'BLOCKED_BY':
-                # This issue is blocked by targetIssue
-                target = rel.get('targetIssue') or {}
-                if target.get('title'):
-                    t_repo = target.get('repository', {}).get('name', '')
-                    t_num  = target.get('number', '')
-                    t_url  = target.get('url', '')
-                    native_blockers.append({'title': target['title'], 'repo': t_repo,
-                        'number': t_num, 'url': t_url})
-            elif rel_type == 'BLOCKS':
-                # sourceIssue blocks this issue — check if we are the target
-                source = rel.get('sourceIssue') or {}
-                if source.get('title') and source.get('number') != number:
-                    # This node is blocked by source
-                    s_repo = source.get('repository', {}).get('name', '')
-                    s_num  = source.get('number', '')
-                    s_url  = source.get('url', '')
-                    native_blockers.append({'title': source['title'], 'repo': s_repo,
-                        'number': s_num, 'url': s_url})
-
         if status.lower() not in DONE_STATUSES:
             items_out.append({
-                'status':          status,
-                'type':            'pr' if is_pr else 'issue',
-                'number':          number,
-                'repo':            repo,
-                'title':           c.get('title',''),
-                'url':             c.get('url',''),
-                'state':           c.get('state',''),
-                'merged_at':       c.get('mergedAt'),
-                'is_draft':        c.get('isDraft', False),
-                'body':            (c.get('body') or ''),
-                'text_fields':     text_fields,
-                'native_blockers': native_blockers,
+                'status':    status,
+                'type':      'pr' if is_pr else 'issue',
+                'number':    number, 'repo': repo,
+                'title':     c.get('title',''), 'url': c.get('url',''),
+                'state':     c.get('state',''), 'merged_at': c.get('mergedAt'),
+                'is_draft':  c.get('isDraft', False),
             })
     boards[org] = items_out; board_counts[org] = status_counts
     print(f'  Board {org}: {len(items_out)} non-Done | {dict(sorted(status_counts.items()))}')
@@ -277,74 +205,18 @@ for pr in long_prs:
 
 print(f'Board issues: {len(board_issues)}')
 
-# ── 6b. Blocked items — collect + fetch blocker reasons ──────────────────────
+# ── 6b. Blocked items — simple list from board status column only
 BLOCKED_STATUSES = {'blocked', 'blocking'}
 BOARD_URLS = {
     'unicity-astrid':  'https://github.com/orgs/unicity-astrid/projects/1/views/1',
     'unicity-sphere':  'https://github.com/orgs/unicity-sphere/projects/1/views/1',
     'unicitynetwork':  'https://github.com/orgs/unicitynetwork/projects/1/views/17',
 }
-
-def fetch_blocker_reason(org, repo, number, body='', text_fields=None, native_blockers=None):
-    """Return a short blocker reason string by checking (in priority order):
-    0. Native GitHub relationships set via "Mark as blocked by" button
-    1. Board text field named "blocked by" or "blocker"
-    2. Issue/PR body for "blocked by ..." text
-    3. Issue/PR comments for "blocked by ..." text
-    Returns '' if nothing found.
-    """
-    # 0. Native GitHub issue relationships (most reliable source)
-    if native_blockers:
-        parts = []
-        for b in native_blockers[:3]:
-            ref = f'{b["repo"]} #{b["number"]}' if b.get('repo') and b.get('number') else ''
-            title = b.get('title', '')
-            if ref and title:
-                parts.append(f'<a href="{b.get("url","")}" style="color:#791F1F">{ref} \u2014 {title}</a>')
-            elif ref:
-                parts.append(ref)
-            elif title:
-                parts.append(title)
-        if parts:
-            return '__native__' + ' \u00b7 '.join(parts)
-
-    # 1. Board text field (e.g. custom "Blocked by" field on the project)
-    if text_fields:
-        for key in ('blocked by', 'blocker', 'blocking reason', 'blocked_by'):
-            val = (text_fields or {}).get(key, '').strip()
-            if val:
-                return val[:200]
-
-    # 2. Issue/PR body
-    if body:
-        m = re.search(r'blocked\s+by[:\s]+([^\n]{3,200})', body, re.IGNORECASE)
-        if m:
-            return m.group(0).strip()[:200]
-
-    # 3. Comments — REST API
-    comments = gh_rest(f'/repos/{org}/{repo}/issues/{number}/comments?per_page=50')
-    if isinstance(comments, list):
-        for comment in comments:
-            comment_body = comment.get('body', '') or ''
-            m = re.search(r'blocked\s+by[:\s]+([^\n]{3,200})', comment_body, re.IGNORECASE)
-            if m:
-                author = comment.get('user', {}).get('login', '')
-                snippet = m.group(0).strip()[:180]
-                return f'@{author}: {snippet}' if author else snippet
-
-    return ''
-
 blocked_items = []
 for org, items in boards.items():
     label = ORG_LABELS.get(org, org)
     for item in items:
         if item['status'].lower() in BLOCKED_STATUSES:
-            reason = fetch_blocker_reason(
-                org, item['repo'], item['number'],
-                body=item.get('body', ''),
-                text_fields=item.get('text_fields', {}),
-                native_blockers=item.get('native_blockers', []),
-            )
             blocked_items.append({
                 'org':       label,
                 'board_url': BOARD_URLS.get(org, ''),
@@ -354,7 +226,6 @@ for org, items in boards.items():
                 'title':     item['title'],
                 'url':       item['url'],
                 'is_draft':  item.get('is_draft', False),
-                'reason':    reason,
             })
 
 print(f'Blocked items: {len(blocked_items)}')
@@ -415,11 +286,8 @@ def member_summary_lines():
     lines = []
     for member in MEMBERS:
         d = member_data[member]
-        merged = d['authored_merged']
-        opened = d['authored_open']
-        inv    = d['involved']
-        if not merged and not opened and not inv:
-            continue
+        merged = d['authored_merged']; opened = d['authored_open']; inv = d['involved']
+        if not merged and not opened and not inv: continue
         merged_items = ', '.join(f'{pr["repository_url"].split("/")[-1]} #{pr["number"]} "{pr["title"]}"' for pr in merged[:15])
         open_items   = ', '.join(f'{pr["repository_url"].split("/")[-1]} #{pr["number"]} "{pr["title"]}"' for pr in opened[:6])
         inv_items    = ', '.join(f'{it["repository_url"].split("/")[-1]} #{it["number"]} "{it["title"]}"' for it in inv[:6])
@@ -449,23 +317,17 @@ BOARD ISSUES:
 
 Task 1 — For each active team member write a mc_detail narrative (2-3 sentences max, specific: mention PR numbers, repo names, what they merged, what's open, what they reviewed/commented on). Also write 2-4 short tags.
 
-Example good narrative for joshuajbouw: "35 PRs merged: sdk-rust #7 + 7 capsule doc PRs + v0.3.0 release + 16 sdk-bump PRs + 7 overnight fix PRs. 4 PRs open this morning targeting state support and richer capsule memory/identity."
+Example good narrative: "35 PRs merged: sdk-rust #7 + 7 capsule doc PRs + v0.3.0 release + 16 sdk-bump PRs. 4 PRs open targeting state support and richer capsule memory/identity."
 Example tags: ["35 merged", "sdk-rust v0.3.0", "all capsule repos"]
 
-Task 2 — Write 3-6 "Needs attention" items: specific actionable items from long PRs and board issues. Each item should name the exact PR/issue, its age, who owns it, what the blocker is, what action is needed. Be direct and specific like a tech lead reviewing the board.
-
-Example: "sphere-sdk #87 TOCTOU race fix — 5 days, 2093 tests, critical, no reviewer, not on board"
+Task 2 — Write 3-6 "Needs attention" items from long PRs and board issues. Name exact PR/issue, age, owner, blocker, action needed.
 Badge options: "review needed", "decision needed", "close or revive", "assign reviewer", "unblock", "critical"
 Badge colors: "purple", "amber", "blue", "red", "green"
 
 Respond ONLY with valid JSON no fences:
 {{
-  "member_narratives": {{
-    "username": {{"detail": "...", "tags": ["tag1", "tag2"]}}
-  }},
-  "needs_attention": [
-    {{"title": "...", "badge": "...", "badge_color": "amber", "detail": ""}}
-  ]
+  "member_narratives": {{"username": {{"detail": "...", "tags": ["tag1", "tag2"]}}}},
+  "needs_attention": [{{"title": "...", "badge": "...", "badge_color": "amber", "detail": ""}}]
 }}"""
 
 raw2 = claude(narrative_prompt, max_tokens=4000)
@@ -473,11 +335,10 @@ try:
     enriched = json.loads(raw2)
     member_narratives = enriched.get('member_narratives', {})
     needs_attention   = enriched.get('needs_attention', [])
-    print(f'Enrichment OK: {len(member_narratives)} member narratives, {len(needs_attention)} attention items')
+    print(f'Enrichment OK: {len(member_narratives)} narratives, {len(needs_attention)} attention items')
 except Exception as e:
     print(f'Enrichment parse error: {e}')
-    member_narratives = {}
-    needs_attention   = []
+    member_narratives = {}; needs_attention = []
 
 # ── 10. HTML helpers ──────────────────────────────────────────────────────────
 def esc(s):
@@ -525,7 +386,6 @@ def build_timeline(prs):
             if grp: groups.append(grp)
             grp, cur = [(ts, pr)], ts
     if grp: groups.append(grp)
-
     out = '<div class="timeline">'
     for group in groups:
         times = [t for t,_ in group]
@@ -582,45 +442,37 @@ def board_status_line(org):
 def render_board_section():
     if not board_issues and not any(board_counts.values()):
         return '<p style="font-size:13px;color:#888;padding:8px 0">No board issues detected \u2014 all active items correctly tracked.</p>'
-
     SEV_LABELS = {
         'stale':    ('\u26a0 STALE STATUS', '#D97706'),
         'nostatus': ('\u2298 NO STATUS',    '#3C3489'),
         'missing':  ('\u2717 NOT ON BOARD', '#791F1F'),
     }
     CHIP_CLASS = {'stale': 'chip-stale', 'nostatus': 'chip-nostatus', 'missing': 'chip-miss'}
-
     org_order = ['Astrid', 'Sphere', 'Unicity Network']
     by_org = {}
     for issue in board_issues[:40]:
         by_org.setdefault(issue['org'], []).append(issue)
-
-    org_keys = {'Astrid': 'unicity-astrid', 'Sphere': 'unicity-sphere', 'Unicity Network': 'unicitynetwork'}
+    org_keys  = {'Astrid': 'unicity-astrid', 'Sphere': 'unicity-sphere', 'Unicity Network': 'unicitynetwork'}
     board_urls = {
         'Astrid':          'https://github.com/orgs/unicity-astrid/projects/1/views/1',
         'Sphere':          'https://github.com/orgs/unicity-sphere/projects/1/views/1',
         'Unicity Network': 'https://github.com/orgs/unicitynetwork/projects/1/views/17',
     }
-
     out = ''
     for org_label in org_order:
-        org_key = org_keys.get(org_label, '')
+        org_key     = org_keys.get(org_label, '')
         status_line = board_status_line(org_key)
         board_url   = board_urls.get(org_label, '')
         org_issues  = by_org.get(org_label, [])
-
-        link_html = f' <a href="{board_url}" style="font-size:11px;color:#378ADD;font-family:\'SF Mono\',monospace;text-decoration:none">board \u2197</a>' if board_url else ''
+        link_html   = f' <a href="{board_url}" style="font-size:11px;color:#378ADD;font-family:\'SF Mono\',monospace;text-decoration:none">board \u2197</a>' if board_url else ''
         status_html = f'<span style="font-size:11px;color:#888;margin-left:8px">{status_line}</span>' if status_line else ''
         out += f'<p class="section-title">{esc(org_label)}{link_html}{status_html}</p>'
-
         if not org_issues:
             out += '<p style="font-size:12px;color:#888;margin-bottom:10px">\u2713 No issues detected.</p>'
             continue
-
         by_sev = {}
         for issue in org_issues:
             by_sev.setdefault(issue['sev'], []).append(issue)
-
         for sev in ('stale', 'nostatus', 'missing'):
             items = by_sev.get(sev, [])
             if not items: continue
@@ -635,18 +487,14 @@ def render_board_section():
     <div class="board-detail"><code>{esc(issue['ref'])}</code> \u00b7 {esc(issue['msg'])}</div>
   </div></div>'''
             out += '</div>'
-
     return out
 
 def render_blocked_items():
-    if not blocked_items:
-        return ''
-
+    if not blocked_items: return ''
     org_order = ['Astrid', 'Sphere', 'Unicity Network']
     by_org = {}
     for item in blocked_items:
         by_org.setdefault(item['org'], []).append(item)
-
     out = ''
     for org_label in org_order:
         items = by_org.get(org_label, [])
@@ -656,54 +504,37 @@ def render_blocked_items():
         out += f'<p class="section-title">{esc(org_label)}{link_html}</p>'
         out += '<div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">\u26d4 BLOCKED</span></div>'
         for item in items:
-            kind   = 'PR' if item['type'] == 'pr' else 'Issue'
-            draft  = ' <span class="draft-tag">Draft</span>' if item.get('is_draft') else ''
-            reason = item.get('reason', '').strip()
-            if reason.startswith('__native__'):
-                # Native GitHub relationship — contains pre-built HTML links
-                reason_html = f'<div class="board-reason">\u26a0\ufe0f Blocked by: {reason[len("__native__"):]}</div>'
-            elif reason:
-                reason_html = f'<div class="board-reason">\u26a0\ufe0f Blocked by: {esc(reason)}</div>'
-            else:
-                reason_html = ''
+            kind  = 'PR' if item['type'] == 'pr' else 'Issue'
+            draft = ' <span class="draft-tag">Draft</span>' if item.get('is_draft') else ''
             out += f'''<div class="board-row">
   <span class="chip chip-blocked">{kind}</span>
   <div class="board-body">
     <div class="board-title"><a href="{esc(item['url'])}" class="pr-link">{esc(item['title'])}</a>{draft}</div>
     <div class="board-detail"><code>{esc(item['repo'])} #{item['number']}</code></div>
-    {reason_html}
   </div></div>'''
         out += '</div>'
-
     return out
 
 def render_needs_attention():
-    if not needs_attention:
-        return ''
+    if not needs_attention: return ''
     BADGE_COLORS = {
-        'purple': ('background:#EEEDFE;color:#3C3489'),
-        'amber':  ('background:#FAEEDA;color:#633806'),
-        'blue':   ('background:#E6F1FB;color:#0C447C'),
-        'red':    ('background:#FCEBEB;color:#791F1F'),
-        'green':  ('background:#E1F5EE;color:#085041'),
+        'purple': 'background:#EEEDFE;color:#3C3489', 'amber': 'background:#FAEEDA;color:#633806',
+        'blue':   'background:#E6F1FB;color:#0C447C', 'red':   'background:#FCEBEB;color:#791F1F',
+        'green':  'background:#E1F5EE;color:#085041',
     }
-    DOT_COLORS = {
-        'purple': '#7F77DD', 'amber': '#EF9F27', 'blue': '#378ADD',
-        'red': '#E24B4A', 'green': '#1D9E75',
-    }
+    DOT_COLORS = {'purple':'#7F77DD','amber':'#EF9F27','blue':'#378ADD','red':'#E24B4A','green':'#1D9E75'}
     out = ''
     for item in needs_attention[:6]:
         color     = item.get('badge_color', 'amber')
         badge_css = BADGE_COLORS.get(color, BADGE_COLORS['amber'])
         dot_color = DOT_COLORS.get(color, '#EF9F27')
-        badge_txt = esc(item.get('badge',''))
         detail    = esc(item.get('detail',''))
         out += f'''<div class="event-row">
   <div class="event-dot" style="background:{dot_color}"></div>
   <div class="event-body">
     <div class="event-title">{esc(item.get("title",""))}</div>
     {f'<div class="event-detail">{detail}</div>' if detail else ''}
-    <div class="event-meta"><span class="badge" style="{badge_css}">{badge_txt}</span></div>
+    <div class="event-meta"><span class="badge" style="{badge_css}">{esc(item.get("badge",""))}</span></div>
   </div></div>'''
     return out
 
@@ -711,19 +542,13 @@ def render_member_cards():
     active, inactive = [], []
     for member in MEMBERS:
         d = member_data[member]
-        total = len(d['authored_merged']) + len(d['authored_open']) + len(d['involved'])
-        if total > 0: active.append(member)
-        else:         inactive.append(member)
-
+        if len(d['authored_merged']) + len(d['authored_open']) + len(d['involved']) > 0: active.append(member)
+        else: inactive.append(member)
     out = '<div class="member-grid">'
     for member in active:
-        d    = member_data[member]
-        name = MEMBER_NAMES.get(member, '')
+        d    = member_data[member]; name = MEMBER_NAMES.get(member, '')
         narr = member_narratives.get(member, {})
-
-        detail = narr.get('detail', '')
-        tags   = narr.get('tags', [])
-
+        detail = narr.get('detail', ''); tags = narr.get('tags', [])
         if not detail:
             n_m = len(d['authored_merged']); n_o = len(d['authored_open']); n_i = len(d['involved'])
             parts = []
@@ -731,14 +556,12 @@ def render_member_cards():
             if n_o: parts.append(f'{n_o} open PR{"s" if n_o!=1 else ""}')
             if n_i: parts.append(f'involved in {n_i} item{"s" if n_i!=1 else ""}')
             detail = ', '.join(parts)
-
         if not tags:
             repos = set()
             for item in d['authored_merged'] + d['authored_open'] + d['involved']:
                 r = item.get('repository_url','').split('/')[-1]
                 if r: repos.add(r)
             tags = sorted(repos)[:4]
-
         tags_html = ''.join(f'<span class="tag">{esc(t)}</span>' for t in tags[:5])
         out += f'''<div class="member-card">
   <div class="mc-name">{esc(name) + " " if name else ""}<span class="mc-handle">@{esc(member)}</span></div>
@@ -746,11 +569,9 @@ def render_member_cards():
   <div style="margin-top:6px">{tags_html}</div>
 </div>'''
     out += '</div>'
-
     if inactive:
         quiet = ', '.join(f'@{m}' for m in inactive)
         out += f'<div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">{esc(quiet)}</p></div>'
-
     out += '''<div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments \u2014 not just authored items.</div>'''
@@ -808,7 +629,6 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .org-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .section-title{font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
 .section-title:first-child{margin-top:0}
-.divider{border:none;border-top:0.5px solid rgba(0,0,0,0.08);margin:12px 0}
 .timeline{position:relative;padding-left:14px}
 .timeline::before{content:'';position:absolute;left:3px;top:6px;bottom:6px;width:1px;background:rgba(0,0,0,0.1)}
 .tl-item{position:relative;padding:3px 0 4px 12px;font-size:12px;color:#444;line-height:1.55}
@@ -825,15 +645,11 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 .board-row{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border-bottom:0.5px solid rgba(0,0,0,0.06);font-size:12px}
 .board-row:last-child{border-bottom:none}
 .chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0;min-width:72px;text-align:center;margin-top:1px}
-.chip-stale{background:#FAEEDA;color:#633806}
-.chip-nostatus{background:#EEEDFE;color:#3C3489}
-.chip-miss{background:#FCEBEB;color:#791F1F}
-.chip-blocked{background:#FCEBEB;color:#791F1F}
+.chip-stale{background:#FAEEDA;color:#633806}.chip-nostatus{background:#EEEDFE;color:#3C3489}
+.chip-miss{background:#FCEBEB;color:#791F1F}.chip-blocked{background:#FCEBEB;color:#791F1F}
 .board-body{flex:1}
 .board-title{font-size:12px;color:#1a1a18;line-height:1.4}
 .board-detail{font-size:11.5px;color:#666;margin-top:2px}
-.board-reason{font-size:11.5px;color:#791F1F;margin-top:4px;line-height:1.4}
-.board-reason a{color:#791F1F;font-weight:500}
 .pr-table{width:100%;border-collapse:collapse;font-size:12px}
 .pr-table th{font-size:10.5px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.04em;padding:6px 10px;background:#f5f4f0;border-bottom:0.5px solid rgba(0,0,0,0.1);text-align:left}
 .pr-table td{padding:8px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);vertical-align:top}
