@@ -81,8 +81,8 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <h2>Unicity project &mdash; daily brief</h2>
   <p>Thursday, 9 April 2026</p>
   <div class="header-meta">
-    <span class="window-badge">Coverage: Wednesday, 8 April 2026 &middot; PRs + direct commits + branch events</span>
-    <span class="updated-badge">Updated: 9 April 2026, 12:21 UTC</span>
+    <span class="window-badge">Coverage: Wednesday, 8 April 2026 &middot; GitHub API (author + involves sweep)</span>
+    <span class="updated-badge">Updated: 9 April 2026, 12:36 UTC</span>
     
   </div>
 </div>
@@ -96,32 +96,27 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 </div>
 
 <div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">0 PRs merged</span></div><p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p></div>
-<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">4 PRs merged · 1 new branch</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
+<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">4 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Points Economy &amp; Project Levels Rolled Out</div>
-    <div class="event-detail">Three PRs landed the points economy and project levels feature across both the quest and dev environments: sphere-dev #4 and sphere-quest #36 introduced the full 'Feat/points economy project levels' implementation, while sphere-quest #37 patched a related type gap by adding 'levelId' and 'budgetTopUp' to the AdminProject type. The type fix in #37 likely addressed a runtime or compile-time issue surfaced during integration of the new levels logic. Together these PRs establish the foundational data model and economy mechanics for project-level progression. This is a significant feature milestone for the Sphere product.</div>
-    <div class="event-meta"><code>sphere-quest, sphere-dev</code></div>
+    <div class="event-title">Points Economy and Project Levels Integration</div>
+    <div class="event-detail">PRs #4 (sphere-dev) and #36 (sphere-quest) deliver the points economy project levels feature across both environments. The AdminProject type was extended in PR #37 (sphere-quest) with two new fields, levelId and budgetTopUp, to support level-aware project configuration. Together these changes wire the data model to the broader points economy system, enabling projects to carry level metadata and budget top-up information. This lays the groundwork for tiered project progression and economy-driven budget management within the Sphere platform.</div>
+    <div class="event-meta"><code>sphere-dev, sphere-quest</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">External APIs Page Added to Quest</div>
-    <div class="event-detail">sphere-quest #35 merged the 'Feat/external apis page' feature, introducing a dedicated UI page for managing or displaying external API integrations. This expands the Sphere admin or user-facing surface to expose third-party connectivity in a structured way. It likely complements the points economy work by enabling project-level API configurations to be surfaced and managed. The addition keeps Sphere's admin tooling growing in breadth alongside its backend feature set.</div>
+    <div class="event-title">External APIs Management Page</div>
+    <div class="event-detail">PR #35 (sphere-quest) introduces a dedicated External APIs page to the Sphere interface. This surface gives administrators or users a centralised location to view and manage third-party API integrations connected to the platform. Adding this page improves operational visibility over external dependencies and reduces the need for manual configuration outside the UI.</div>
     <div class="event-meta"><code>sphere-quest</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">WebRTC Telco Calls Branch Created</div>
-    <div class="event-detail">A new branch 'feat/telco-webrtc-calls' was opened by @vrogojin on the sphere repo, signalling the start of work on WebRTC-based telephony calling features. No code has merged yet, but the branch creation marks an intentional expansion into real-time communications territory. This could introduce peer-to-peer or SFU-backed call flows into the Sphere platform. It is one to watch for upcoming PRs as the feature takes shape.</div>
-    <div class="event-meta"><code>sphere</code></div>
   </div></div></div>
-<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">8 PRs merged · 7 new branches</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">8 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">SSL Manager Alias Proxy Stabilised &amp; Hardened</div>
-    <div class="event-detail">A rapid sequence of six ssl-manager PRs (#6 through #11) progressively built up and then stabilised a new nginx alias proxy mechanism. Work began with #9 refactoring alias registration to operate at the app HTTPS port and removing the old TLS proxy startup, followed by #8 adding a 10-second TLS handshake timeout to prevent thread exhaustion caused by health check floods. Crash resilience was then addressed in two passes: #7 introduced a bash supervisor wrapper for SIGSEGV recovery, and #6 added automatic restart on any crash. PR #10 generalised the approach by having ssl-setup auto-generate nginx alias blocks, and #11 fixed a final gap by ensuring the alias proxy correctly forwards to the primary HTTPS endpoint for full API access. The matching branches (fix/alias-proxy-auto-restart, fix/alias-proxy-shell-supervisor, fix/alias-proxy-handshake-timeout, refactor/nginx-alias-instead-of-proxy, feat/generic-nginx-alias-blocks) track each incremental step and are all now merged.</div>
-    <div class="event-meta"><code>ssl-manager</code></div>
+    <div class="event-title">Generic Nginx Alias Block Generation in SSL Manager</div>
+    <div class="event-detail">PRs #10 and #9 (ssl-manager) refactor the SSL setup process to generate generic nginx alias blocks automatically and register those aliases directly at the application HTTPS port, removing the previous TLS proxy startup step entirely. PR #5 (ipfs-storage) and PR #4 (ipfs-storage) follow on by replacing ipfs-storage's bespoke TLS proxy and nginx server block configuration with the new ssl-manager generic alias config, consolidating proxy logic in one place. PR #11 (ssl-manager) fixes a gap where the alias proxy was not forwarding the full API surface, ensuring all HTTPS endpoints are reachable through the aliased route. This refactoring reduces duplication across services and gives every aliased service a consistent, centrally managed nginx configuration.</div>
+    <div class="event-meta"><code>ssl-manager, ipfs-storage</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">IPFS Storage Migrated to SSL Manager Nginx Aliases</div>
-    <div class="event-detail">Two ipfs-storage PRs (#4 and #5) migrated the service away from its own TLS proxy setup toward the centralised nginx alias blocks now provided by ssl-manager. PR #4 (branch refactor/nginx-alias-blocks) replaced the existing TLS proxy server blocks with nginx alias server blocks, aligning ipfs-storage with the new architecture. PR #5 (branch refactor/use-ssl-manager-alias-nginx) completed the transition by refactoring to consume the generic alias nginx config generated by ssl-manager rather than maintaining any local variant. This reduces duplication and ensures ipfs-storage benefits automatically from any future ssl-manager improvements. The two PRs together make the storage layer a clean consumer of the shared SSL infrastructure.</div>
-    <div class="event-meta"><code>ipfs-storage</code></div>
+    <div class="event-title">Alias Proxy Stability and Crash Recovery</div>
+    <div class="event-detail">PRs #6, #7, and #8 (ssl-manager) address reliability problems in the alias proxy process. PR #6 introduces automatic restart behaviour when the alias proxy crashes, and PR #7 wraps this in a dedicated bash wrapper that specifically handles SIGSEGV signals to ensure the process recovers from segmentation faults cleanly. PR #8 adds a 10-second TLS handshake timeout to prevent long-lived stalled connections from exhausting available threads, particularly under repeated health check traffic. Collectively these fixes make the alias proxy significantly more resilient against both sudden crashes and slow-drip resource exhaustion scenarios.</div>
+    <div class="event-meta"><code>ssl-manager</code></div>
   </div></div><p class="section-title" style="margin-top:14px">Timeline — Wednesday, 8 April 2026</p><div class="timeline"><div class="tl-item tl-fix"><span class="tl-time">Wed 13:46</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/6" class="tl-link">ssl-manager #6</a> — fix: auto-restart alias proxy on crash</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 14:03</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/7" class="tl-link">ssl-manager #7</a> — fix: bash wrapper for alias proxy crash recovery (SIGSEGV)</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 14:13</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/8" class="tl-link">ssl-manager #8</a> — fix: 10s TLS handshake timeout prevents thread exhaustion from health checks</span></div><div class="tl-item tl-refactor"><span class="tl-time">Wed 16:49</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/9" class="tl-link">ssl-manager #9</a> (refactor: register aliases at app HTTPS port, remove TLS proxy startup) &middot; <a href="https://github.com/unicitynetwork/ipfs-storage/pull/4" class="tl-link">ipfs-storage #4</a> (refactor: nginx alias server blocks replace TLS proxy)</span></div><div class="tl-item tl-feat"><span class="tl-time">Wed 17:18–17:19</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/10" class="tl-link">ssl-manager #10</a> (feat: generic nginx alias blocks generated by ssl-setup) &middot; <a href="https://github.com/unicitynetwork/ipfs-storage/pull/5" class="tl-link">ipfs-storage #5</a> (refactor: use ssl-manager generic alias nginx config)</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 17:42</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/11" class="tl-link">ssl-manager #11</a> — fix: alias proxy to primary HTTPS for full API access</span></div></div></div>
 
 <div class="card" style="border-color:#E24B4A">
@@ -264,30 +259,65 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
     <div class="board-detail"><code>.github #12</code></div>
   </div></div></div></div>
 
-
+<div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div><div class="event-row">
+  <div class="event-dot" style="background:#E24B4A"></div>
+  <div class="event-body">
+    <div class="event-title">state-transition-sdk-java #26 — Java SDK cucumber test amendments (170 days open)</div>
+    <div class="event-detail">WIP PR by @b3y0urs3lf has been open 170 days with no board tracking. At this age it is almost certainly stale or superseded. Owner or a lead should assess whether the work is still relevant, close it, or rebase and assign a reviewer to close it out.</div>
+    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#E24B4A"></div>
+  <div class="event-body">
+    <div class="event-title">state-transition-sdk-java #43 &amp; #44 — Rename state id / user-defined mint reasons (128 days open)</div>
+    <div class="event-detail">Two long-lived PRs by @martti007 with no board tracking. Both predate the newer #53/#54 PRs from the same author, raising the question of whether they are superseded. A decision is needed on whether to merge, close, or consolidate with the more recent work before further drift occurs.</div>
+    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#EF9F27"></div>
+  <div class="event-body">
+    <div class="event-title">bft-core #11 — EVM (80 days open, untracked)</div>
+    <div class="event-detail">EVM integration PR by @MastaP has been open 80 days and is not tracked on any board. Given MastaP is currently active on testnet infra PRs, a quick sync is needed to determine current priority, whether the EVM work is blocked on testnet readiness, and who should be assigned to review.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">decision needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">sphere-sdk #87 — TOCTOU race fix in concurrent send() (27 days open, untracked)</div>
+    <div class="event-detail">A concurrency correctness fix by @vrogojin that has sat unreviewed for 27 days despite vrogojin being very active this window. The PR is not on any board. This is a correctness/safety issue (race condition), so it should be prioritised for review and board assignment promptly.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#EF9F27"></div>
+  <div class="event-body">
+    <div class="event-title">rfcs #20–#24 — Capsule/Astrid RFC cluster (16–17 days open, all untracked)</div>
+    <div class="event-detail">Five architectural RFCs by @joshuajbouw (Capsule interface, Distro system, Host ABI, Interceptor middleware, XDG VFS schemes) have accumulated over the past 17 days with no board tracking and no apparent reviewers assigned. These are foundational design decisions for the Astrid project; they need designated reviewers and a structured review timeline before implementation work diverges further.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">decision needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Board hygiene — 2 stale board items + 19 missing PRs</div>
+    <div class="event-detail">sphere-sdk #90 and aggregator-go #51 have merged PRs but remain open on the board (Backlog / Todo) and should be closed. Additionally, 19 open PRs across Unicity Network, Sphere, and Astrid projects have no board representation at all. A board grooming pass is overdue to ensure visibility and ownership across all active work.</div>
+    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">assign reviewer</span></div>
+  </div></div></div>
 
 <div class="card" style="border-color:#1D9E75">
-  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; PRs, direct commits, branch events</span></div>
+  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
   <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
-  <div class="mc-detail">2 open PRs, involved in 1 item</div>
-  <div style="margin-top:6px"><span class="tag">bft-ansible</span><span class="tag">bft-terraform</span><span class="tag">unicity-node</span></div>
+  <div class="mc-detail">Two open PRs in flight: bft-ansible #1 adding testnet environment with sharded aggregator deployment, and bft-terraform #1 provisioning the eu-central-1 testnet environment. Also involved as reviewer/contributor on unicity-node #3 (BFT snapshots) alongside lploom.</div>
+  <div style="margin-top:6px"><span class="tag">2 open PRs</span><span class="tag">testnet infra</span><span class="tag">bft-ansible + bft-terraform</span><span class="tag">BFT snapshots</span></div>
 </div><div class="member-card">
   <div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div>
-  <div class="mc-detail">4 PRs merged</div>
-  <div style="margin-top:6px"><span class="tag">sphere-dev</span><span class="tag">sphere-quest</span></div>
+  <div class="mc-detail">Productive window with 4 PRs merged across sphere-quest and sphere-dev: points economy project levels landed in both repos (sphere-quest #36, sphere-dev #4), plus an external APIs page (sphere-quest #35) and an AdminProject type fix adding levelId and budgetTopUp (sphere-quest #37).</div>
+  <div style="margin-top:6px"><span class="tag">4 merged</span><span class="tag">points economy</span><span class="tag">sphere-quest + sphere-dev</span><span class="tag">AdminProject fix</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@lploom</span></div>
-  <div class="mc-detail">1 open PR</div>
-  <div style="margin-top:6px"><span class="tag">unicity-node</span></div>
+  <div class="mc-detail">One open PR: unicity-node #3 (BFT snapshots), currently in review with MastaP also involved. No merges this window.</div>
+  <div style="margin-top:6px"><span class="tag">1 open PR</span><span class="tag">BFT snapshots</span><span class="tag">unicity-node</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@vrogojin</span></div>
-  <div class="mc-detail">8 PRs merged, 8 new branches</div>
-  <div style="margin-top:6px"><span class="tag">ipfs-storage</span><span class="tag">sphere</span><span class="tag">ssl-manager</span></div>
+  <div class="mc-detail">High-output window with 6 PRs merged across ssl-manager and ipfs-storage: resolved crash recovery and SIGSEGV issues in the alias proxy (ssl-manager #6, #7), fixed TLS handshake timeout (ssl-manager #8), refactored nginx alias architecture removing the TLS proxy (ssl-manager #9, ipfs-storage #4), added generic alias block generation (ssl-manager #10, ipfs-storage #5), and finalized full API access via HTTPS alias (ssl-manager #11).</div>
+  <div style="margin-top:6px"><span class="tag">6 merged</span><span class="tag">ssl-manager + ipfs-storage</span><span class="tag">nginx alias refactor</span><span class="tag">crash recovery fixes</span></div>
 </div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@joshuajbouw, @igmahl, @ristik, @martti007, @jvsteiner, @ahtotruu, @b3y0urs3lf, @jait91, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
-<code>involves:USERNAME</code> for every team member plus per-user event streams
-(<code>/users/{member}/events</code> — authenticated, includes private repos).
-Catches direct commits, new branch creation, reviews, comments, and assignments.</div>
+<code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
+Catches closes, reviews, comments, and assignments — not just authored items.</div>
 </div>
 
 <div class="card" style="border-color:#E24B4A">
@@ -307,7 +337,7 @@ Catches direct commits, new branch creation, reviews, comments, and assignments.
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/44" class="pr-link">Add user defined mint reasons</a>
     <div class="pr-repo">state-transition-sdk-java #44</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-high">79d</span></td>
+  <td><span class="age-pill age-high">80d</span></td>
   <td><a href="https://github.com/unicitynetwork/bft-core/pull/11" class="pr-link">EVM</a><span class="draft-tag">Draft</span>
     <div class="pr-repo">bft-core #11</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
