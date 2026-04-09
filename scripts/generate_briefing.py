@@ -21,9 +21,6 @@ report_date  = now.strftime('%A, %-d %B %Y')
 generated_at = now.strftime('%-d %B %Y, %H:%M UTC')
 print(f'Window: {date_range} ({window_label})')
 
-ws_dt = datetime.strptime(window_start, '%Y-%m-%d').replace(tzinfo=timezone.utc)
-we_dt = datetime.strptime(window_end, '%Y-%m-%d').replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
-
 # ── 2. Helpers ────────────────────────────────────────────────────────────────
 def gh_search(q, per_page=50):
     url = 'https://api.github.com/search/issues?q=' + urllib.parse.quote(q) + f'&per_page={per_page}'
@@ -37,19 +34,6 @@ def gh_search(q, per_page=50):
             return json.loads(r.read()).get('items', [])
     except Exception as e:
         print(f'  search error: {e} | {q[:80]}')
-        return []
-
-def gh_get(path):
-    req = urllib.request.Request(f'https://api.github.com{path}', headers={
-        'Authorization': f'token {GH_TOKEN}',
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'unicity-briefing'
-    })
-    try:
-        with urllib.request.urlopen(req) as r:
-            return json.loads(r.read())
-    except Exception as e:
-        print(f'  gh_get error {path[:80]}: {e}')
         return []
 
 def gh_graphql(query, variables=None):
@@ -119,7 +103,7 @@ for org in ORGS:
 long_prs.sort(key=lambda p: p['created_at'])
 print(f'Long-standing open PRs: {len(long_prs)}')
 
-# ── 5. Board fetch ────────────────────────────────────────────────────────────
+# ── 5. Board fetch — paginated, board_keys = ALL items, boards = non-Done only
 BOARD_Q = '''
 query($org: String!, $num: Int!, $cursor: String) {
   organization(login: $org) {
@@ -185,10 +169,12 @@ for org in ORGS:
         if repo and number: board_keys.add((repo, number))
         if status.lower() not in DONE_STATUSES:
             items_out.append({
-                'status': status, 'type': 'pr' if is_pr else 'issue',
-                'number': number, 'repo': repo, 'title': c.get('title',''),
-                'url': c.get('url',''), 'state': c.get('state',''),
-                'merged_at': c.get('mergedAt'), 'is_draft': c.get('isDraft', False),
+                'status':    status,
+                'type':      'pr' if is_pr else 'issue',
+                'number':    number, 'repo': repo,
+                'title':     c.get('title',''), 'url': c.get('url',''),
+                'state':     c.get('state',''), 'merged_at': c.get('mergedAt'),
+                'is_draft':  c.get('isDraft', False),
             })
     boards[org] = items_out; board_counts[org] = status_counts
     print(f'  Board {org}: {len(items_out)} non-Done | {dict(sorted(status_counts.items()))}')
@@ -219,7 +205,7 @@ for pr in long_prs:
 
 print(f'Board issues: {len(board_issues)}')
 
-# ── 6b. Blocked items ─────────────────────────────────────────────────────────
+# ── 6b. Blocked items — simple list from board status column only
 BLOCKED_STATUSES = {'blocked', 'blocking'}
 BOARD_URLS = {
     'unicity-astrid':  'https://github.com/orgs/unicity-astrid/projects/1/views/1',
@@ -232,72 +218,23 @@ for org, items in boards.items():
     for item in items:
         if item['status'].lower() in BLOCKED_STATUSES:
             blocked_items.append({
-                'org': label, 'board_url': BOARD_URLS.get(org, ''),
-                'type': item['type'], 'repo': item['repo'], 'number': item['number'],
-                'title': item['title'], 'url': item['url'], 'is_draft': item.get('is_draft', False),
+                'org':       label,
+                'board_url': BOARD_URLS.get(org, ''),
+                'type':      item['type'],
+                'repo':      item['repo'],
+                'number':    item['number'],
+                'title':     item['title'],
+                'url':       item['url'],
+                'is_draft':  item.get('is_draft', False),
             })
 
 print(f'Blocked items: {len(blocked_items)}')
 
-# ── 7. involves sweep + user events sweep ─────────────────────────────────────
-# involves: catches PR/issue activity (reviews, comments, assignments)
-# user events: catches direct commits and branch creation across all repos
-# Using /users/{member}/events — authenticated, includes private repos,
-# reliable per-member regardless of org privacy settings.
-
-member_data = {m: {'authored_merged':[], 'authored_open':[], 'involved':[], 'commits':[], 'new_branches':[]} for m in MEMBERS}
+# ── 7. involves sweep — 2s sleep per call stays under 30/min
+member_data = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
 seen_per_member = {m: set() for m in MEMBERS}
 
-# org -> list of push/branch events aggregated from user events
-org_pushes   = {org: [] for org in ORGS}
-org_branches = {org: [] for org in ORGS}
-
-def fetch_user_events(member):
-    """Fetch push and branch creation events for a member within the window."""
-    commits_out  = []
-    branches_out = []
-    for page in range(1, 4):  # up to 3 pages = 300 events
-        events = gh_get(f'/users/{member}/events?per_page=100&page={page}')
-        if not events or not isinstance(events, list):
-            break
-        past_window = False
-        for ev in events:
-            try:
-                ev_time = datetime.fromisoformat(ev.get('created_at','').replace('Z','+00:00'))
-            except Exception:
-                continue
-            if ev_time > we_dt:
-                continue  # too recent (today's events)
-            if ev_time < ws_dt:
-                past_window = True; break  # older than window start, stop
-            ev_type      = ev.get('type','')
-            full_repo    = ev.get('repo',{}).get('name','')   # "org/repo"
-            repo_name    = full_repo.split('/')[-1]
-            repo_org     = full_repo.split('/')[0] if '/' in full_repo else ''
-            payload      = ev.get('payload',{})
-            if ev_type == 'PushEvent':
-                ref    = payload.get('ref','')
-                branch = ref.replace('refs/heads/','') if ref.startswith('refs/heads/') else ref
-                raw_commits = payload.get('commits',[])
-                commits = [
-                    {'sha': c.get('sha','')[:7], 'msg': c.get('message','').split('\n')[0][:100]}
-                    for c in raw_commits if c.get('distinct', True)
-                ]
-                if commits:
-                    entry = {'repo': repo_name, 'repo_org': repo_org, 'branch': branch,
-                             'author': member, 'commits': commits}
-                    commits_out.append(entry)
-            elif ev_type == 'CreateEvent' and payload.get('ref_type') == 'branch':
-                branch = payload.get('ref','')
-                entry  = {'repo': repo_name, 'repo_org': repo_org, 'branch': branch, 'author': member}
-                branches_out.append(entry)
-        if past_window:
-            break
-        time.sleep(0.5)
-    return commits_out, branches_out
-
 for member in MEMBERS:
-    # involves sweep
     for org in ORGS:
         for kind in ('pr', 'issue'):
             items = gh_search(f'involves:{member} updated:>={window_start} is:{kind} org:{org}')
@@ -313,24 +250,7 @@ for member in MEMBERS:
                 elif is_author and is_open:   member_data[member]['authored_open'].append(item)
                 else:                         member_data[member]['involved'].append(item)
 
-    # user events sweep — direct commits and branch creation
-    u_commits, u_branches = fetch_user_events(member)
-    member_data[member]['commits'].extend(u_commits)
-    member_data[member]['new_branches'].extend(u_branches)
-    if u_commits or u_branches:
-        contributors.add(member)
-        print(f'  {member}: {sum(len(c["commits"]) for c in u_commits)} commits across {len(u_commits)} pushes, {len(u_branches)} new branches')
-    # Route into org_pushes/org_branches for theme prompt
-    for entry in u_commits:
-        org = entry.get('repo_org','')
-        if org in org_pushes:
-            org_pushes[org].append(entry)
-    for entry in u_branches:
-        org = entry.get('repo_org','')
-        if org in org_branches:
-            org_branches[org].append(entry)
-
-print('Involves + user events sweep done')
+print('Involves sweep done')
 
 # ── 8. Claude call 1 — thematic summaries ─────────────────────────────────────
 def pr_lines(prs, limit=60):
@@ -339,47 +259,20 @@ def pr_lines(prs, limit=60):
         for pr in prs[:limit]
     )
 
-def push_lines(pushes, limit=20):
-    lines = []
-    for p in pushes[:limit]:
-        n = len(p['commits'])
-        msgs = '; '.join(c['msg'] for c in p['commits'][:3])
-        suffix = f' (+{n-3} more)' if n > 3 else ''
-        lines.append(f'- [{p["repo"]}:{p["branch"]}] {n} commit(s) by @{p["author"]}: {msgs}{suffix}')
-    return '\n'.join(lines)
-
-def branch_lines(branches, limit=10):
-    return '\n'.join(
-        f'- [{b["repo"]}] New branch: {b["branch"]} by @{b["author"]}'
-        for b in branches[:limit]
-    )
-
-def org_activity_block(org):
-    parts = []
-    prs = org_prs.get(org, [])
-    if prs: parts.append(f'Merged PRs ({len(prs)}):\n{pr_lines(prs)}')
-    pushes = org_pushes.get(org, [])
-    if pushes: parts.append(f'Direct branch pushes ({len(pushes)} push events):\n{push_lines(pushes)}')
-    branches = org_branches.get(org, [])
-    if branches: parts.append(f'New branches ({len(branches)}):\n{branch_lines(branches)}')
-    return '\n\n'.join(parts) if parts else 'No activity'
-
 theme_prompt = f"""You are writing the daily engineering briefing for the Unicity project.
 Period: {window_label} | PRs merged: {total_merged} | Releases: {', '.join(releases) or 'none'}
 
-Activity includes merged PRs, direct commits to branches, and new branch creations.
+=== unicity-astrid ({len(org_prs.get('unicity-astrid',[]))} PRs) ===
+{pr_lines(org_prs.get('unicity-astrid',[])) or 'No activity'}
 
-=== unicity-astrid ===
-{org_activity_block('unicity-astrid')}
+=== unicity-sphere ({len(org_prs.get('unicity-sphere',[]))} PRs) ===
+{pr_lines(org_prs.get('unicity-sphere',[])) or 'No activity'}
 
-=== unicity-sphere ===
-{org_activity_block('unicity-sphere')}
+=== unicitynetwork ({len(org_prs.get('unicitynetwork',[]))} PRs) ===
+{pr_lines(org_prs.get('unicitynetwork',[])) or 'No activity'}
 
-=== unicitynetwork (includes website repo) ===
-{org_activity_block('unicitynetwork')}
-
-For each org with any activity, group into 1-4 meaningful themes.
-Each theme: title (punchy, max 10 words), repos (comma-sep), description (3-5 sentences, specific: name PR numbers, branch names, commit messages, what changed, why it matters).
+For each org with activity, group PRs into 1-4 meaningful themes.
+Each theme: title (punchy, max 10 words, name actual capability), repos (comma-sep), description (3-5 sentences, specific: name PR numbers, technical terms, what changed, why it matters).
 
 Respond ONLY with valid JSON no fences:
 {{"astrid":[{{"title":"...","repos":"...","description":"..."}}],"sphere":[...],"network":[...]}}"""
@@ -394,22 +287,14 @@ def member_summary_lines():
     for member in MEMBERS:
         d = member_data[member]
         merged = d['authored_merged']; opened = d['authored_open']; inv = d['involved']
-        commits = d['commits']; branches = d['new_branches']
-        if not any([merged, opened, inv, commits, branches]): continue
+        if not merged and not opened and not inv: continue
         merged_items = ', '.join(f'{pr["repository_url"].split("/")[-1]} #{pr["number"]} "{pr["title"]}"' for pr in merged[:15])
         open_items   = ', '.join(f'{pr["repository_url"].split("/")[-1]} #{pr["number"]} "{pr["title"]}"' for pr in opened[:6])
         inv_items    = ', '.join(f'{it["repository_url"].split("/")[-1]} #{it["number"]} "{it["title"]}"' for it in inv[:6])
-        commit_items = '; '.join(
-            f'[{c["repo"]}:{c["branch"]}] {len(c["commits"])} commit(s): {c["commits"][0]["msg"]}'
-            for c in commits[:6]
-        )
-        branch_items = ', '.join(f'[{b["repo"]}] {b["branch"]}' for b in branches[:5])
         lines.append(f'@{member} ({MEMBER_NAMES.get(member, "")}):')
-        if merged_items:  lines.append(f'  merged PRs: {merged_items}')
-        if open_items:    lines.append(f'  open PRs: {open_items}')
-        if inv_items:     lines.append(f'  involved: {inv_items}')
-        if commit_items:  lines.append(f'  direct commits: {commit_items}')
-        if branch_items:  lines.append(f'  new branches: {branch_items}')
+        if merged_items: lines.append(f'  merged: {merged_items}')
+        if open_items:   lines.append(f'  open PRs: {open_items}')
+        if inv_items:    lines.append(f'  involved: {inv_items}')
     return '\n'.join(lines)
 
 def long_pr_summary():
@@ -421,7 +306,7 @@ def long_pr_summary():
 
 narrative_prompt = f"""You are writing the daily engineering briefing for the Unicity project. Period: {window_label}.
 
-TEAM ACTIVITY THIS WINDOW (includes direct commits and branch work, not just PRs):
+TEAM ACTIVITY THIS WINDOW:
 {member_summary_lines() or 'No activity'}
 
 LONG-STANDING OPEN PRs (>7 days):
@@ -430,13 +315,12 @@ LONG-STANDING OPEN PRs (>7 days):
 BOARD ISSUES:
 {chr(10).join(f'- [{i["sev"].upper()}] {i["ref"]} ({i["org"]}): {i["title"]} — {i["msg"]}' for i in board_issues[:20]) or 'None'}
 
-Task 1 — For each active team member write a narrative (2-3 sentences, specific: PR numbers, repo names, branch names, commit work). Also 2-4 short tags.
-Include direct commit/branch work — not just PRs.
+Task 1 — For each active team member write a mc_detail narrative (2-3 sentences max, specific: mention PR numbers, repo names, what they merged, what's open, what they reviewed/commented on). Also write 2-4 short tags.
 
-Example: "Pushed 13 commits to website:main covering homepage redesign spec, responsive layout, and typography. Created new branch feature/test-infrastructure in state-transition-sdk-js."
-Example tags: ["13 commits", "website redesign", "new branch"]
+Example good narrative: "35 PRs merged: sdk-rust #7 + 7 capsule doc PRs + v0.3.0 release + 16 sdk-bump PRs. 4 PRs open targeting state support and richer capsule memory/identity."
+Example tags: ["35 merged", "sdk-rust v0.3.0", "all capsule repos"]
 
-Task 2 — Write 3-6 "Needs attention" items from long PRs and board issues.
+Task 2 — Write 3-6 "Needs attention" items from long PRs and board issues. Name exact PR/issue, age, owner, blocker, action needed.
 Badge options: "review needed", "decision needed", "close or revive", "assign reviewer", "unblock", "critical"
 Badge colors: "purple", "amber", "blue", "red", "green"
 
@@ -535,18 +419,11 @@ def theme_cards(tlist, color):
     return out
 
 def org_card(org_key, badge_class, border_color, dot_color, theme_key, n_prs):
-    prs    = org_prs.get(org_key, [])
-    tlist  = themes.get(theme_key, [])
-    label  = ORG_LABELS.get(org_key, org_key)
-    pushes = org_pushes.get(org_key, [])
-    brs    = org_branches.get(org_key, [])
-    sub_parts = [f'{n_prs} PRs merged']
-    if pushes: sub_parts.append(f'{len(pushes)} branch push{"es" if len(pushes)!=1 else ""}')
-    if brs:    sub_parts.append(f'{len(brs)} new branch{"es" if len(brs)!=1 else ""}')
-    subtitle = ' \u00b7 '.join(sub_parts)
+    prs = org_prs.get(org_key, []); tlist = themes.get(theme_key, [])
+    label = ORG_LABELS.get(org_key, org_key)
     html  = f'<div class="card" style="border-color:{border_color}">'
     html += f'<div class="org-header"><span class="badge {badge_class}">{esc(label)}</span>'
-    html += f'<span style="font-size:13px;color:#666">{subtitle}</span></div>'
+    html += f'<span style="font-size:13px;color:#666">{n_prs} PRs merged</span></div>'
     html += theme_cards(tlist, dot_color)
     if len(prs) >= 5:
         html += f'<p class="section-title" style="margin-top:14px">Timeline \u2014 {esc(window_label)}</p>'
@@ -665,32 +542,26 @@ def render_member_cards():
     active, inactive = [], []
     for member in MEMBERS:
         d = member_data[member]
-        if any([d['authored_merged'], d['authored_open'], d['involved'], d['commits'], d['new_branches']]):
-            active.append(member)
-        else:
-            inactive.append(member)
+        if len(d['authored_merged']) + len(d['authored_open']) + len(d['involved']) > 0: active.append(member)
+        else: inactive.append(member)
     out = '<div class="member-grid">'
     for member in active:
         d    = member_data[member]; name = MEMBER_NAMES.get(member, '')
         narr = member_narratives.get(member, {})
         detail = narr.get('detail', ''); tags = narr.get('tags', [])
         if not detail:
-            parts = []
             n_m = len(d['authored_merged']); n_o = len(d['authored_open']); n_i = len(d['involved'])
-            n_c = sum(len(c['commits']) for c in d['commits']); n_b = len(d['new_branches'])
+            parts = []
             if n_m: parts.append(f'{n_m} PR{"s" if n_m!=1 else ""} merged')
             if n_o: parts.append(f'{n_o} open PR{"s" if n_o!=1 else ""}')
             if n_i: parts.append(f'involved in {n_i} item{"s" if n_i!=1 else ""}')
-            if n_c: parts.append(f'{n_c} direct commit{"s" if n_c!=1 else ""}')
-            if n_b: parts.append(f'{n_b} new branch{"es" if n_b!=1 else ""}')
             detail = ', '.join(parts)
         if not tags:
             repos = set()
             for item in d['authored_merged'] + d['authored_open'] + d['involved']:
-                repos.add(item.get('repository_url','').split('/')[-1])
-            for c in d['commits']: repos.add(c['repo'])
-            for b in d['new_branches']: repos.add(b['repo'])
-            tags = sorted(r for r in repos if r)[:4]
+                r = item.get('repository_url','').split('/')[-1]
+                if r: repos.add(r)
+            tags = sorted(repos)[:4]
         tags_html = ''.join(f'<span class="tag">{esc(t)}</span>' for t in tags[:5])
         out += f'''<div class="member-card">
   <div class="mc-name">{esc(name) + " " if name else ""}<span class="mc-handle">@{esc(member)}</span></div>
@@ -702,9 +573,8 @@ def render_member_cards():
         quiet = ', '.join(f'@{m}' for m in inactive)
         out += f'<div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">{esc(quiet)}</p></div>'
     out += '''<div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
-<code>involves:USERNAME</code> for every team member plus per-user event streams
-(<code>/users/{member}/events</code> — authenticated, includes private repos).
-Catches direct commits, new branch creation, reviews, comments, and assignments.</div>'''
+<code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
+Catches closes, reviews, comments, and assignments \u2014 not just authored items.</div>'''
     return out
 
 def long_pr_rows(prs):
@@ -816,7 +686,7 @@ HTML = f'''<!DOCTYPE html>
   <h2>Unicity project &mdash; daily brief</h2>
   <p>{esc(report_date)}</p>
   <div class="header-meta">
-    <span class="window-badge">Coverage: {esc(window_label)} &middot; PRs + direct commits + branch events</span>
+    <span class="window-badge">Coverage: {esc(window_label)} &middot; GitHub API (author + involves sweep)</span>
     <span class="updated-badge">Updated: {esc(generated_at)}</span>
     {rel_str}
   </div>
@@ -847,7 +717,7 @@ HTML = f'''<!DOCTYPE html>
 {"<div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div>" + needs_html + "</div>" if needs_html else ""}
 
 <div class="card" style="border-color:#1D9E75">
-  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; PRs, direct commits, branch events</span></div>
+  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   {render_member_cards()}
 </div>
 
