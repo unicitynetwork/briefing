@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unicity Briefing &mdash; Thursday, 9 April 2026</title>
+<title>Unicity Briefing &mdash; Friday, 10 April 2026</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
@@ -79,45 +79,25 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 
 <div class="header">
   <h2>Unicity project &mdash; daily brief</h2>
-  <p>Thursday, 9 April 2026</p>
+  <p>Friday, 10 April 2026</p>
   <div class="header-meta">
-    <span class="window-badge">Coverage: Wednesday, 8 April 2026 &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 9 April 2026, 12:36 UTC</span>
+    <span class="window-badge">Coverage: Thursday, 9 April 2026 &middot; PRs + direct commits (involves + commit search)</span>
+    <span class="updated-badge">Updated: 10 April 2026, 08:25 UTC</span>
     
   </div>
 </div>
 
 <div class="metric-grid">
-  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">12</div></div>
+  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">0</div></div>
   <div class="metric"><div class="metric-label">Releases</div><div class="metric-val am">0</div></div>
-  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">19</div></div>
-  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">2</div></div>
-  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">0 / 4 / 8</div></div>
+  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">18</div></div>
+  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">0</div></div>
+  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">0 / 0 / 0</div></div>
 </div>
 
 <div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">0 PRs merged</span></div><p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p></div>
-<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">4 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">Points Economy and Project Levels Integration</div>
-    <div class="event-detail">PRs #4 (sphere-dev) and #36 (sphere-quest) deliver the points economy project levels feature across both environments. The AdminProject type was extended in PR #37 (sphere-quest) with two new fields, levelId and budgetTopUp, to support level-aware project configuration. Together these changes wire the data model to the broader points economy system, enabling projects to carry level metadata and budget top-up information. This lays the groundwork for tiered project progression and economy-driven budget management within the Sphere platform.</div>
-    <div class="event-meta"><code>sphere-dev, sphere-quest</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">External APIs Management Page</div>
-    <div class="event-detail">PR #35 (sphere-quest) introduces a dedicated External APIs page to the Sphere interface. This surface gives administrators or users a centralised location to view and manage third-party API integrations connected to the platform. Adding this page improves operational visibility over external dependencies and reduces the need for manual configuration outside the UI.</div>
-    <div class="event-meta"><code>sphere-quest</code></div>
-  </div></div></div>
-<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">8 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
-  <div class="event-body">
-    <div class="event-title">Generic Nginx Alias Block Generation in SSL Manager</div>
-    <div class="event-detail">PRs #10 and #9 (ssl-manager) refactor the SSL setup process to generate generic nginx alias blocks automatically and register those aliases directly at the application HTTPS port, removing the previous TLS proxy startup step entirely. PR #5 (ipfs-storage) and PR #4 (ipfs-storage) follow on by replacing ipfs-storage's bespoke TLS proxy and nginx server block configuration with the new ssl-manager generic alias config, consolidating proxy logic in one place. PR #11 (ssl-manager) fixes a gap where the alias proxy was not forwarding the full API surface, ensuring all HTTPS endpoints are reachable through the aliased route. This refactoring reduces duplication across services and gives every aliased service a consistent, centrally managed nginx configuration.</div>
-    <div class="event-meta"><code>ssl-manager, ipfs-storage</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
-  <div class="event-body">
-    <div class="event-title">Alias Proxy Stability and Crash Recovery</div>
-    <div class="event-detail">PRs #6, #7, and #8 (ssl-manager) address reliability problems in the alias proxy process. PR #6 introduces automatic restart behaviour when the alias proxy crashes, and PR #7 wraps this in a dedicated bash wrapper that specifically handles SIGSEGV signals to ensure the process recovers from segmentation faults cleanly. PR #8 adds a 10-second TLS handshake timeout to prevent long-lived stalled connections from exhausting available threads, particularly under repeated health check traffic. Collectively these fixes make the alias proxy significantly more resilient against both sudden crashes and slow-drip resource exhaustion scenarios.</div>
-    <div class="event-meta"><code>ssl-manager</code></div>
-  </div></div><p class="section-title" style="margin-top:14px">Timeline — Wednesday, 8 April 2026</p><div class="timeline"><div class="tl-item tl-fix"><span class="tl-time">Wed 13:46</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/6" class="tl-link">ssl-manager #6</a> — fix: auto-restart alias proxy on crash</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 14:03</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/7" class="tl-link">ssl-manager #7</a> — fix: bash wrapper for alias proxy crash recovery (SIGSEGV)</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 14:13</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/8" class="tl-link">ssl-manager #8</a> — fix: 10s TLS handshake timeout prevents thread exhaustion from health checks</span></div><div class="tl-item tl-refactor"><span class="tl-time">Wed 16:49</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/9" class="tl-link">ssl-manager #9</a> (refactor: register aliases at app HTTPS port, remove TLS proxy startup) &middot; <a href="https://github.com/unicitynetwork/ipfs-storage/pull/4" class="tl-link">ipfs-storage #4</a> (refactor: nginx alias server blocks replace TLS proxy)</span></div><div class="tl-item tl-feat"><span class="tl-time">Wed 17:18–17:19</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/10" class="tl-link">ssl-manager #10</a> (feat: generic nginx alias blocks generated by ssl-setup) &middot; <a href="https://github.com/unicitynetwork/ipfs-storage/pull/5" class="tl-link">ipfs-storage #5</a> (refactor: use ssl-manager generic alias nginx config)</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 17:42</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ssl-manager/pull/11" class="tl-link">ssl-manager #11</a> — fix: alias proxy to primary HTTPS for full API access</span></div></div></div>
+<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">0 PRs merged</span></div><p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p></div>
+<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">0 PRs merged</span></div><p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p></div>
 
 <div class="card" style="border-color:#E24B4A">
   <div class="org-header">
@@ -159,11 +139,6 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-astrid/rfcs/pull/25" class="pr-link">RFC: Agent-Composed UI via A2UI Protocol</a></div>
     <div class="board-detail"><code>rfcs #25</code> · Open PR not tracked on any board</div>
-  </div></div><div class="board-row">
-  <span class="chip chip-miss">MISSING</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicity-astrid/sdk-rust/pull/33" class="pr-link">fix(macros): use snake_case serde rename instead of kebab-case</a></div>
-    <div class="board-detail"><code>sdk-rust #33</code> · Open PR not tracked on any board</div>
   </div></div></div><p class="section-title">Sphere <a href="https://github.com/orgs/unicity-sphere/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 23 · In progress 3 · In review 6 · Ready 2 · Done 27</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
   <span class="chip chip-stale">STALE</span>
   <div class="board-body">
@@ -259,65 +234,25 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
     <div class="board-detail"><code>.github #12</code></div>
   </div></div></div></div>
 
-<div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div><div class="event-row">
-  <div class="event-dot" style="background:#E24B4A"></div>
-  <div class="event-body">
-    <div class="event-title">state-transition-sdk-java #26 — Java SDK cucumber test amendments (170 days open)</div>
-    <div class="event-detail">WIP PR by @b3y0urs3lf has been open 170 days with no board tracking. At this age it is almost certainly stale or superseded. Owner or a lead should assess whether the work is still relevant, close it, or rebase and assign a reviewer to close it out.</div>
-    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#E24B4A"></div>
-  <div class="event-body">
-    <div class="event-title">state-transition-sdk-java #43 &amp; #44 — Rename state id / user-defined mint reasons (128 days open)</div>
-    <div class="event-detail">Two long-lived PRs by @martti007 with no board tracking. Both predate the newer #53/#54 PRs from the same author, raising the question of whether they are superseded. A decision is needed on whether to merge, close, or consolidate with the more recent work before further drift occurs.</div>
-    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#EF9F27"></div>
-  <div class="event-body">
-    <div class="event-title">bft-core #11 — EVM (80 days open, untracked)</div>
-    <div class="event-detail">EVM integration PR by @MastaP has been open 80 days and is not tracked on any board. Given MastaP is currently active on testnet infra PRs, a quick sync is needed to determine current priority, whether the EVM work is blocked on testnet readiness, and who should be assigned to review.</div>
-    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">decision needed</span></div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#7F77DD"></div>
-  <div class="event-body">
-    <div class="event-title">sphere-sdk #87 — TOCTOU race fix in concurrent send() (27 days open, untracked)</div>
-    <div class="event-detail">A concurrency correctness fix by @vrogojin that has sat unreviewed for 27 days despite vrogojin being very active this window. The PR is not on any board. This is a correctness/safety issue (race condition), so it should be prioritised for review and board assignment promptly.</div>
-    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review needed</span></div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#EF9F27"></div>
-  <div class="event-body">
-    <div class="event-title">rfcs #20–#24 — Capsule/Astrid RFC cluster (16–17 days open, all untracked)</div>
-    <div class="event-detail">Five architectural RFCs by @joshuajbouw (Capsule interface, Distro system, Host ABI, Interceptor middleware, XDG VFS schemes) have accumulated over the past 17 days with no board tracking and no apparent reviewers assigned. These are foundational design decisions for the Astrid project; they need designated reviewers and a structured review timeline before implementation work diverges further.</div>
-    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">decision needed</span></div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#378ADD"></div>
-  <div class="event-body">
-    <div class="event-title">Board hygiene — 2 stale board items + 19 missing PRs</div>
-    <div class="event-detail">sphere-sdk #90 and aggregator-go #51 have merged PRs but remain open on the board (Backlog / Todo) and should be closed. Additionally, 19 open PRs across Unicity Network, Sphere, and Astrid projects have no board representation at all. A board grooming pass is overdue to ensure visibility and ownership across all active work.</div>
-    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">assign reviewer</span></div>
-  </div></div></div>
+
 
 <div class="card" style="border-color:#1D9E75">
-  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
+  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; PRs, reviews, comments + direct commits</span></div>
   <div class="member-grid"><div class="member-card">
-  <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
-  <div class="mc-detail">Two open PRs in flight: bft-ansible #1 adding testnet environment with sharded aggregator deployment, and bft-terraform #1 provisioning the eu-central-1 testnet environment. Also involved as reviewer/contributor on unicity-node #3 (BFT snapshots) alongside lploom.</div>
-  <div style="margin-top:6px"><span class="tag">2 open PRs</span><span class="tag">testnet infra</span><span class="tag">bft-ansible + bft-terraform</span><span class="tag">BFT snapshots</span></div>
+  <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
+  <div class="mc-detail">3 PRs merged, 18 open PRs, involved in 1 item</div>
+  <div style="margin-top:6px"><span class="tag">capsule-agents</span><span class="tag">capsule-cli</span><span class="tag">capsule-context-engine</span><span class="tag">capsule-fs</span></div>
 </div><div class="member-card">
-  <div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div>
-  <div class="mc-detail">Productive window with 4 PRs merged across sphere-quest and sphere-dev: points economy project levels landed in both repos (sphere-quest #36, sphere-dev #4), plus an external APIs page (sphere-quest #35) and an AdminProject type fix adding levelId and budgetTopUp (sphere-quest #37).</div>
-  <div style="margin-top:6px"><span class="tag">4 merged</span><span class="tag">points economy</span><span class="tag">sphere-quest + sphere-dev</span><span class="tag">AdminProject fix</span></div>
-</div><div class="member-card">
-  <div class="mc-name"><span class="mc-handle">@lploom</span></div>
-  <div class="mc-detail">One open PR: unicity-node #3 (BFT snapshots), currently in review with MastaP also involved. No merges this window.</div>
-  <div style="margin-top:6px"><span class="tag">1 open PR</span><span class="tag">BFT snapshots</span><span class="tag">unicity-node</span></div>
+  <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
+  <div class="mc-detail">1 open PR</div>
+  <div style="margin-top:6px"><span class="tag">sphere-quest</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@vrogojin</span></div>
-  <div class="mc-detail">High-output window with 6 PRs merged across ssl-manager and ipfs-storage: resolved crash recovery and SIGSEGV issues in the alias proxy (ssl-manager #6, #7), fixed TLS handshake timeout (ssl-manager #8), refactored nginx alias architecture removing the TLS proxy (ssl-manager #9, ipfs-storage #4), added generic alias block generation (ssl-manager #10, ipfs-storage #5), and finalized full API access via HTTPS alias (ssl-manager #11).</div>
-  <div style="margin-top:6px"><span class="tag">6 merged</span><span class="tag">ssl-manager + ipfs-storage</span><span class="tag">nginx alias refactor</span><span class="tag">crash recovery fixes</span></div>
-</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@joshuajbouw, @igmahl, @ristik, @martti007, @jvsteiner, @ahtotruu, @b3y0urs3lf, @jait91, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
-<code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
-Catches closes, reviews, comments, and assignments — not just authored items.</div>
+  <div class="mc-detail">1 open PR</div>
+  <div style="margin-top:6px"><span class="tag">sphere-sdk</span></div>
+</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@MastaP, @KruGoL, @ristik, @martti007, @jvsteiner, @ahtotruu, @b3y0urs3lf, @jait91, @lploom, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
+<code>involves:USERNAME</code> for every team member (PRs, issues, reviews, comments)
+plus <code>/search/commits</code> per member per org to catch direct branch commits without a PR.</div>
 </div>
 
 <div class="card" style="border-color:#E24B4A">
@@ -329,11 +264,11 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/26" class="pr-link">[WIP] Java SDK cucumber test amendments</a>
     <div class="pr-repo">state-transition-sdk-java #26</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-critical">128d</span></td>
+  <td><span class="age-pill age-critical">129d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/43" class="pr-link">#40 Rename request id to state id, secure state id</a>
     <div class="pr-repo">state-transition-sdk-java #43</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-critical">128d</span></td>
+  <td><span class="age-pill age-critical">129d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/44" class="pr-link">Add user defined mint reasons</a>
     <div class="pr-repo">state-transition-sdk-java #44</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
@@ -341,63 +276,59 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <td><a href="https://github.com/unicitynetwork/bft-core/pull/11" class="pr-link">EVM</a><span class="draft-tag">Draft</span>
     <div class="pr-repo">bft-core #11</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-high">62d</span></td>
+  <td><span class="age-pill age-high">63d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-js-sdk/pull/4" class="pr-link">test: add comprehensive unit tests for uncovered modules</a>
     <div class="pr-repo">nostr-js-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-high">62d</span></td>
+  <td><span class="age-pill age-high">63d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-sdk/pull/4" class="pr-link">Add comprehensive unit tests (366 new tests)</a>
     <div class="pr-repo">nostr-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-medium">27d</span></td>
+  <td><span class="age-pill age-medium">28d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-sdk/pull/87" class="pr-link">fix(payments): eliminate TOCTOU race in concurrent send() calls</a>
     <div class="pr-repo">sphere-sdk #87</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-medium">22d</span></td>
+  <td><span class="age-pill age-medium">23d</span></td>
   <td><a href="https://github.com/unicity-astrid/capsule-memory/pull/3" class="pr-link">feat: KV-backed memory with add_memory tool and /memory-export command</a>
     <div class="pr-repo">capsule-memory #3</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">17d</span></td>
+  <td><span class="age-pill age-medium">18d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/20" class="pr-link">RFC: Capsule interface system</a>
     <div class="pr-repo">rfcs #20</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">17d</span></td>
+  <td><span class="age-pill age-medium">18d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/21" class="pr-link">RFC: Distro system</a>
     <div class="pr-repo">rfcs #21</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">17d</span></td>
+  <td><span class="age-pill age-medium">18d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/22" class="pr-link">RFC: Host ABI</a>
     <div class="pr-repo">rfcs #22</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">17d</span></td>
+  <td><span class="age-pill age-medium">18d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/23" class="pr-link">RFC: Interceptor middleware chain</a>
     <div class="pr-repo">rfcs #23</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">16d</span></td>
+  <td><span class="age-pill age-medium">17d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/24" class="pr-link">RFC: XDG-aligned VFS schemes (config://, data://, cache://, state://)</a>
     <div class="pr-repo">rfcs #24</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">15d</span></td>
+  <td><span class="age-pill age-medium">16d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/53" class="pr-link">#52 Add general structure, token minting and transfering functionality.</a>
     <div class="pr-repo">state-transition-sdk-java #53</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-medium">15d</span></td>
+  <td><span class="age-pill age-medium">16d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/54" class="pr-link">#51 Add payment functionality</a>
     <div class="pr-repo">state-transition-sdk-java #54</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-medium">14d</span></td>
+  <td><span class="age-pill age-medium">15d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/25" class="pr-link">RFC: Agent-Composed UI via A2UI Protocol</a>
     <div class="pr-repo">rfcs #25</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-low">13d</span></td>
+  <td><span class="age-pill age-medium">14d</span></td>
   <td><a href="https://github.com/unicitynetwork/unicity-node/pull/3" class="pr-link">BFT snapshots</a>
     <div class="pr-repo">unicity-node #3</div></td>
   <td class="pr-author">@lploom</td></tr><tr>
-  <td><span class="age-pill age-low">13d</span></td>
-  <td><a href="https://github.com/unicity-astrid/sdk-rust/pull/33" class="pr-link">fix(macros): use snake_case serde rename instead of kebab-case</a>
-    <div class="pr-repo">sdk-rust #33</div></td>
-  <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-low">9d</span></td>
+  <td><span class="age-pill age-low">10d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-js/pull/102" class="pr-link">#98 add unicity id support</a>
     <div class="pr-repo">state-transition-sdk-js #102</div></td>
   <td class="pr-author">@martti007</td></tr></tbody>
