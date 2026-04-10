@@ -36,25 +36,6 @@ def gh_search(q, per_page=50):
         print(f'  search error: {e} | {q[:80]}')
         return []
 
-def gh_search_commits(q, per_page=100):
-    """Search commits via the indexed commit search API.
-    Requires Accept: application/vnd.github.cloak-preview.
-    Works for private repos when authenticated with repo scope.
-    Returns [] gracefully on any error so callers degrade cleanly.
-    """
-    url = 'https://api.github.com/search/commits?q=' + urllib.parse.quote(q) + f'&per_page={per_page}'
-    req = urllib.request.Request(url, headers={
-        'Authorization': f'token {GH_TOKEN}',
-        'Accept': 'application/vnd.github.cloak-preview',
-        'User-Agent': 'unicity-briefing'
-    })
-    try:
-        with urllib.request.urlopen(req) as r:
-            return json.loads(r.read()).get('items', [])
-    except Exception as e:
-        print(f'  commit search error: {e} | {q[:80]}')
-        return []
-
 def gh_graphql(query, variables=None):
     payload = json.dumps({'query': query, 'variables': variables or {}}).encode()
     req = urllib.request.Request('https://api.github.com/graphql', data=payload,
@@ -250,8 +231,7 @@ for org, items in boards.items():
 print(f'Blocked items: {len(blocked_items)}')
 
 # ── 7. involves sweep — 2s sleep per call stays under 30/min
-# member_data['commits'] is populated in section 7b below via Search Commits API
-member_data = {m: {'authored_merged':[], 'authored_open':[], 'involved':[], 'commits':[]} for m in MEMBERS}
+member_data = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
 seen_per_member = {m: set() for m in MEMBERS}
 
 for member in MEMBERS:
@@ -272,30 +252,6 @@ for member in MEMBERS:
 
 print('Involves sweep done')
 
-# ── 7b. Commit search — direct commits per member via Search Commits API ──────
-# Uses /search/commits (Accept: application/vnd.github.cloak-preview).
-# This is a proper indexed search that works for private repos with token scope.
-# One query per member per org (3 orgs × 13 members = 39 calls at 1s each).
-# Degrades cleanly: if search returns nothing the member card is unchanged.
-print('Commit search...')
-for member in MEMBERS:
-    for org in ORGS:
-        items = gh_search_commits(
-            f'author:{member} org:{org} author-date:{window_start}..{window_end}',
-            per_page=100
-        )
-        time.sleep(1)
-        for c in items:
-            repo = c.get('repository', {}).get('name', '')
-            sha  = (c.get('sha') or '')[:7]
-            msg  = (c.get('commit', {}).get('message', '') or '').split('\n')[0][:120]
-            member_data[member]['commits'].append({'repo': repo, 'sha': sha, 'msg': msg, 'org': org})
-    n = len(member_data[member]['commits'])
-    if n:
-        contributors.add(member)
-        print(f'  {member}: {n} commits')
-print('Commit search done')
-
 # ── 8. Claude call 1 — thematic summaries ─────────────────────────────────────
 def pr_lines(prs, limit=60):
     return '\n'.join(
@@ -303,39 +259,20 @@ def pr_lines(prs, limit=60):
         for pr in prs[:limit]
     )
 
-def commit_lines_for_org(org, limit=30):
-    """Aggregate commit lines for an org from member_data commits."""
-    lines = []
-    for member in MEMBERS:
-        for c in member_data[member]['commits']:
-            if c.get('org') == org:
-                lines.append(f'- [{c["repo"]}] {c["sha"]} "{c["msg"]}" by @{member}')
-    return '\n'.join(lines[:limit]) if lines else ''
-
-def org_block(org):
-    parts = []
-    prs = org_prs.get(org, [])
-    if prs: parts.append(f'Merged PRs ({len(prs)}):\n{pr_lines(prs)}')
-    clines = commit_lines_for_org(org)
-    if clines: parts.append(f'Direct commits (no PR):\n{clines}')
-    return '\n\n'.join(parts) if parts else 'No activity'
-
 theme_prompt = f"""You are writing the daily engineering briefing for the Unicity project.
 Period: {window_label} | PRs merged: {total_merged} | Releases: {', '.join(releases) or 'none'}
 
-Activity includes merged PRs AND direct commits to branches (commits not part of a PR).
+=== unicity-astrid ({len(org_prs.get('unicity-astrid',[]))} PRs) ===
+{pr_lines(org_prs.get('unicity-astrid',[])) or 'No activity'}
 
-=== unicity-astrid ===
-{org_block('unicity-astrid')}
+=== unicity-sphere ({len(org_prs.get('unicity-sphere',[]))} PRs) ===
+{pr_lines(org_prs.get('unicity-sphere',[])) or 'No activity'}
 
-=== unicity-sphere ===
-{org_block('unicity-sphere')}
+=== unicitynetwork ({len(org_prs.get('unicitynetwork',[]))} PRs) ===
+{pr_lines(org_prs.get('unicitynetwork',[])) or 'No activity'}
 
-=== unicitynetwork (includes website, ssl-manager, uniquake and all other repos) ===
-{org_block('unicitynetwork')}
-
-For each org with any activity (PRs or direct commits), group into 1-4 meaningful themes.
-Each theme: title (punchy, max 10 words, name actual capability), repos (comma-sep), description (3-5 sentences, specific: name PR numbers, commit SHAs or messages, branch work, what changed, why it matters).
+For each org with activity, group PRs into 1-4 meaningful themes.
+Each theme: title (punchy, max 10 words, name actual capability), repos (comma-sep), description (3-5 sentences, specific: name PR numbers, technical terms, what changed, why it matters).
 
 Respond ONLY with valid JSON no fences:
 {{"astrid":[{{"title":"...","repos":"...","description":"..."}}],"sphere":[...],"network":[...]}}"""
@@ -349,11 +286,8 @@ def member_summary_lines():
     lines = []
     for member in MEMBERS:
         d = member_data[member]
-        merged  = d['authored_merged']
-        opened  = d['authored_open']
-        inv     = d['involved']
-        commits = d['commits']
-        if not any([merged, opened, inv, commits]): continue
+        merged = d['authored_merged']; opened = d['authored_open']; inv = d['involved']
+        if not merged and not opened and not inv: continue
         merged_items = ', '.join(f'{pr["repository_url"].split("/")[-1]} #{pr["number"]} "{pr["title"]}"' for pr in merged[:15])
         open_items   = ', '.join(f'{pr["repository_url"].split("/")[-1]} #{pr["number"]} "{pr["title"]}"' for pr in opened[:6])
         inv_items    = ', '.join(f'{it["repository_url"].split("/")[-1]} #{it["number"]} "{it["title"]}"' for it in inv[:6])
@@ -361,19 +295,6 @@ def member_summary_lines():
         if merged_items: lines.append(f'  merged: {merged_items}')
         if open_items:   lines.append(f'  open PRs: {open_items}')
         if inv_items:    lines.append(f'  involved: {inv_items}')
-        # Commits: group by repo, show first message + count
-        if commits:
-            by_repo = {}
-            for c in commits:
-                by_repo.setdefault(c['repo'], []).append(c['msg'])
-            commit_parts = []
-            for repo, msgs in list(by_repo.items())[:5]:
-                n = len(msgs)
-                commit_parts.append(
-                    f'[{repo}] {n} commit{"s" if n!=1 else ""}: {msgs[0]}' +
-                    (f' (+{n-1} more)' if n > 1 else '')
-                )
-            lines.append(f'  direct commits: {"; ".join(commit_parts)}')
     return '\n'.join(lines)
 
 def long_pr_summary():
@@ -385,7 +306,7 @@ def long_pr_summary():
 
 narrative_prompt = f"""You are writing the daily engineering briefing for the Unicity project. Period: {window_label}.
 
-TEAM ACTIVITY THIS WINDOW (PRs + direct commits to branches):
+TEAM ACTIVITY THIS WINDOW:
 {member_summary_lines() or 'No activity'}
 
 LONG-STANDING OPEN PRs (>7 days):
@@ -394,13 +315,12 @@ LONG-STANDING OPEN PRs (>7 days):
 BOARD ISSUES:
 {chr(10).join(f'- [{i["sev"].upper()}] {i["ref"]} ({i["org"]}): {i["title"]} — {i["msg"]}' for i in board_issues[:20]) or 'None'}
 
-Task 1 — For each active team member write a narrative (2-3 sentences max, specific: mention PR numbers, repo names, what they merged, what's open, what they reviewed, AND any notable direct commits to branches). Also write 2-4 short tags.
+Task 1 — For each active team member write a mc_detail narrative (2-3 sentences max, specific: mention PR numbers, repo names, what they merged, what's open, what they reviewed/commented on). Also write 2-4 short tags.
 
-Example when member has both PRs and commits: "Merged sphere-sdk #99 (Nostr reconnect fix) and pushed 13 commits to website covering homepage redesign spec and responsive layout. Has sphere-quest #23 open."
-Example when member has only commits: "Pushed 22 commits across sdk-rust and capsule-system migrating all capsule repos to SDK 0.6.0 (wasmtime Component Model). No open PRs this window."
-Example tags: ["13 commits", "website redesign", "sdk migration"]
+Example good narrative: "35 PRs merged: sdk-rust #7 + 7 capsule doc PRs + v0.3.0 release + 16 sdk-bump PRs. 4 PRs open targeting state support and richer capsule memory/identity."
+Example tags: ["35 merged", "sdk-rust v0.3.0", "all capsule repos"]
 
-Task 2 — Write 3-6 "Needs attention" items from long PRs and board issues.
+Task 2 — Write 3-6 "Needs attention" items from long PRs and board issues. Name exact PR/issue, age, owner, blocker, action needed.
 Badge options: "review needed", "decision needed", "close or revive", "assign reviewer", "unblock", "critical"
 Badge colors: "purple", "amber", "blue", "red", "green"
 
@@ -499,17 +419,11 @@ def theme_cards(tlist, color):
     return out
 
 def org_card(org_key, badge_class, border_color, dot_color, theme_key, n_prs):
-    prs   = org_prs.get(org_key, [])
-    tlist = themes.get(theme_key, [])
+    prs = org_prs.get(org_key, []); tlist = themes.get(theme_key, [])
     label = ORG_LABELS.get(org_key, org_key)
-    # Count direct commits for this org
-    n_commits = sum(len(member_data[m]['commits']) for m in MEMBERS
-                    if any(c.get('org') == org_key for c in member_data[m]['commits']))
-    sub = f'{n_prs} PRs merged'
-    if n_commits: sub += f' \u00b7 {n_commits} direct commit{"s" if n_commits!=1 else ""}'
     html  = f'<div class="card" style="border-color:{border_color}">'
     html += f'<div class="org-header"><span class="badge {badge_class}">{esc(label)}</span>'
-    html += f'<span style="font-size:13px;color:#666">{sub}</span></div>'
+    html += f'<span style="font-size:13px;color:#666">{n_prs} PRs merged</span></div>'
     html += theme_cards(tlist, dot_color)
     if len(prs) >= 5:
         html += f'<p class="section-title" style="margin-top:14px">Timeline \u2014 {esc(window_label)}</p>'
@@ -628,34 +542,25 @@ def render_member_cards():
     active, inactive = [], []
     for member in MEMBERS:
         d = member_data[member]
-        # Active if any PR activity OR any direct commits
-        if any([d['authored_merged'], d['authored_open'], d['involved'], d['commits']]):
-            active.append(member)
-        else:
-            inactive.append(member)
+        if len(d['authored_merged']) + len(d['authored_open']) + len(d['involved']) > 0: active.append(member)
+        else: inactive.append(member)
     out = '<div class="member-grid">'
     for member in active:
         d    = member_data[member]; name = MEMBER_NAMES.get(member, '')
         narr = member_narratives.get(member, {})
         detail = narr.get('detail', ''); tags = narr.get('tags', [])
-        # Fallback if Claude didn't produce a narrative
         if not detail:
-            parts = []
             n_m = len(d['authored_merged']); n_o = len(d['authored_open']); n_i = len(d['involved'])
-            n_c = len(d['commits'])
+            parts = []
             if n_m: parts.append(f'{n_m} PR{"s" if n_m!=1 else ""} merged')
             if n_o: parts.append(f'{n_o} open PR{"s" if n_o!=1 else ""}')
             if n_i: parts.append(f'involved in {n_i} item{"s" if n_i!=1 else ""}')
-            if n_c: parts.append(f'{n_c} direct commit{"s" if n_c!=1 else ""}')
             detail = ', '.join(parts)
-        # Fallback tags: collect repos from all activity types
         if not tags:
             repos = set()
             for item in d['authored_merged'] + d['authored_open'] + d['involved']:
                 r = item.get('repository_url','').split('/')[-1]
                 if r: repos.add(r)
-            for c in d['commits']:
-                if c.get('repo'): repos.add(c['repo'])
             tags = sorted(repos)[:4]
         tags_html = ''.join(f'<span class="tag">{esc(t)}</span>' for t in tags[:5])
         out += f'''<div class="member-card">
@@ -668,8 +573,8 @@ def render_member_cards():
         quiet = ', '.join(f'@{m}' for m in inactive)
         out += f'<div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">{esc(quiet)}</p></div>'
     out += '''<div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
-<code>involves:USERNAME</code> for every team member (PRs, issues, reviews, comments)
-plus <code>/search/commits</code> per member per org to catch direct branch commits without a PR.</div>'''
+<code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
+Catches closes, reviews, comments, and assignments \u2014 not just authored items.</div>'''
     return out
 
 def long_pr_rows(prs):
@@ -781,7 +686,7 @@ HTML = f'''<!DOCTYPE html>
   <h2>Unicity project &mdash; daily brief</h2>
   <p>{esc(report_date)}</p>
   <div class="header-meta">
-    <span class="window-badge">Coverage: {esc(window_label)} &middot; PRs + direct commits (involves + commit search)</span>
+    <span class="window-badge">Coverage: {esc(window_label)} &middot; GitHub API (author + involves sweep)</span>
     <span class="updated-badge">Updated: {esc(generated_at)}</span>
     {rel_str}
   </div>
@@ -812,7 +717,7 @@ HTML = f'''<!DOCTYPE html>
 {"<div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div>" + needs_html + "</div>" if needs_html else ""}
 
 <div class="card" style="border-color:#1D9E75">
-  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; PRs, reviews, comments + direct commits</span></div>
+  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   {render_member_cards()}
 </div>
 
