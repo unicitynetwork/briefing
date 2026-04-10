@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 GH_TOKEN      = os.environ['GH_TOKEN'].strip()
 ANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY'].strip()
 
-# ── 1. Window ─────────────────────────────────────────────────────────────────
+# ── 1. Window ─────────────────────────────────────────────────────────────────────────────────
 now     = datetime.now(timezone.utc)
 weekday = now.weekday()  # 0=Mon
 
@@ -21,7 +21,7 @@ report_date  = now.strftime('%A, %-d %B %Y')
 generated_at = now.strftime('%-d %B %Y, %H:%M UTC')
 print(f'Window: {date_range} ({window_label})')
 
-# ── 2. Helpers ────────────────────────────────────────────────────────────────
+# ── 2. Helpers ──────────────────────────────────────────────────────────────────────────────
 def gh_search(q, per_page=50):
     url = 'https://api.github.com/search/issues?q=' + urllib.parse.quote(q) + f'&per_page={per_page}'
     req = urllib.request.Request(url, headers={
@@ -76,7 +76,7 @@ MEMBER_NAMES = {
     'jvsteiner':'Jamie Steiner',
 }
 
-# ── 3. Merged PRs ─────────────────────────────────────────────────────────────
+# ── 3. Merged PRs ─────────────────────────────────────────────────────────────────────────────
 org_prs = {}; all_prs = []; releases = []; contributors = set(); merged_keys = set()
 
 for org in ORGS:
@@ -179,7 +179,7 @@ for org in ORGS:
     boards[org] = items_out; board_counts[org] = status_counts
     print(f'  Board {org}: {len(items_out)} non-Done | {dict(sorted(status_counts.items()))}')
 
-# ── 6. Board issues ───────────────────────────────────────────────────────────
+# ── 6. Board issues ────────────────────────────────────────────────────────────────────────────
 IN_DEV = {'In Dev','In Development','In Progress','In Review','Review','Test','Testing','Blocked','In Prod','Ready','Todo','Backlog'}
 board_issues = []
 
@@ -252,7 +252,7 @@ for member in MEMBERS:
 
 print('Involves sweep done')
 
-# ── 8. Claude call 1 — thematic summaries ─────────────────────────────────────
+# ── 8. Claude call 1 — thematic summaries ─────────────────────────────────────────────────────
 def pr_lines(prs, limit=60):
     return '\n'.join(
         f'- [{pr["repository_url"].split("/")[-1]}] #{pr["number"]} "{pr["title"]}" by @{pr["user"]["login"]}'
@@ -281,7 +281,7 @@ raw = claude(theme_prompt)
 try:    themes = json.loads(raw)
 except: themes = {'astrid':[], 'sphere':[], 'network':[]}
 
-# ── 9. Claude call 2 — member narratives + needs attention ────────────────────
+# ── 9. Claude call 2 — member narratives + needs attention ────────────────────────────────────
 def member_summary_lines():
     lines = []
     for member in MEMBERS:
@@ -340,7 +340,7 @@ except Exception as e:
     print(f'Enrichment parse error: {e}')
     member_narratives = {}; needs_attention = []
 
-# ── 10. HTML helpers ──────────────────────────────────────────────────────────
+# ── 10. HTML helpers ────────────────────────────────────────────────────────────────────────────
 def esc(s):
     return str(s).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
@@ -592,7 +592,7 @@ def long_pr_rows(prs):
   <td class="pr-author">@{esc(pr["user"]["login"])}</td></tr>'''
     return rows
 
-# ── 11. Build HTML ────────────────────────────────────────────────────────────
+# ── 11. Build HTML ────────────────────────────────────────────────────────────────────────────
 n_astrid  = len(org_prs.get('unicity-astrid', []))
 n_sphere  = len(org_prs.get('unicity-sphere', []))
 n_network = len(org_prs.get('unicitynetwork', []))
@@ -734,7 +734,7 @@ HTML = f'''<!DOCTYPE html>
 
 print(f'HTML built: {len(HTML)} chars')
 
-# ── 12. Push index.html ───────────────────────────────────────────────────────
+# ── 12. Push index.html ─────────────────────────────────────────────────────────────────────────────
 sha_url = 'https://api.github.com/repos/unicitynetwork/briefing/contents/index.html'
 req = urllib.request.Request(sha_url, headers={'Authorization': f'token {GH_TOKEN}',
     'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'unicity-briefing'})
