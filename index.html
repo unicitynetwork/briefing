@@ -81,8 +81,8 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <h2>Unicity project &mdash; daily brief</h2>
   <p>Friday, 10 April 2026</p>
   <div class="header-meta">
-    <span class="window-badge">Coverage: Thursday, 9 April 2026 &middot; PRs + direct commits (involves + commit search)</span>
-    <span class="updated-badge">Updated: 10 April 2026, 08:25 UTC</span>
+    <span class="window-badge">Coverage: Thursday, 9 April 2026 &middot; GitHub API (author + involves sweep)</span>
+    <span class="updated-badge">Updated: 10 April 2026, 08:37 UTC</span>
     
   </div>
 </div>
@@ -234,25 +234,61 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
     <div class="board-detail"><code>.github #12</code></div>
   </div></div></div></div>
 
-
+<div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div><div class="event-row">
+  <div class="event-dot" style="background:#E24B4A"></div>
+  <div class="event-body">
+    <div class="event-title">state-transition-sdk-java #26 — Java SDK Cucumber tests (170 days open)</div>
+    <div class="event-detail">Owned by @b3y0urs3lf, WIP for 170 days with no board tracking. Needs an explicit decision: either scope it down to a mergeable state or close and file a fresh issue. Immediate action: assign a reviewer or team lead to make the call this sprint.</div>
+    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#E24B4A"></div>
+  <div class="event-body">
+    <div class="event-title">state-transition-sdk-java #43 &amp; #44 — State ID rename + mint reasons (129 days open)</div>
+    <div class="event-detail">Both PRs by @martti007 have been open 129 days and are untracked on any board. Likely blocked on a design decision around state ID semantics. Action: schedule a 15-min sync with @martti007 to confirm relevance against current architecture and either merge, rebase, or close.</div>
+    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">bft-core #11 — EVM integration (80 days open)</div>
+    <div class="event-detail">Opened by @MastaP, untracked on any board for 80 days. EVM scope is significant and the absence of board visibility suggests it may be deprioritised without a formal decision. Action: product/engineering lead to confirm whether EVM is in scope for the current cycle and update the board accordingly.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">decision needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#EF9F27"></div>
+  <div class="event-body">
+    <div class="event-title">sphere-sdk #87 — TOCTOU race in concurrent send() (28 days open)</div>
+    <div class="event-detail">Critical correctness fix by @vrogojin targeting a payment concurrency bug, open 28 days with no board card. A race condition in payments warrants urgent review. Action: assign at least one reviewer immediately and add to the Sphere board.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">review needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">rfcs #20–#24 — Five Astrid architecture RFCs (17–18 days open)</div>
+    <div class="event-detail">All five RFCs (Capsule interface, Distro, Host ABI, Interceptor middleware, XDG VFS schemes) authored by @joshuajbouw are untracked on the Astrid board. These are design gates for the capsule migration PRs also open this window. Action: add all five to the Astrid board, assign reviewers, and set a review deadline to unblock the SDK 0.6.0 capsule migrations.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">decision needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Board hygiene — 2 stale cards + 20 missing PRs</div>
+    <div class="event-detail">sphere-sdk #90 and aggregator-go #51 have merged PRs still sitting in Backlog/Todo. Additionally 20 open PRs across Unicity Network, Sphere, and Astrid boards have no tracking card at all. Action: a 30-minute board grooming session to close merged items and create cards for all untracked PRs listed in tonight's brief.</div>
+    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">assign reviewer</span></div>
+  </div></div></div>
 
 <div class="card" style="border-color:#1D9E75">
-  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; PRs, reviews, comments + direct commits</span></div>
+  <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
   <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
-  <div class="mc-detail">3 PRs merged, 18 open PRs, involved in 1 item</div>
-  <div style="margin-top:6px"><span class="tag">capsule-agents</span><span class="tag">capsule-cli</span><span class="tag">capsule-context-engine</span><span class="tag">capsule-fs</span></div>
+  <div class="mc-detail">Merged sdk-rust #33, #34, and #36 to ship the 0.6.0 release with WIT-in-crate packaging and snake_case serde fixes. Now driving six simultaneous SDK 0.6.0 migration PRs across capsule-system #7, capsule-skills #13, capsule-shell #9, capsule-session #10, capsule-router #10, and capsule-registry #11. Five RFC PRs (#20–#24) and capsule-memory #3 remain open and untracked on any board.</div>
+  <div style="margin-top:6px"><span class="tag">sdk-rust v0.6.0 shipped</span><span class="tag">6 capsule migrations open</span><span class="tag">5 RFCs pending</span><span class="tag">board tracking gap</span></div>
 </div><div class="member-card">
   <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
-  <div class="mc-detail">1 open PR</div>
-  <div style="margin-top:6px"><span class="tag">sphere-quest</span></div>
+  <div class="mc-detail">Has sphere-quest #38 open targeting a reworked task completion flow. No merges recorded this window; PR appears to be the sole active workstream.</div>
+  <div style="margin-top:6px"><span class="tag">sphere-quest #38 open</span><span class="tag">task completion flow</span><span class="tag">no merges this window</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@vrogojin</span></div>
-  <div class="mc-detail">1 open PR</div>
-  <div style="margin-top:6px"><span class="tag">sphere-sdk</span></div>
+  <div class="mc-detail">Opened sphere-sdk #105 introducing the UXF module and Profile storage backed by content-addressable OrbitDB token packaging. The long-standing sphere-sdk #87 (TOCTOU payment race fix, 28 days old) remains open and untracked on the board.</div>
+  <div style="margin-top:6px"><span class="tag">sphere-sdk #105 UXF+OrbitDB</span><span class="tag">sphere-sdk #87 stale 28d</span><span class="tag">board tracking gap</span></div>
 </div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@MastaP, @KruGoL, @ristik, @martti007, @jvsteiner, @ahtotruu, @b3y0urs3lf, @jait91, @lploom, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
-<code>involves:USERNAME</code> for every team member (PRs, issues, reviews, comments)
-plus <code>/search/commits</code> per member per org to catch direct branch commits without a PR.</div>
+<code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
+Catches closes, reviews, comments, and assignments — not just authored items.</div>
 </div>
 
 <div class="card" style="border-color:#E24B4A">
