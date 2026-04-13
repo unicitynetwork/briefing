@@ -76,7 +76,7 @@ total = len(all_prs)
 print(f'Found {total} PRs merged on {date_str}')
 
 if total == 0:
-    discord_post({'content': f'No PRs merged on {date_disp}.', 'username': 'Unicity Briefing'})
+    print('No PRs merged — skipping Discord post.')
     exit(0)
 
 # 2. Build per-area PR lists for Claude
@@ -212,7 +212,7 @@ for area in areas_out:
     description = '\n\n'.join(theme_blocks)
 
     embeds.append({
-        'title': cap(f'{area_name} — {pr_count} PRs', 256),
+        'title': cap(f'{area_name} \u2014 {pr_count} PRs', 256),
         'description': cap(description, 4096),
         'color': color
     })
