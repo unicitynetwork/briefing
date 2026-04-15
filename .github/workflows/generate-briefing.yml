@@ -2,7 +2,7 @@ name: Generate daily briefing page
 
 on:
   schedule:
-    - cron: '17 7 * * 1-5'  # 09:17 EET (UTC+2) Mon–Fri
+    - cron: '17 5 * * 1-5'  # 07:17 EET (UTC+2) Mon–Fri
   workflow_dispatch:
 
 jobs:
