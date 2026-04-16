@@ -104,8 +104,6 @@ long_prs.sort(key=lambda p: p['created_at'])
 print(f'Long-standing open PRs: {len(long_prs)}')
 
 # ── 4c. Apr26 release tracking ────────────────────────────────────────────────────────────────
-# Fetches all items tagged release:Apr26 from the unicitynetwork project board.
-# Counts Done vs open, breaks down by status, feeds Claude sentiment call.
 APR26_Q = '''
 query($cursor: String) {
   organization(login: "unicitynetwork") {
@@ -137,7 +135,7 @@ query($cursor: String) {
 apr26_all = []; apr26_open = []; apr26_done_items = []
 apr26_by_status = {}
 DONE_STATUSES_APR = {'done', 'closed', 'complete', 'completed', 'shipped'}
-deadline      = datetime(2026, 4, 30, tzinfo=timezone.utc)
+deadline         = datetime(2026, 4, 30, tzinfo=timezone.utc)
 days_to_deadline = max(0, (deadline - now).days)
 
 apr26_cursor = None
@@ -430,7 +428,7 @@ def apr26_open_lines():
             lines.append(f'  - [{it["repo"]}] {it["title"]} (@{owner})')
     return '\n'.join(lines)
 
-apr26_sentiment = {'sentiment': 'unknown', 'badge_color': 'amber', 'summary': ''}
+apr26_sentiment = {'sentiment': 'unknown', 'badge_color': 'amber', 'moving': [], 'risks': []}
 if apr26_total > 0:
     sentiment_prompt = f"""You are assessing the Apr26 TGE release for the Unicity project.
 Deadline: April 30, 2026 ({days_to_deadline} days from now)
@@ -439,18 +437,26 @@ Progress: {len(apr26_done_items)} of {apr26_total} items done ({apr26_pct}%)
 Open items ({len(apr26_open)} remaining):
 {apr26_open_lines() or 'None'}
 
-Assess release readiness in plain terms:
-- "sentiment": one of "on track", "at risk", "critical"
-- "badge_color": "green" if on track, "amber" if at risk, "red" if critical
-- "summary": 2-3 sentences. Be direct: name specific open items, owners, or dependency chains that are risks. Call out unassigned work or work concentrated on one person. No fluff.
+Produce a structured release readiness assessment with two sections:
+
+1. "sentiment": one of "on track", "at risk", "critical"
+2. "badge_color": "green" / "amber" / "red"
+3. "moving": 3-5 items describing what is actively progressing. Each item:
+   - "title": short label (max 8 words)
+   - "detail": 1-2 sentences. Name specific tasks, repos, owners. Explain what is happening and why it matters for the release.
+4. "risks": 3-6 items describing concerns. Each item:
+   - "title": short label (max 8 words)
+   - "detail": 1-3 sentences. Be specific: name the exact tasks blocked, explain dependency chains (e.g. "X cannot start until Y closes"), call out single-person concentration risk, unassigned work, or items with no recent activity. Connect the dots between tasks.
+
+Be direct. Do not hedge. Use repo names and owner handles where relevant.
 
 Respond ONLY with valid JSON no fences:
-{{"sentiment": "...", "badge_color": "...", "summary": "..."}}"""
+{{"sentiment":"...","badge_color":"...","moving":[{{"title":"...","detail":"..."}}],"risks":[{{"title":"...","detail":"..."}}]}}"""
 
-    raw3 = claude(sentiment_prompt, max_tokens=400)
+    raw3 = claude(sentiment_prompt, max_tokens=1200)
     try:
         apr26_sentiment = json.loads(raw3)
-        print(f'Apr26 sentiment: {apr26_sentiment.get("sentiment")}')
+        print(f'Apr26 sentiment: {apr26_sentiment.get("sentiment")} | {len(apr26_sentiment.get("moving",[]))} moving, {len(apr26_sentiment.get("risks",[]))} risks')
     except Exception as e:
         print(f'Apr26 sentiment parse error: {e}')
 
@@ -656,7 +662,8 @@ def render_apr26_card():
     if not apr26_total: return ''
     sentiment    = apr26_sentiment.get('sentiment', 'unknown')
     badge_color  = apr26_sentiment.get('badge_color', 'amber')
-    summary      = apr26_sentiment.get('summary', '')
+    moving       = apr26_sentiment.get('moving', [])
+    risks        = apr26_sentiment.get('risks', [])
     BADGE_CSS    = {
         'green': 'background:#E1F5EE;color:#085041',
         'amber': 'background:#FAEEDA;color:#633806',
@@ -676,10 +683,12 @@ def render_apr26_card():
             status_chips += f'<span style="font-size:11px;color:#555;margin-right:14px"><strong>{len(items)}</strong> {esc(status)}</span>'
 
     out  = f'<div class="card" style="border-color:{border_color}">'
+    # Header
     out += f'<div class="org-header">'
     out += f'<span class="badge" style="{badge_css}">Apr26 release</span>'
     out += f'<span style="font-size:13px;color:#666">{len(apr26_done_items)}/{apr26_total} done &middot; {days_to_deadline} day{"s" if days_to_deadline!=1 else ""} to deadline</span>'
-    out += f'<a href="{board_link}" style="font-size:11px;color:#378ADD;font-family:\'SF Mono\',monospace;text-decoration:none;margin-left:auto">board \u2197</a>'
+    out += f'<span class="badge" style="{badge_css};margin-left:auto">{esc(sentiment)}</span>'
+    out += f'<a href="{board_link}" style="font-size:11px;color:#378ADD;font-family:\'SF Mono\',monospace;text-decoration:none">board \u2197</a>'
     out += '</div>'
     # Progress bar
     out += f'<div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden">'
@@ -687,15 +696,41 @@ def render_apr26_card():
     out += '</div>'
     # Status breakdown
     if status_chips:
-        out += f'<div style="margin-bottom:10px">{status_chips}</div>'
-    # Sentiment + summary
-    out += f'<div class="event-row" style="border:none;padding-top:0">'
-    out += f'<div class="event-body">'
-    out += f'<div class="event-meta" style="margin-bottom:6px"><span class="badge" style="{badge_css}">{esc(sentiment)}</span></div>'
-    if summary:
-        out += f'<div style="font-size:12px;color:#444;line-height:1.6">{esc(summary)}</div>'
-    out += '</div></div>'
+        out += f'<div style="margin-bottom:14px">{status_chips}</div>'
+
+    # Two-column layout: What's moving / What worries
+    out += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
+
+    # What's moving
+    out += '<div>'
+    out += '<p class="section-title" style="margin-top:0;color:#085041">\u2714 What\'s moving</p>'
+    for item in moving[:5]:
+        out += f'''<div class="event-row">
+  <div class="event-dot" style="background:#1D9E75"></div>
+  <div class="event-body">
+    <div class="event-title">{esc(item.get("title",""))}</div>
+    <div class="event-detail">{esc(item.get("detail",""))}</div>
+  </div></div>'''
+    if not moving:
+        out += '<p style="font-size:12px;color:#888">No active progress detected.</p>'
     out += '</div>'
+
+    # What worries
+    out += '<div>'
+    out += f'<p class="section-title" style="margin-top:0;color:{BORDER_COLOR.get(badge_color,"#D97706")}">\u26a0 What worries</p>'
+    for item in risks[:6]:
+        out += f'''<div class="event-row">
+  <div class="event-dot" style="background:{BORDER_COLOR.get(badge_color,"#EF9F27")}"></div>
+  <div class="event-body">
+    <div class="event-title">{esc(item.get("title",""))}</div>
+    <div class="event-detail">{esc(item.get("detail",""))}</div>
+  </div></div>'''
+    if not risks:
+        out += '<p style="font-size:12px;color:#888">No significant risks detected.</p>'
+    out += '</div>'
+
+    out += '</div>'  # end grid
+    out += '</div>'  # end card
     return out
 
 def render_member_cards():
@@ -861,8 +896,6 @@ HTML = f'''<!DOCTYPE html>
   <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">{n_astrid} / {n_sphere} / {n_network}</div></div>
 </div>
 
-{apr26_html}
-
 {org_card('unicity-astrid','badge-purple','#7F77DD','#7F77DD','astrid', n_astrid)}
 {org_card('unicity-sphere','badge-teal',  '#1D9E75','#1D9E75','sphere', n_sphere)}
 {org_card('unicitynetwork','badge-blue',  '#378ADD','#378ADD','network',n_network)}
@@ -891,6 +924,8 @@ HTML = f'''<!DOCTYPE html>
     <tbody>{long_pr_rows(long_prs)}</tbody>
   </table></div>
 </div>
+
+{apr26_html}
 
 <p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
 </div></body></html>'''
