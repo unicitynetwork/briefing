@@ -103,6 +103,84 @@ for org in ORGS:
 long_prs.sort(key=lambda p: p['created_at'])
 print(f'Long-standing open PRs: {len(long_prs)}')
 
+# ── 4c. Apr26 release tracking ────────────────────────────────────────────────────────────────
+# Fetches all items tagged release:Apr26 from the unicitynetwork project board.
+# Counts Done vs open, breaks down by status, feeds Claude sentiment call.
+APR26_Q = '''
+query($cursor: String) {
+  organization(login: "unicitynetwork") {
+    projectV2(number: 1) {
+      items(first: 100, after: $cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          fieldValues(first: 20) {
+            nodes {
+              ... on ProjectV2ItemFieldSingleSelectValue {
+                name
+                field { ... on ProjectV2SingleSelectField { name } }
+              }
+            }
+          }
+          content {
+            ... on Issue {
+              number title url state
+              repository { name }
+              assignees(first: 3) { nodes { login } }
+            }
+          }
+        }
+      }
+    }
+  }
+}'''
+
+apr26_all = []; apr26_open = []; apr26_done_items = []
+apr26_by_status = {}
+DONE_STATUSES_APR = {'done', 'closed', 'complete', 'completed', 'shipped'}
+deadline      = datetime(2026, 4, 30, tzinfo=timezone.utc)
+days_to_deadline = max(0, (deadline - now).days)
+
+apr26_cursor = None
+while True:
+    result = gh_graphql(APR26_Q, {'cursor': apr26_cursor})
+    try:
+        pd = result['data']['organization']['projectV2']['items']
+        for node in pd['nodes']:
+            fvs = node.get('fieldValues', {}).get('nodes', [])
+            status = None; release = None
+            for fv in fvs:
+                if not fv or 'name' not in fv or not isinstance(fv.get('field'), dict): continue
+                fname = fv['field'].get('name', '').lower()
+                if fname == 'status':  status  = fv['name']
+                if fname == 'release': release = fv['name']
+            if release != 'Apr26': continue
+            c = node.get('content')
+            if not c or not c.get('title'): continue
+            status = status or 'No Status'
+            assignees = [a['login'] for a in c.get('assignees', {}).get('nodes', [])]
+            item = {
+                'title':     c.get('title', ''),
+                'url':       c.get('url', ''),
+                'repo':      c.get('repository', {}).get('name', ''),
+                'number':    c.get('number'),
+                'status':    status,
+                'assignees': assignees,
+            }
+            apr26_all.append(item)
+            if status.lower() in DONE_STATUSES_APR:
+                apr26_done_items.append(item)
+            else:
+                apr26_open.append(item)
+                apr26_by_status.setdefault(status, []).append(item)
+        if not pd['pageInfo']['hasNextPage']: break
+        apr26_cursor = pd['pageInfo']['endCursor']
+    except Exception as e:
+        print(f'  Apr26 fetch failed: {e}'); break
+
+apr26_total = len(apr26_all)
+apr26_pct   = int(len(apr26_done_items) / apr26_total * 100) if apr26_total else 0
+print(f'Apr26: {len(apr26_done_items)}/{apr26_total} done ({apr26_pct}%), {days_to_deadline} days left, {len(apr26_open)} open')
+
 # ── 5. Board fetch — paginated, board_keys = ALL items, boards = non-Done only
 BOARD_Q = '''
 query($org: String!, $num: Int!, $cursor: String) {
@@ -340,6 +418,42 @@ except Exception as e:
     print(f'Enrichment parse error: {e}')
     member_narratives = {}; needs_attention = []
 
+# ── 9b. Claude call 3 — Apr26 release sentiment ───────────────────────────────────────────────
+def apr26_open_lines():
+    lines = []
+    for status in ['Todo', 'In Dev', 'Test', 'Blocked', 'No Status']:
+        items = apr26_by_status.get(status, [])
+        if not items: continue
+        lines.append(f'{status} ({len(items)}):')
+        for it in items[:10]:
+            owner = ', '.join(it['assignees']) if it['assignees'] else 'unassigned'
+            lines.append(f'  - [{it["repo"]}] {it["title"]} (@{owner})')
+    return '\n'.join(lines)
+
+apr26_sentiment = {'sentiment': 'unknown', 'badge_color': 'amber', 'summary': ''}
+if apr26_total > 0:
+    sentiment_prompt = f"""You are assessing the Apr26 TGE release for the Unicity project.
+Deadline: April 30, 2026 ({days_to_deadline} days from now)
+Progress: {len(apr26_done_items)} of {apr26_total} items done ({apr26_pct}%)
+
+Open items ({len(apr26_open)} remaining):
+{apr26_open_lines() or 'None'}
+
+Assess release readiness in plain terms:
+- "sentiment": one of "on track", "at risk", "critical"
+- "badge_color": "green" if on track, "amber" if at risk, "red" if critical
+- "summary": 2-3 sentences. Be direct: name specific open items, owners, or dependency chains that are risks. Call out unassigned work or work concentrated on one person. No fluff.
+
+Respond ONLY with valid JSON no fences:
+{{"sentiment": "...", "badge_color": "...", "summary": "..."}}"""
+
+    raw3 = claude(sentiment_prompt, max_tokens=400)
+    try:
+        apr26_sentiment = json.loads(raw3)
+        print(f'Apr26 sentiment: {apr26_sentiment.get("sentiment")}')
+    except Exception as e:
+        print(f'Apr26 sentiment parse error: {e}')
+
 # ── 10. HTML helpers ────────────────────────────────────────────────────────────────────────────
 def esc(s):
     return str(s).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
@@ -538,6 +652,52 @@ def render_needs_attention():
   </div></div>'''
     return out
 
+def render_apr26_card():
+    if not apr26_total: return ''
+    sentiment    = apr26_sentiment.get('sentiment', 'unknown')
+    badge_color  = apr26_sentiment.get('badge_color', 'amber')
+    summary      = apr26_sentiment.get('summary', '')
+    BADGE_CSS    = {
+        'green': 'background:#E1F5EE;color:#085041',
+        'amber': 'background:#FAEEDA;color:#633806',
+        'red':   'background:#FCEBEB;color:#791F1F',
+    }
+    BORDER_COLOR = {'green': '#1D9E75', 'amber': '#EF9F27', 'red': '#E24B4A'}
+    badge_css    = BADGE_CSS.get(badge_color, BADGE_CSS['amber'])
+    border_color = BORDER_COLOR.get(badge_color, '#EF9F27')
+    bar_color    = BORDER_COLOR.get(badge_color, '#EF9F27')
+    board_link   = 'https://github.com/orgs/unicitynetwork/projects/1/views/2'
+
+    # Status breakdown chips
+    status_chips = ''
+    for status in ['In Dev', 'Todo', 'Test', 'Blocked', 'No Status']:
+        items = apr26_by_status.get(status, [])
+        if items:
+            status_chips += f'<span style="font-size:11px;color:#555;margin-right:14px"><strong>{len(items)}</strong> {esc(status)}</span>'
+
+    out  = f'<div class="card" style="border-color:{border_color}">'
+    out += f'<div class="org-header">'
+    out += f'<span class="badge" style="{badge_css}">Apr26 release</span>'
+    out += f'<span style="font-size:13px;color:#666">{len(apr26_done_items)}/{apr26_total} done &middot; {days_to_deadline} day{"s" if days_to_deadline!=1 else ""} to deadline</span>'
+    out += f'<a href="{board_link}" style="font-size:11px;color:#378ADD;font-family:\'SF Mono\',monospace;text-decoration:none;margin-left:auto">board \u2197</a>'
+    out += '</div>'
+    # Progress bar
+    out += f'<div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden">'
+    out += f'<div style="background:{bar_color};width:{apr26_pct}%;height:100%;border-radius:4px"></div>'
+    out += '</div>'
+    # Status breakdown
+    if status_chips:
+        out += f'<div style="margin-bottom:10px">{status_chips}</div>'
+    # Sentiment + summary
+    out += f'<div class="event-row" style="border:none;padding-top:0">'
+    out += f'<div class="event-body">'
+    out += f'<div class="event-meta" style="margin-bottom:6px"><span class="badge" style="{badge_css}">{esc(sentiment)}</span></div>'
+    if summary:
+        out += f'<div style="font-size:12px;color:#444;line-height:1.6">{esc(summary)}</div>'
+    out += '</div></div>'
+    out += '</div>'
+    return out
+
 def render_member_cards():
     active, inactive = [], []
     for member in MEMBERS:
@@ -600,6 +760,7 @@ rel_str   = ' &middot; '.join(f'<span class="badge badge-release">{esc(r)}</span
 boards_ok = any(board_counts.values())
 needs_html   = render_needs_attention()
 blocked_html = render_blocked_items()
+apr26_html   = render_apr26_card()
 
 CSS = '''*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
@@ -699,6 +860,8 @@ HTML = f'''<!DOCTYPE html>
   <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">{len(contributors)}</div></div>
   <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">{n_astrid} / {n_sphere} / {n_network}</div></div>
 </div>
+
+{apr26_html}
 
 {org_card('unicity-astrid','badge-purple','#7F77DD','#7F77DD','astrid', n_astrid)}
 {org_card('unicity-sphere','badge-teal',  '#1D9E75','#1D9E75','sphere', n_sphere)}
