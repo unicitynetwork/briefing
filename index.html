@@ -82,7 +82,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <p>Friday, 17 April 2026</p>
   <div class="header-meta">
     <span class="window-badge">Coverage: Thursday, 16 April 2026 &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 17 April 2026, 07:29 UTC</span>
+    <span class="updated-badge">Updated: 17 April 2026, 08:09 UTC</span>
     
   </div>
 </div>
@@ -97,20 +97,25 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 
 <div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">2 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Async HTTP Migration and Sandbox Hardening</div>
-    <div class="event-detail">Two fixes from @joshuajbouw address runtime correctness and sandboxing reliability in the Astrid CLI and workspace layers. PR #652 replaces the blocking reqwest client with its async counterpart, eliminating potential thread-pool starvation in async runtimes and aligning the CLI with the project's async-first architecture. PR #651 resolves bwrap mount ordering issues that could cause sandbox initialisation failures, and adds an AppArmor fallback to ensure confinement is maintained on systems where the primary profile is unavailable. Together these changes improve both the reliability of outbound HTTP calls and the robustness of the sandboxed execution environment.</div>
+    <div class="event-title">Async HTTP client migration in CLI</div>
+    <div class="event-detail">PR #652 replaces the blocking reqwest client with its async counterpart in the Astrid CLI. This eliminates the dedicated OS thread that reqwest::blocking spins up per request, reducing resource overhead and aligning the CLI's HTTP layer with the rest of the async runtime. The change prevents potential deadlocks that can occur when blocking calls are made inside an async context, such as within a Tokio executor. Overall this makes the CLI more consistent, performant, and safer under concurrent workloads.</div>
+    <div class="event-meta"><code>unicity-astrid</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">Sandbox mount ordering and AppArmor resilience fix</div>
+    <div class="event-detail">PR #651 addresses two distinct but related hardening issues in the workspace sandboxing layer. First, it corrects the bwrap (Bubblewrap) mount ordering, ensuring bind mounts and overlay mounts are applied in the sequence the kernel expects, preventing failed or mis-scoped sandbox environments. Second, it introduces an AppArmor fallback so that systems where the AppArmor profile is unavailable or not loaded do not hard-fail on workspace startup. Together these changes make sandbox initialisation more robust across heterogeneous deployment environments, particularly CI runners and developer machines with varying kernel security configurations.</div>
     <div class="event-meta"><code>unicity-astrid</code></div>
   </div></div></div>
 <div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">1 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Reduce Failure Cooldown for Faster Recovery</div>
-    <div class="event-detail">PR #1 from @igmahl shortens the fail cooldown window in the Sphere API from 24 hours to 1 hour. This change dramatically reduces the penalty period following a failed operation, allowing clients and services to retry significantly sooner without manual intervention. The original 24-hour window was overly conservative for typical transient failure scenarios and was impeding development velocity and production recovery times. Tightening the cooldown to 1 hour strikes a better balance between abuse prevention and operational responsiveness.</div>
+    <div class="event-title">Reduce failure cooldown from 24 hours to 1 hour</div>
+    <div class="event-detail">PR #1 in sphere-api shortens the cooldown period applied after a failure event from 24 hours down to 1 hour. This is the first merged PR in the unicity-sphere organisation and introduces the cooldown feature baseline for the API. The previous 24-hour window was overly punitive for transient failures, significantly delaying recovery and degrading developer and user experience. Reducing it to 1 hour strikes a better balance between rate-limiting abusive or broken clients and allowing legitimate retries in a reasonable timeframe. This change will need to be monitored post-deployment to validate that the shorter window does not increase load on downstream services.</div>
     <div class="event-meta"><code>sphere-api</code></div>
   </div></div></div>
 <div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">1 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Unicity ID Support in State Transition SDK</div>
-    <div class="event-detail">PR #102 from @martti007 implements Unicity ID support in the JavaScript State Transition SDK, closing issue #98. This addition integrates first-class identity primitives into the SDK, enabling consumers to construct and validate state transitions that are anchored to Unicity-native identifiers. The change extends the SDK's core data model and likely touches serialisation and validation logic to handle the new ID format correctly. Supporting Unicity IDs at the SDK level is a foundational step for applications that need deterministic, network-verifiable identity references within state transition workflows.</div>
+    <div class="event-title">Unicity ID support in state transition SDK</div>
+    <div class="event-detail">PR #102 implements Unicity ID support in the JavaScript state transition SDK, closing issue #98. This adds the data structures, serialisation logic, and likely validation routines needed to represent and process Unicity identifiers within state transition flows. Unicity IDs are a foundational primitive for addressing and routing within the network, so their presence in the JS SDK unblocks client-side applications that need to construct or verify state transitions referencing specific network entities. The change extends the SDK's type surface and will require downstream consumers to update any state transition payloads to include the new ID fields where applicable.</div>
     <div class="event-meta"><code>state-transition-sdk-js</code></div>
   </div></div></div>
 
@@ -312,38 +317,38 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 <div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">finality-gadget #1–#5, #7–#10: 10 security/correctness issues with no board status or owner</div>
-    <div class="event-detail">Ten finality-gadget issues covering OOM crash, stream leaks, data races, message authentication gaps, uint64 underflow, and broken re-finalization guards have no status, no assignee, and no board tracking. These are production-safety risks. Action: triage immediately, assign owners, and move to In Progress or explicitly defer with documented rationale.</div>
+    <div class="event-title">finality-gadget #1–#5, #7–#10: 9 critical issues with no status assigned</div>
+    <div class="event-detail">Nine open issues in finality-gadget covering remote OOM crash (no max message size), stream leak, data race/goroutine leak, missing message authentication, uint64 underflow, broken genesis check, BoltDB handle leaks, missing safety checks in FollowerVerify, and a silently broken node state. All are unassigned and have no board status. These are network-safety and correctness issues that need triage and ownership assigned immediately — suggest @MastaP or @lploom as first reviewers given their finality-gadget involvement.</div>
     <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">critical</span></div>
   </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">rfcs #20–#25 (Astrid): 6 foundational RFCs open 22–25 days, no reviewers engaged</div>
+    <div class="event-detail">Joshua's six RFCs covering the capsule interface system, distro system, Host ABI, interceptor middleware chain, XDG VFS schemes, and A2UI protocol have been open 22–25 days with no visible review activity. These RFCs gate downstream implementation work (astrid #184, #249, #250, #252). Reviewers need to be assigned and a decision window set before the open PR stack grows further.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review needed</span></div>
+  </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">state-transition-sdk-java #26 (177 days) — WIP cucumber test amendments by @b3y0urs3lf</div>
-    <div class="event-detail">Oldest open PR on the project at 177 days, marked WIP, not tracked on any board. No recent activity visible. Action: @b3y0urs3lf or a lead should decide whether to close, rebase onto current main, or hand off; the repo has since accumulated multiple other SDK changes making a stale rebase costly.</div>
+    <div class="event-title">sphere-sdk #87: TOCTOU race in concurrent send() — 35 days open, untracked</div>
+    <div class="event-detail">vrogojin's payment safety fix has been open 35 days, is not tracked on any board, and risks being buried under the five new sphere-sdk PRs opened this window. The race condition affects concurrent send() correctness. Needs a reviewer assigned and addition to the Sphere board before it ages further.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">review needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#EF9F27"></div>
+  <div class="event-body">
+    <div class="event-title">state-transition-sdk-java #26, #43, #44: long-running Java SDK PRs (136–177 days), untracked</div>
+    <div class="event-detail">#26 (WIP cucumber amendments by @b3y0urs3lf) is 177 days old; #43 and #44 (both by @martti007, state/request ID rename and user-defined mint reasons) are 136 days old. None appear on any project board. With the Java SDK now receiving BFT sharding work (#58), these should be explicitly closed, rebased, or superseded to avoid confusion.</div>
     <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">close or revive</span></div>
   </div></div><div class="event-row">
-  <div class="event-dot" style="background:#EF9F27"></div>
-  <div class="event-body">
-    <div class="event-title">bft-core #11 'EVM' by @MastaP — open 87 days, untracked on board</div>
-    <div class="event-detail">EVM integration PR has been open for 87 days with no board entry. It is unclear whether this is blocked on design, review capacity, or scope change. Action: @MastaP to post a status update; leads to decide if this is in scope for the current milestone or should be moved to a future epic and closed temporarily.</div>
-    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">decision needed</span></div>
-  </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">rfcs #20–#25 by @joshuajbouw — 22–25 days open, capsule-memory #3 at 30 days</div>
-    <div class="event-detail">Six RFC PRs (Capsule interface, Distro system, Host ABI, Interceptor chain, VFS schemes, A2UI Protocol) and the KV-backed capsule-memory implementation have been awaiting review for 22–30 days. The open astrid implementation PRs (#249–#252) depend on these RFCs being settled. Action: assign dedicated RFC reviewers this sprint to unblock the capsule feature work.</div>
-    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review needed</span></div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#7F77DD"></div>
-  <div class="event-body">
-    <div class="event-title">sphere-sdk #87 — TOCTOU race in concurrent send() — 35 days open, untracked</div>
-    <div class="event-detail">A concurrency correctness fix for the payments path has been sitting unreviewed for 35 days and is not on any project board. With @vrogojin now merging a large transport/accounting/swap feature wave on top, the unresolved race condition becomes a higher risk. Action: assign a reviewer immediately and add to the Sphere board.</div>
-    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review needed</span></div>
+    <div class="event-title">bft-core #11: EVM PR by @MastaP — 87 days open, untracked on any board</div>
+    <div class="event-detail">The EVM integration PR has been open 87 days with no board tracking. It is unclear whether this is blocked on a design decision, deprioritised, or waiting for review. With active BFT sharding work now landing in bft-core (#20), a decision on scope and priority for EVM is needed to avoid merge conflicts and unclear ownership.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">decision needed</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Board staleness: sphere-sdk #90 and aggregator-go #51 merged but board not updated</div>
-    <div class="event-detail">sphere-sdk #90 remains in 'Backlog' and aggregator-go #51 remains in 'Todo' despite both PRs having been merged. Stale board state degrades sprint visibility and skews throughput metrics. Action: close or move these items to Done; review board hygiene process to catch future drift.</div>
+    <div class="event-title">Board hygiene: sphere-sdk #90 and aggregator-go #51 stale after merge</div>
+    <div class="event-detail">sphere-sdk #90 (Feat/auto connect) was merged but remains in 'Backlog'; aggregator-go #51 (streaming round processing) was merged but remains in 'Todo'. Both board items should be closed/moved to Done to keep the board an accurate picture of remaining work.</div>
     <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">decision needed</span></div>
   </div></div></div>
 
@@ -351,44 +356,44 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
   <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
-  <div class="mc-detail">Merged astrid #652 (async reqwest fix) and #651 (bwrap mount ordering + AppArmor fallback), resolving the Linux sandbox and daemon-startup blockers tracked in #648 and #645. Five PRs remain open in astrid spanning the full capsule stack: Hook Bridge (#250), Context Engine compaction (#252), OpenClaw transpiler pipeline (#249), dependency classification fix (#214), and the foundational Airlock Management PR (#184). RFC suite (#20–#25) and capsule-memory #3 continue to age without merge.</div>
-  <div style="margin-top:6px"><span class="tag">2 merged</span><span class="tag">5 open astrid PRs</span><span class="tag">6 open RFCs + capsule-memory</span><span class="tag">sandbox + async fixes</span></div>
+  <div class="mc-detail">Merged astrid #652 (async reqwest fix) and #651 (bwrap mount ordering + AppArmor fallback), resolving the Linux sandbox and daemon startup regressions tracked in #648 and #645. Five PRs remain open in astrid spanning the full capsule stack: Hook Bridge (#250), Context Engine compaction (#252), OpenClaw pipeline (#249), dependency classification (#214), and the foundational Airlock Management PR #184. Six RFCs (#20–#25) covering capsule interface, distro, Host ABI, interceptor chain, VFS schemes, and A2UI have been open 22–25 days awaiting review.</div>
+  <div style="margin-top:6px"><span class="tag">2 merged</span><span class="tag">5 open astrid PRs</span><span class="tag">6 open RFCs</span><span class="tag">capsule/sandbox stack</span></div>
 </div><div class="member-card">
   <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
-  <div class="mc-detail">Active reviewer on finality-gadget #13 (review fixes) and aggregator-go #142 (sharded v2 inclusion proof composition), as well as unicity-node #3 (BFT snapshots) and state-transition-sdk-js #102 (Unicity ID support, now merged). Long-standing bft-core #11 (EVM, 87 days) remains open and untracked on any board.</div>
-  <div style="margin-top:6px"><span class="tag">4 PRs reviewed</span><span class="tag">bft-core EVM stale 87d</span><span class="tag">cross-repo reviewer</span></div>
+  <div class="mc-detail">Actively reviewing finality-gadget #13 (review fixes) and unicity-node #3 (BFT snapshots), and engaged on aggregator-go #142 (sharded v2 inclusion proof composition) and state-transition-sdk-js #102 (Unicity ID support). No merges this window; primary contribution is cross-repo review across the BFT and aggregation layer.</div>
+  <div style="margin-top:6px"><span class="tag">review focus</span><span class="tag">BFT/aggregation layer</span><span class="tag">4 PRs involved</span></div>
 </div><div class="member-card">
   <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
-  <div class="mc-detail">Merged sphere-api #1, shortening the fail cooldown from 24 h to 1 h — a targeted reliability improvement to the Sphere API layer.</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">sphere-api cooldown fix</span></div>
+  <div class="mc-detail">Merged sphere-api #1, shortening the fail cooldown from 24 hours to 1 hour — a targeted reliability improvement to the Sphere API layer.</div>
+  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">sphere-api</span><span class="tag">cooldown fix</span></div>
 </div><div class="member-card">
   <div class="mc-name">Risto Laanoja <span class="mc-handle">@ristik</span></div>
-  <div class="mc-detail">Contributing to state-transition-sdk-js #98 ('[TGE] Implement Unicity ID'), which feeds into the merged #102 and the open BFT sharding PR #107.</div>
-  <div style="margin-top:6px"><span class="tag">TGE Unicity ID</span><span class="tag">sdk-js contributor</span></div>
+  <div class="mc-detail">Contributing to state-transition-sdk-js #98, the TGE Unicity ID implementation for the JS SDK, which is also a dependency for the downstream #102 merge.</div>
+  <div style="margin-top:6px"><span class="tag">JS SDK</span><span class="tag">Unicity ID</span><span class="tag">TGE work</span></div>
 </div><div class="member-card">
   <div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div>
-  <div class="mc-detail">Merged state-transition-sdk-js #102 (Unicity ID support), closing out the #98 work. Actively involved in the BFT sharding wave across state-transition-sdk-java #58, state-transition-sdk-js #107, and .github #32, plus the long-standing sdk-java PRs #43, #44, and #53 (136, 136, and 23 days open respectively).</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">BFT sharding wave</span><span class="tag">3 stale sdk-java PRs</span><span class="tag">TGE contributor</span></div>
+  <div class="mc-detail">Merged state-transition-sdk-js #102, landing Unicity ID support built on #98. Also involved in the broader BFT-based sharding push across state-transition-sdk-java #58, state-transition-sdk-js #107, and .github #32, while continuing to carry two long-standing open PRs (#43, #44) in the Java SDK.</div>
+  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">JS SDK Unicity ID</span><span class="tag">BFT sharding</span><span class="tag">long-standing Java PRs</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@ahtotruu</span></div>
-  <div class="mc-detail">Driving the BFT sharding initiative with five open PRs spanning state-transition-sdk-java #58, state-transition-sdk-js #107, aggregator-go #144, bft-core #20, and .github #32, plus the time-locked predicates feature in aggregator-go #139. None of these PRs appear on the project board.</div>
-  <div style="margin-top:6px"><span class="tag">6 open PRs</span><span class="tag">BFT sharding author</span><span class="tag">TGE time-locked predicates</span><span class="tag">all untracked on board</span></div>
+  <div class="mc-detail">Driving the BFT-based sharding initiative with open PRs across six repos: state-transition-sdk-java #58, state-transition-sdk-js #107, aggregator-go #144, bft-core #20, .github #32, and aggregator-go #139 (time-locked predicates for TGE). This is the broadest cross-repo surface area active this window.</div>
+  <div style="margin-top:6px"><span class="tag">6 open PRs</span><span class="tag">BFT sharding</span><span class="tag">multi-repo</span><span class="tag">TGE predicates</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@b3y0urs3lf</span></div>
-  <div class="mc-detail">Involved in astrid #648 (Linux sandbox bug, now resolved via merged #651) and state-transition-sdk-js #98 (Unicity ID). Two long-standing test PRs — nostr-js-sdk #4 and nostr-sdk #4 (both 70 days) — remain open and untracked on any board, alongside the 177-day WIP state-transition-sdk-java #26.</div>
-  <div style="margin-top:6px"><span class="tag">3 stale PRs (177d/70d/70d)</span><span class="tag">sandbox bug reviewer</span><span class="tag">TGE contributor</span></div>
+  <div class="mc-detail">Opened state-transition-sdk-js #106 (test infrastructure) and is involved in the Unicity ID work on #98 and the astrid Linux sandbox bug #648. Also carries two long-standing test PRs in nostr-js-sdk #4 and nostr-sdk #4 (both 70 days old) that are untracked on any board.</div>
+  <div style="margin-top:6px"><span class="tag">test infrastructure</span><span class="tag">JS SDK</span><span class="tag">2 stale nostr PRs</span><span class="tag">sandbox bug review</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@jait91</span></div>
-  <div class="mc-detail">Owns aggregator-go #142 (sharded v2 inclusion proof composition) and is involved in the BFT sharding aggregator-go #144 and .github #32, as well as the time-locked predicates work in aggregator-go #139.</div>
-  <div style="margin-top:6px"><span class="tag">1 open PR owned</span><span class="tag">3 PRs involved</span><span class="tag">aggregator-go focus</span></div>
+  <div class="mc-detail">Owns aggregator-go #142 (sharded v2 inclusion proof composition) and is involved in the wider BFT sharding effort via aggregator-go #144, .github #32, and the time-locked predicate work in aggregator-go #139.</div>
+  <div style="margin-top:6px"><span class="tag">aggregator-go</span><span class="tag">sharded proofs</span><span class="tag">BFT sharding</span><span class="tag">TGE predicates</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@lploom</span></div>
-  <div class="mc-detail">Owns finality-gadget #13 (review fixes) and unicity-node #3 (BFT snapshots), and is involved in bft-core #20 (sharding verification) and .github #32 (BFT sharding). The finality-gadget repo also carries ten unstatused security and correctness issues (#1–#10) with no board assignment.</div>
-  <div style="margin-top:6px"><span class="tag">2 open PRs owned</span><span class="tag">BFT snapshots</span><span class="tag">finality-gadget issues backlog</span></div>
+  <div class="mc-detail">Owns finality-gadget #13 (review fixes) and unicity-node #3 (BFT snapshots), and is involved in bft-core #20 (sharding verification) and .github #32. Work sits at the intersection of finality and snapshot consistency for the BFT layer.</div>
+  <div style="margin-top:6px"><span class="tag">finality-gadget</span><span class="tag">BFT snapshots</span><span class="tag">sharding verify</span><span class="tag">2 open PRs</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@vrogojin</span></div>
-  <div class="mc-detail">Driving a broad sphere-sdk feature push with five open PRs: resilient transport (#108), accounting module (#109), swap module (#110), CLI overhaul (#111), and a relay rejection retry fix (#113), plus a sphere dependency bump (#294). The 35-day-old TOCTOU race fix sphere-sdk #87 is still open and untracked on the board.</div>
-  <div style="margin-top:6px"><span class="tag">6 open PRs</span><span class="tag">sphere-sdk feature wave</span><span class="tag">sphere-sdk #87 stale 35d</span><span class="tag">transport + swap + CLI</span></div>
+  <div class="mc-detail">Five open PRs in sphere-sdk this window: resilient publish/health-check transport (#108), AccountingModule (#109), SwapModule (#110), comprehensive CLI overhaul (#111), and a relay-rejection retry fix (#113), plus a downstream version bump in sphere #294. The TOCTOU payments race fix in sphere-sdk #87 remains open at 35 days with no board tracking.</div>
+  <div style="margin-top:6px"><span class="tag">5 new sphere-sdk PRs</span><span class="tag">swap/accounting/CLI</span><span class="tag">stale #87 untracked</span><span class="tag">sphere ecosystem</span></div>
 </div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@KruGoL, @jvsteiner, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments — not just authored items.</div>
@@ -486,61 +491,61 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   </table></div>
 </div>
 
-<div class="card" style="border-color:#E24B4A"><div class="org-header"><span class="badge" style="background:#FCEBEB;color:#791F1F">Apr26 release</span><span style="font-size:13px;color:#666">33/55 done &middot; 12 days to deadline</span><span class="badge" style="background:#FCEBEB;color:#791F1F;margin-left:auto">critical</span><a href="https://github.com/orgs/unicitynetwork/projects/1/views/2" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></div><div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden"><div style="background:#E24B4A;width:60%;height:100%;border-radius:4px"></div></div><div style="margin-bottom:14px"><span style="font-size:11px;color:#555;margin-right:14px"><strong>10</strong> In Dev</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>12</strong> Todo</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><p class="section-title" style="margin-top:0;color:#085041">✔ What's moving</p><div class="event-row">
+<div class="card" style="border-color:#E24B4A"><div class="org-header"><span class="badge" style="background:#FCEBEB;color:#791F1F">Apr26 release</span><span style="font-size:13px;color:#666">32/51 done &middot; 12 days to deadline</span><span class="badge" style="background:#FCEBEB;color:#791F1F;margin-left:auto">critical</span><a href="https://github.com/orgs/unicitynetwork/projects/1/views/2" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></div><div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden"><div style="background:#E24B4A;width:62%;height:100%;border-radius:4px"></div></div><div style="margin-bottom:14px"><span style="font-size:11px;color:#555;margin-right:14px"><strong>9</strong> In Dev</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>10</strong> Todo</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><p class="section-title" style="margin-top:0;color:#085041">✔ What's moving</p><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Type tags defined across aggregator and SDKs</div>
-    <div class="event-detail">@ahtotruu is actively defining type tags for both token/transaction elements and aggregation protocol elements in [unicity-ids]. These unblock downstream SDK and aggregator tag-update tasks across [state-transition-sdk-js], [state-transition-sdk-java], and [aggregator-go].</div>
+    <div class="event-title">Aggregator type tags and proof format updates</div>
+    <div class="event-detail">@MastaP is updating aggregator-go to use new type tags, and @jait91 is reworking the aggregation tree and inclusion proof formats. These are foundational protocol changes that unblock SDK alignment work across Java and JS.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Java SDK V2 general structure in progress</div>
-    <div class="event-detail">@martti007 is in dev on [state-transition-sdk-java] V2 general structure, verification and token transfers — the foundational item that gates V2 payments, splits, Unicity ID support, and time-locked predicates in the Java SDK.</div>
+    <div class="event-title">Java SDK general structure and verification</div>
+    <div class="event-detail">@martti007 has the Java SDK general structure, verification, and token transfers in active development. This is the base layer required before V2 payments, splits, and Unicity ID support can land.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Aggregation tree and inclusion proof format update</div>
-    <div class="event-detail">@jait91 is actively updating aggregation tree and inclusion proof formats in [aggregator-go], which must land before the corresponding inclusion proof format updates in both SDKs ([state-transition-sdk-js] and [state-transition-sdk-java]) can be completed.</div>
+    <div class="event-title">Unicity type tags being defined</div>
+    <div class="event-detail">@ahtotruu is actively defining type tags for both aggregation protocol elements and token/transaction data elements in unicity-ids. All SDK update tasks in JS and Java are blocked on these closing.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">BFT sharding support progressing in bft-core</div>
-    <div class="event-detail">@lploom is in dev verifying sharding support in [bft-core], feeding directly into the BFT-based sharding implementation in [aggregator-go] by @jait91 and the cross-repo [.github] coordination task.</div>
+    <div class="event-title">BFT sharding verification in progress</div>
+    <div class="event-detail">@lploom is verifying sharding support in bft-core. This underpins three downstream tasks across .github, state-transition-sdk-js, and state-transition-sdk-java that cannot start until this closes.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">AgentSphere inventory and transfer overhaul in dev</div>
-    <div class="event-detail">@vrogojin, @igmahl, and @KruGoL are actively working the Sphere v3.4/v3.5 overhaul in [sphere], a multi-person effort covering inventory maintenance and token transfer that is required for TGE release readiness.</div>
+    <div class="event-title">AgentSphere inventory and transfer overhaul active</div>
+    <div class="event-detail">@vrogojin, @igmahl, and @KruGoL are working the Sphere TGE inventory and token transfer overhaul against spec v3.4/v3.5. This is a multi-person effort and is currently in dev.</div>
   </div></div></div><div><p class="section-title" style="margin-top:0;color:#E24B4A">⚠ What worries</p><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">@martti007 is single point of failure</div>
-    <div class="event-detail">@martti007 owns 8 of 22 open items across [state-transition-sdk-java] and [state-transition-sdk-js], including items in both Todo and In Dev states. Any slowdown from a single contributor blocks Java SDK V2 payments, splits, Unicity ID support, time-locked predicates, inclusion proof format, and JS SDK tag updates simultaneously.</div>
+    <div class="event-title">BFT sharding blocks three downstream tasks</div>
+    <div class="event-detail">The BFT sharding implementation (@ahtotruu, @lploom, @martti007 in .github) plus JS and Java sharding support are all in Todo with no owner on the .github item confirmed as active. @lploom's bft-core verification must close before any of the three SDK sharding tasks can begin, and none of those three have started. Four tasks depending on one in-progress item with 12 days left is a critical path risk.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">Deep dependency chain blocks Java SDK completion</div>
-    <div class="event-detail">All remaining [state-transition-sdk-java] tasks depend on the V2 general structure item currently in dev. That item must close before V2 payments/splits, Unicity ID support, time-locked predicates, inclusion proof format, and type tag updates can even start. With 6 dependent tasks and 12 days remaining, there is no slack in this chain.</div>
+    <div class="event-title">@martti007 owns 8 of 19 open items</div>
+    <div class="event-detail">@martti007 is sole owner or co-owner of 8 remaining tasks across state-transition-sdk-java and state-transition-sdk-js. This is extreme single-person concentration risk. Any delay, illness, or context-switching by this individual collapses the Java and JS SDK tracks entirely.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">Type tag cascade not yet resolved</div>
-    <div class="event-detail">Type tag updates in [state-transition-sdk-js] and [state-transition-sdk-java] are in Todo and cannot start until [unicity-ids] type tag definitions (@ahtotruu) close. The JS SDK tag update is also a prerequisite for validating TokenId length fix, creating a three-task sequential dependency that must complete end-to-end before TGE.</div>
+    <div class="event-title">Type tag dependency chain is not yet closed</div>
+    <div class="event-detail">The unicity-ids type tag definitions (@ahtotruu) are still In Dev. At least four tasks — aggregator-go update (@MastaP), JS SDK update (@martti007), Java SDK update (@martti007), and version tags (@ahtotruu) — cannot be finalized until both unicity-ids items close. These are not yet closed with 12 days remaining.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">BFT sharding is a multi-repo, multi-owner open task</div>
-    <div class="event-detail">BFT-based sharding spans [bft-core] (@lploom), [aggregator-go] (@jait91), and a [.github] coordination item assigned to @ahtotruu, @lploom, and @martti007. The [.github] item is still in Todo with no evidence of progress, and sharding is a high-complexity architectural feature unlikely to close safely in 12 days.</div>
+    <div class="event-title">Java SDK has four sequential incomplete tasks</div>
+    <div class="event-detail">The Java SDK track has four open items: general structure (In Dev), V2 payments/splits (Todo), V2 Unicity ID support (Todo), and inclusion proof format update (Todo). These are likely sequential. All four are owned by @martti007 and none of the latter three have started, making completion by April 30 extremely tight.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">Time-locked predicates blocked across two repos</div>
-    <div class="event-detail">Time-locked predicates must land in both [aggregator-go] (@jait91) and [state-transition-sdk-java] (@martti007); the JS SDK variant is in dev. The Java implementation is Todo and cannot start until the V2 general structure closes, compressing all three implementations into the final days of the window.</div>
+    <div class="event-title">JS SDK inclusion proof format not yet closed</div>
+    <div class="event-detail">The JS SDK inclusion proof format update (@martti007) is still In Dev, and the JS SDK type tag update is in Todo behind it. The JS SDK token ID validation fix is also in Todo. Three JS SDK items remain with a single owner who is simultaneously responsible for four Java SDK items.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">40% of items open with 12 days left is not recoverable at current pace</div>
-    <div class="event-detail">33 of 55 items are done with 12 days remaining. The 22 open items include complex, dependent, multi-repo work. At the observed completion rate and given the serial dependency chains, completing all remaining items by April 30 without scope cuts or additional resourcing is not realistic.</div>
+    <div class="event-title">38% of work remaining with 12 days to deadline</div>
+    <div class="event-detail">19 of 51 items are open with 12 days left. The remaining items are disproportionately complex — protocol-level changes, BFT sharding, and multi-SDK rewrites — not minor cleanup tasks. The current 62% completion rate does not reflect the difficulty weight of what remains. A slip beyond April 30 is probable without immediate scope decisions or resource reallocation.</div>
   </div></div></div></div></div>
 
 <p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
