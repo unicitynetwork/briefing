@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unicity Briefing &mdash; Wednesday, 22 April 2026</title>
+<title>Unicity Briefing &mdash; Thursday, 23 April 2026</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
@@ -79,54 +79,39 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 
 <div class="header">
   <h2>Unicity project &mdash; daily brief</h2>
-  <p>Wednesday, 22 April 2026</p>
+  <p>Thursday, 23 April 2026</p>
   <div class="header-meta">
-    <span class="window-badge">Coverage: Tuesday, 21 April 2026 &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 22 April 2026, 07:05 UTC</span>
+    <span class="window-badge">Coverage: Wednesday, 22 April 2026 &middot; GitHub API (author + involves sweep)</span>
+    <span class="updated-badge">Updated: 23 April 2026, 07:09 UTC</span>
     
   </div>
 </div>
 
 <div class="metric-grid">
-  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">6</div></div>
+  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">5</div></div>
   <div class="metric"><div class="metric-label">Releases</div><div class="metric-val am">0</div></div>
   <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">21</div></div>
-  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">4</div></div>
-  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">3 / 0 / 3</div></div>
+  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">3</div></div>
+  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">0 / 3 / 2</div></div>
 </div>
 
-<div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">3 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
+<div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">0 PRs merged</span></div><p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p></div>
+<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">3 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Per-Principal Identity Profiles via profile.toml</div>
-    <div class="event-detail">PR #665 introduces PrincipalProfile, a per-principal identity construct backed by a profile.toml configuration file, closing issue #663. This gives each principal a structured, declarative profile that can be resolved and loaded at runtime, laying the groundwork for fine-grained principal-level customization. The addition of profile.toml as the canonical descriptor means principal metadata is now version-controllable and portable across deployments. This is a foundational capability for multi-tenant and multi-principal Astrid environments.</div>
-    <div class="event-meta"><code>unicity-astrid</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
-  <div class="event-body">
-    <div class="event-title">Per-Invocation Secret Store and Scoped Capsule Logging</div>
-    <div class="event-detail">PR #662 introduces a per-invocation SecretStore, ensuring that sensitive material is scoped strictly to the lifetime of a single capsule invocation rather than shared across calls. Alongside this, capsule_log is re-scoped so that log output is isolated per invocation, preventing cross-invocation log bleed and improving auditability. Together these changes harden the capsule execution model by enforcing strict isolation boundaries around both secrets and observability data. This is critical for security posture in multi-tenant workloads where invocation-level confidentiality must be guaranteed.</div>
-    <div class="event-meta"><code>unicity-astrid</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
-  <div class="event-body">
-    <div class="event-title">Per-Invocation home:// and /tmp/ VFS Resolution</div>
-    <div class="event-detail">PR #659 implements per-invocation resolution of the home:// and /tmp/ virtual filesystem paths within the capsule VFS layer. Previously these paths could resolve to shared or persistent locations, creating the risk of state leakage between capsule invocations. With this change, each invocation receives its own isolated home and temporary directory namespaces, fully consistent with the per-invocation isolation model being built across PRs #662 and #665. This ensures that filesystem side-effects from one invocation cannot be observed or tampered with by another, strengthening the overall capsule sandbox guarantees.</div>
-    <div class="event-meta"><code>unicity-astrid</code></div>
+    <div class="event-title">Maintenance Mode Across Full Sphere Stack</div>
+    <div class="event-detail">Three PRs from @igmahl (#1 in sphere-quest-frontend, #1 in sphere-backoffice, and #2 in sphere-api) introduce maintenance mode support across the entire Sphere stack in a coordinated, full-stack rollout. The API layer gains the backend logic to toggle and serve maintenance state, while the backoffice receives the administrative controls to manage that state. The frontend quest interface is updated to detect and display the maintenance mode experience to end users. This unified approach ensures consistent behaviour across all layers when maintenance mode is activated, reducing the risk of partial states or mismatched UI signals.</div>
+    <div class="event-meta"><code>sphere-quest-frontend, sphere-backoffice, sphere-api</code></div>
   </div></div></div>
-<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">0 PRs merged</span></div><p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p></div>
-<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">3 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">2 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Timelock Predicate Encoding Formalized in Yellowpaper</div>
-    <div class="event-detail">PR #3 in the yellowpaper repository formally specifies the encoding of timelock predicates, adding rigorous mathematical and structural definitions to the Unicity protocol documentation. Timelock predicates are a key primitive for time-bound transaction logic, and their precise encoding is essential for interoperability and correct implementation across clients. Formalizing this in the yellowpaper ensures that all implementors share a single normative reference, reducing the risk of divergent interpretations. This contribution advances the completeness of the Unicity protocol specification.</div>
-    <div class="event-meta"><code>unicity-yellowpaper-tex</code></div>
+    <div class="event-title">CBOR Tag Encoding for Token Data Elements</div>
+    <div class="event-detail">PR #7 by @ahtotruu introduces CBOR tags for token data elements in the unicity-ids repository, formalising the binary serialisation schema for identity tokens. Assigning explicit CBOR tags ensures that each data element carries unambiguous type information, improving interoperability with external CBOR-aware tooling and validators. This change strengthens the canonical encoding of token structures, which is critical for deterministic hashing and cross-platform consistency within the Unicity identity layer.</div>
+    <div class="event-meta"><code>unicity-ids</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">ShardID Verification Added to Unicity Certificates</div>
-    <div class="event-detail">PR #5 in bft-go-base adds shardID verification to Unicity Certificates (UCs), ensuring that a certificate is explicitly bound to the shard it was issued for. Without this check, a certificate from one shard could potentially be replayed or misapplied in the context of another shard, representing a cross-shard integrity risk. The addition of this verification step strengthens the UC validation pipeline and aligns certificate semantics with the sharded architecture of the Unicity network. This is an important correctness and security improvement for the BFT base layer.</div>
-    <div class="event-meta"><code>bft-go-base</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
-  <div class="event-body">
-    <div class="event-title">CBOR Tag Support in Aggregator Serialization</div>
-    <div class="event-detail">PR #143 introduces CBOR tag support to the aggregator-go service, updating the serialization layer to correctly encode and decode typed CBOR structures using explicit tags. CBOR tags enable self-describing, strongly-typed binary data, which improves interoperability with other components and external systems that consume aggregator output. This change likely resolves ambiguity in previously untagged CBOR payloads where type information had to be inferred from context. Proper CBOR tagging is a step toward a more robust and standards-compliant data interchange format across the Unicity network stack.</div>
-    <div class="event-meta"><code>aggregator-go</code></div>
+    <div class="event-title">Sharding Bug Fix in BFT Consensus Core</div>
+    <div class="event-detail">PR #21 by @lploom addresses a sharding defect in bft-core, targeting correctness in how the Byzantine Fault Tolerant consensus engine partitions or routes data across shards. Sharding bugs at the consensus layer can lead to split-brain scenarios, missed votes, or inconsistent ledger state across nodes, making this a high-priority fix. The change stabilises shard assignment or message routing logic, ensuring that consensus rounds proceed correctly under a sharded topology. This unblocks reliable horizontal scalability for the Unicity network infrastructure.</div>
+    <div class="event-meta"><code>bft-core</code></div>
   </div></div></div>
 
 <div class="card" style="border-color:#E24B4A">
@@ -134,7 +119,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
     <span class="badge" style="background:#FCEBEB;color:#791F1F">Project board comparison</span>
     <span style="font-size:12px;color:#666">Stale statuses &middot; No Status &middot; open PRs not tracked</span>
   </div>
-  <p class="section-title">Astrid <a href="https://github.com/orgs/unicity-astrid/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 138 · In progress 11 · Done 273</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
+  <p class="section-title">Astrid <a href="https://github.com/orgs/unicity-astrid/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 137 · In progress 12 · Done 273</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
   <span class="chip chip-miss">MISSING</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-astrid/capsule-memory/pull/3" class="pr-link">feat: KV-backed memory with add_memory tool and /memory-export command</a></div>
@@ -179,7 +164,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/105" class="pr-link">feat: UXF module + Profile storage — content-addressable token packaging with OrbitDB</a></div>
     <div class="board-detail"><code>sphere-sdk #105</code> · Open PR not tracked on any board</div>
-  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Blocked 6 · In Dev 23 · No Status 9 · Test 6 · Todo 73 · Done 269</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
+  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Blocked 6 · In Dev 22 · No Status 9 · Test 5 · Todo 74 · Done 271</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
   <span class="chip chip-stale">STALE</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicitynetwork/aggregator-go/pull/51" class="pr-link">Streaming round processing with adaptive timing</a></div>
@@ -332,80 +317,80 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 <div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">astrid #654 — v0.5.1 release blocker: 5 capsules fail manifest validation, agent loop non-functional</div>
-    <div class="event-detail">Open PR by @b3y0urs3lf, blocking end-to-end verification (#648) and downstream work by @joshuajbouw. Age not specified but flagged as active blocker. Needs immediate review and merge or a clear remediation path so the agent loop can be verified and the isolation-stack PRs (#666, #656, etc.) can be validated end-to-end.</div>
-    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">critical</span></div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#E24B4A"></div>
-  <div class="event-body">
-    <div class="event-title">finality-gadget #1–#5, #7–#10 — 9 unassigned critical bugs (OOM, stream leak, data race, auth bypass, underflow, genesis bug, BoltDB leak, safety checks, broken node state)</div>
-    <div class="event-detail">Nine issues in the Unicity Network finality-gadget repo have no status assigned and are not tracked on any board. They include a remote OOM crash (#1), libp2p stream leak (#2), goroutine leak and data race (#3), missing message authentication (#4), uint64 underflow (#5), genesis check bug causing re-finalization guards to be disabled (#7), BoltDB handle leak (#8), missing safety checks in FollowerVerify (#9), and a node running in broken state due to swallowed errors (#10). All need immediate triage, status assignment, and owner assignment.</div>
+    <div class="event-title">finality-gadget #1–#5, #7–#10: 9 untracked critical bugs, no status assigned</div>
+    <div class="event-detail">Nine issues in finality-gadget (Unicity Network) cover remote OOM crashes, stream leaks, data races, missing message authentication, uint64 underflow, genesis check bugs, BoltDB handle leaks, missing safety checks, and a silently broken node state. None have a status or assignee on the board. These represent serious network-layer risks and must be triaged, assigned, and statused immediately.</div>
     <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">critical</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">state-transition-sdk-java #26, #43, #44, #53 — Long-standing Java SDK PRs (28–182 days), untracked on board</div>
-    <div class="event-detail">#26 by @b3y0urs3lf is 182 days old (WIP cucumber tests); #43 and #44 by @martti007 are 141 days old (state ID rename, user-defined mint reasons); #53 by @martti007 is 28 days old (general structure + minting/transfer). None are tracked on any project board. Decision needed: are these still relevant to the roadmap? If yes, assign reviewers and add to board; if no, close with a comment.</div>
+    <div class="event-title">state-transition-sdk-java #26: WIP cucumber tests, 183 days open, untracked</div>
+    <div class="event-detail">Owned by @b3y0urs3lf, this WIP PR has been open for over six months with no board tracking. It needs a decision: either rebase and finish it with a clear scope, or close it. Owner or team lead should assess whether the cucumber test strategy it represents is still current.</div>
     <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">close or revive</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#EF9F27"></div>
+  <div class="event-body">
+    <div class="event-title">state-transition-sdk-java #43 &amp; #44: 142 days open, @martti007, untracked on any board</div>
+    <div class="event-detail">Both PRs — renaming request ID to state ID and adding user-defined mint reasons — have been open 142 days without board status. Martti is currently active on sdk-js work; these Java SDK PRs risk permanent staleness. A reviewer should be assigned and a merge or close decision made this sprint.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">decision needed</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">rfcs #20–#25 — Six Astrid RFCs open 27–30 days, untracked on board (capsule interface, distro, host ABI, interceptor, VFS schemes, A2UI)</div>
-    <div class="event-detail">All six RFCs by @joshuajbouw (#20 Capsule interface, #21 Distro system, #22 Host ABI, #23 Interceptor middleware, #24 XDG VFS schemes, #25 A2UI protocol) have been open ~4 weeks with no board tracking. These are architectural documents that likely gate implementation PRs already in flight. They need designated reviewers, board entries, and a decision window to avoid blocking the broader astrid roadmap.</div>
-    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">decision needed</span></div>
+    <div class="event-title">rfcs #20–#25: Six Astrid RFCs, 28–31 days open, all by @joshuajbouw, none board-tracked</div>
+    <div class="event-detail">Six foundational Astrid RFCs (capsule interface, distro system, host ABI, interceptor chain, VFS schemes, A2UI protocol) have been open up to 31 days with no board tracking. They block downstream implementation work. At minimum #20, #22, and #23 should enter formal review this week given Joshua's active quota-enforcement PRs depend on settled interface contracts.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review needed</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">bft-core #11 — EVM PR by @MastaP open 92 days, untracked on board</div>
-    <div class="event-detail">This WIP EVM integration PR has been open for over three months with no board tracking. Given the active sharding and BFT work happening in parallel (bft-core #21, bft-go-base #5), it is a risk to leave it diverging silently. Owner (@MastaP) should provide a status update: is this still the intended approach, does it need a rebase, or should it be closed in favour of a fresh branch?</div>
+    <div class="event-title">bft-core #11: EVM, 93 days open, @MastaP, no board tracking</div>
+    <div class="event-detail">This long-running EVM integration PR has been open 93 days with no board status while MastaP is actively merging sharding work. The EVM scope should be re-evaluated: if it is still in scope for the current roadmap phase, assign a reviewer and set a milestone; otherwise close it to reduce noise.</div>
     <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">close or revive</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">sphere-sdk #90 and aggregator-go #51 — Stale board entries for already-merged PRs</div>
-    <div class="event-detail">sphere-sdk #90 (Feat/auto connect) remains in 'Backlog' and aggregator-go #51 (Streaming round processing) remains in 'Todo' despite both PRs being merged. These stale cards misrepresent project progress. Board maintainer should close or archive both items to keep the board accurate.</div>
-    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">close or revive</span></div>
+    <div class="event-title">Board stale items: sphere-sdk #90 and aggregator-go #51 not updated after merge</div>
+    <div class="event-detail">sphere-sdk #90 remains in 'Backlog' and aggregator-go #51 remains in 'Todo' despite their PRs having been merged. Board hygiene action needed: move both to Done/Closed so the board reflects actual state and sprint velocity is counted correctly.</div>
+    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">decision needed</span></div>
   </div></div></div>
 
 <div class="card" style="border-color:#1D9E75">
   <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
   <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
-  <div class="mc-detail">Merged three astrid PRs this window: #665 (per-principal PrincipalProfile + profile.toml), #662 (per-invocation SecretStore + capsule_log re-scoping), and #659 (per-invocation home:// and /tmp/ VFS resolution), completing Layers 1–3 groundwork of the per-invocation isolation stack. Has six open PRs spanning quota enforcement (#666), engine refactor (#660), remote CLI auth (#658), CLI redesign (#657), sub-agent delegation (#656), and post-review hygiene (#664). Also actively involved in the v0.5.1 release blocker (#654) where 5 core capsules fail manifest validation and the agent loop remains non-functional.</div>
-  <div style="margin-top:6px"><span class="tag">3 merged</span><span class="tag">astrid isolation stack</span><span class="tag">6 open PRs</span><span class="tag">v0.5.1 blocker</span></div>
+  <div class="mc-detail">Two open PRs in astrid advancing per-invocation quota enforcement from PrincipalProfile: #667 (Layer 3 surface) and #666 (core enforcement, targeting #653). Both are awaiting review and build on each other sequentially.</div>
+  <div style="margin-top:6px"><span class="tag">2 open PRs</span><span class="tag">astrid quota enforcement</span><span class="tag">PrincipalProfile layer</span></div>
 </div><div class="member-card">
   <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
-  <div class="mc-detail">Merged aggregator-go #143 (CBOR tags), landing the tag scheme update on the aggregator side. Currently involved in bft-core #21 (fix sharding), bft-go-base #5 (shardID verification), finality-gadget #13 (review fixes), and aggregator-go #141 (v2 tree and inclusion proof format), indicating active cross-repo review and coordination across the BFT and aggregator layers.</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">aggregator-go CBOR</span><span class="tag">BFT + finality review</span><span class="tag">multi-repo</span></div>
+  <div class="mc-detail">Actively involved across four PRs: driving aggregator-go #146 (BFT sharding), bft-core #21 (fix sharding, now merged), state-transition-sdk-js #111 (StateId shard check), and state-transition-sdk-js #109 (CBOR tag updates). Heavy focus on sharding correctness across the Go and JS layers.</div>
+  <div style="margin-top:6px"><span class="tag">sharding push</span><span class="tag">aggregator-go</span><span class="tag">bft-core</span><span class="tag">sdk-js CBOR</span></div>
+</div><div class="member-card">
+  <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
+  <div class="mc-detail">Merged three maintenance-mode PRs across the Sphere stack: sphere-quest-frontend #1, sphere-backoffice #1, and sphere-api #2. Consistent cross-repo delivery completing the maintenance-mode feature rollout.</div>
+  <div style="margin-top:6px"><span class="tag">3 merged</span><span class="tag">maintenance mode</span><span class="tag">sphere stack</span></div>
 </div><div class="member-card">
   <div class="mc-name">Risto Laanoja <span class="mc-handle">@ristik</span></div>
-  <div class="mc-detail">Involved in unicity-yellowpaper-tex #3 (encoding of timelock predicates), which was merged this window, contributing to the formal specification of timelock predicate encoding in the yellow paper.</div>
-  <div style="margin-top:6px"><span class="tag">yellowpaper</span><span class="tag">timelock predicates</span><span class="tag">spec review</span></div>
+  <div class="mc-detail">One open PR in state-transition-sdk-js: #110 'direct predicate use', which is also drawing review involvement from Martti. Focused contribution on predicate handling in the JS SDK.</div>
+  <div style="margin-top:6px"><span class="tag">sdk-js predicate</span><span class="tag">1 open PR</span></div>
 </div><div class="member-card">
   <div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div>
-  <div class="mc-detail">Opened state-transition-sdk-js #109 to update CBOR tags for the aggregator layer and token, tracking the tag changes landed in aggregator-go #143. Also involved in unicity-ids #7 (CBOR tags for token data elements) and unicity-yellowpaper-tex #3 (timelock predicates), keeping the JS SDK and specification work aligned.</div>
-  <div style="margin-top:6px"><span class="tag">sdk-js CBOR tags</span><span class="tag">1 open PR</span><span class="tag">spec + SDK alignment</span></div>
+  <div class="mc-detail">Authoring or co-authoring three open PRs in state-transition-sdk-js (#111, #109, #108) covering shard checks, CBOR tag updates, and inclusion proof format changes. Also reviewing unicity-ids #7 (now merged) and #4, plus state-transition-sdk-js #110.</div>
+  <div style="margin-top:6px"><span class="tag">3 open PRs</span><span class="tag">sdk-js CBOR &amp; proofs</span><span class="tag">unicity-ids review</span><span class="tag">broad cross-repo involvement</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@ahtotruu</span></div>
-  <div class="mc-detail">Merged unicity-yellowpaper-tex #3 (encoding of timelock predicates), closing out the formal spec PR. Has unicity-ids #7 (CBOR tags for token data elements) open and was involved in the aggregator-go #143 CBOR tags merge, bridging specification and implementation on the encoding work.</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">yellowpaper author</span><span class="tag">CBOR tags spec</span><span class="tag">unicity-ids open PR</span></div>
-</div><div class="member-card">
-  <div class="mc-name"><span class="mc-handle">@b3y0urs3lf</span></div>
-  <div class="mc-detail">Driving astrid #654, the v0.5.1 release blocker where 5 core capsules fail manifest validation and the agent loop is non-functional, blocking end-to-end verification (#648). This PR remains open and is a critical dependency for Joshua's ongoing isolation-stack work in astrid.</div>
-  <div style="margin-top:6px"><span class="tag">v0.5.1 blocker</span><span class="tag">manifest validation</span><span class="tag">astrid agent loop</span></div>
+  <div class="mc-detail">Merged unicity-ids #7 'CBOR tags for token data elements', delivering a key serialisation specification. Also involved in bft-core #20 (verify sharding support) and the still-open unicity-ids #4 (TGE type tags).</div>
+  <div style="margin-top:6px"><span class="tag">unicity-ids #7 merged</span><span class="tag">CBOR tags</span><span class="tag">bft sharding review</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@jait91</span></div>
-  <div class="mc-detail">Has aggregator-go #141 (v2 tree and inclusion proof format) open and was involved in the aggregator-go #143 CBOR tags merge, indicating active work on the aggregator's proof and encoding layer.</div>
-  <div style="margin-top:6px"><span class="tag">aggregator-go v2 tree</span><span class="tag">inclusion proofs</span><span class="tag">CBOR tags review</span></div>
+  <div class="mc-detail">Owns the open aggregator-go #146 'Bft sharding' PR, a significant cross-cutting change also co-driven by MastaP. Awaiting review or merge.</div>
+  <div style="margin-top:6px"><span class="tag">aggregator-go sharding</span><span class="tag">1 open PR</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@lploom</span></div>
-  <div class="mc-detail">Merged bft-go-base #5 (shardID verification in UC) and has two PRs open: bft-core #21 (fix sharding) and finality-gadget #13 (review fixes), consolidating shard correctness work across the BFT stack.</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">sharding fixes</span><span class="tag">finality-gadget</span><span class="tag">bft-core open PR</span></div>
+  <div class="mc-detail">Merged bft-core #21 'Fix sharding' and is involved in bft-core #20 'Verify sharding support'. Also holds the long-standing open PR unicity-node #3 'BFT snapshots' (27 days open).</div>
+  <div style="margin-top:6px"><span class="tag">bft-core #21 merged</span><span class="tag">sharding fixes</span><span class="tag">BFT snapshots pending</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@vrogojin</span></div>
-  <div class="mc-detail">Has two open PRs: sphere #301 (dedicated mobile layout with bottom navigation) and sphere-sdk #105 (UXF module + Profile storage with content-addressable token packaging via OrbitDB), advancing both the mobile UI and the SDK's identity/storage layer.</div>
-  <div style="margin-top:6px"><span class="tag">sphere mobile layout</span><span class="tag">sphere-sdk UXF</span><span class="tag">OrbitDB integration</span><span class="tag">2 open PRs</span></div>
-</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@igmahl, @KruGoL, @jvsteiner, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
+  <div class="mc-detail">One open PR: sphere-cli #1 implementing phase 2 of the CLI, covering legacy bridge and host DM transport. No reviewers or board tracking noted.</div>
+  <div style="margin-top:6px"><span class="tag">sphere-cli phase 2</span><span class="tag">1 open PR</span><span class="tag">legacy bridge</span></div>
+</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@KruGoL, @jvsteiner, @b3y0urs3lf, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments — not just authored items.</div>
 </div>
@@ -415,148 +400,148 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <div style="overflow-x:auto"><table class="pr-table">
     <thead><tr><th>Age</th><th>PR</th><th>Author</th></tr></thead>
     <tbody><tr>
-  <td><span class="age-pill age-critical">182d</span></td>
+  <td><span class="age-pill age-critical">183d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/26" class="pr-link">[WIP] Java SDK cucumber test amendments</a>
     <div class="pr-repo">state-transition-sdk-java #26</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-critical">141d</span></td>
+  <td><span class="age-pill age-critical">142d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/43" class="pr-link">#40 Rename request id to state id, secure state id</a>
     <div class="pr-repo">state-transition-sdk-java #43</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-critical">141d</span></td>
+  <td><span class="age-pill age-critical">142d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/44" class="pr-link">Add user defined mint reasons</a>
     <div class="pr-repo">state-transition-sdk-java #44</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-critical">92d</span></td>
+  <td><span class="age-pill age-critical">93d</span></td>
   <td><a href="https://github.com/unicitynetwork/bft-core/pull/11" class="pr-link">EVM</a><span class="draft-tag">Draft</span>
     <div class="pr-repo">bft-core #11</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-high">75d</span></td>
+  <td><span class="age-pill age-high">76d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-js-sdk/pull/4" class="pr-link">test: add comprehensive unit tests for uncovered modules</a>
     <div class="pr-repo">nostr-js-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-high">75d</span></td>
+  <td><span class="age-pill age-high">76d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-sdk/pull/4" class="pr-link">Add comprehensive unit tests (366 new tests)</a>
     <div class="pr-repo">nostr-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-high">35d</span></td>
+  <td><span class="age-pill age-high">36d</span></td>
   <td><a href="https://github.com/unicity-astrid/capsule-memory/pull/3" class="pr-link">feat: KV-backed memory with add_memory tool and /memory-export command</a>
     <div class="pr-repo">capsule-memory #3</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">30d</span></td>
+  <td><span class="age-pill age-high">31d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/20" class="pr-link">RFC: Capsule interface system</a>
     <div class="pr-repo">rfcs #20</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">30d</span></td>
+  <td><span class="age-pill age-high">31d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/21" class="pr-link">RFC: Distro system</a>
     <div class="pr-repo">rfcs #21</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">30d</span></td>
+  <td><span class="age-pill age-high">31d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/22" class="pr-link">RFC: Host ABI</a>
     <div class="pr-repo">rfcs #22</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">30d</span></td>
+  <td><span class="age-pill age-high">31d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/23" class="pr-link">RFC: Interceptor middleware chain</a>
     <div class="pr-repo">rfcs #23</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">29d</span></td>
+  <td><span class="age-pill age-high">30d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/24" class="pr-link">RFC: XDG-aligned VFS schemes (config://, data://, cache://, state://)</a>
     <div class="pr-repo">rfcs #24</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">28d</span></td>
+  <td><span class="age-pill age-medium">29d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/53" class="pr-link">#52 Add general structure, token minting and transfering functionality.</a>
     <div class="pr-repo">state-transition-sdk-java #53</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-medium">27d</span></td>
+  <td><span class="age-pill age-medium">28d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/25" class="pr-link">RFC: Agent-Composed UI via A2UI Protocol</a>
     <div class="pr-repo">rfcs #25</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">26d</span></td>
+  <td><span class="age-pill age-medium">27d</span></td>
   <td><a href="https://github.com/unicitynetwork/unicity-node/pull/3" class="pr-link">BFT snapshots</a>
     <div class="pr-repo">unicity-node #3</div></td>
   <td class="pr-author">@lploom</td></tr><tr>
-  <td><span class="age-pill age-medium">14d</span></td>
+  <td><span class="age-pill age-medium">15d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-js/pull/106" class="pr-link">Feature/test infrastructure</a>
     <div class="pr-repo">state-transition-sdk-js #106</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-low">13d</span></td>
+  <td><span class="age-pill age-medium">14d</span></td>
   <td><a href="https://github.com/unicitynetwork/bft-terraform/pull/1" class="pr-link">Add testnet environment (eu-central-1)</a>
     <div class="pr-repo">bft-terraform #1</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-low">13d</span></td>
+  <td><span class="age-pill age-medium">14d</span></td>
   <td><a href="https://github.com/unicitynetwork/bft-ansible/pull/1" class="pr-link">Add testnet environment and sharded aggregator deployment</a>
     <div class="pr-repo">bft-ansible #1</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-low">12d</span></td>
+  <td><span class="age-pill age-low">13d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-sdk/pull/105" class="pr-link">feat: UXF module + Profile storage — content-addressable token packaging with OrbitDB</a>
     <div class="pr-repo">sphere-sdk #105</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-low">9d</span></td>
+  <td><span class="age-pill age-low">10d</span></td>
   <td><a href="https://github.com/unicitynetwork/aggregator-go/pull/141" class="pr-link">Implement v2 tree and inclusion proof format</a>
     <div class="pr-repo">aggregator-go #141</div></td>
   <td class="pr-author">@jait91</td></tr><tr>
-  <td><span class="age-pill age-low">8d</span></td>
+  <td><span class="age-pill age-low">9d</span></td>
   <td><a href="https://github.com/unicitynetwork/finality-gadget/pull/11" class="pr-link">IPC client timeout</a>
     <div class="pr-repo">finality-gadget #11</div></td>
   <td class="pr-author">@lploom</td></tr></tbody>
   </table></div>
 </div>
 
-<div class="card" style="border-color:#E24B4A"><div class="org-header"><span class="badge" style="background:#FCEBEB;color:#791F1F">Apr26 release</span><span style="font-size:13px;color:#666">33/50 done &middot; 7 days to deadline</span><span class="badge" style="background:#FCEBEB;color:#791F1F;margin-left:auto">critical</span><a href="https://github.com/orgs/unicitynetwork/projects/1/views/2" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></div><div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden"><div style="background:#E24B4A;width:66%;height:100%;border-radius:4px"></div></div><div style="margin-bottom:14px"><span style="font-size:11px;color:#555;margin-right:14px"><strong>4</strong> In Dev</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>9</strong> Todo</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>3</strong> Test</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>1</strong> Blocked</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><p class="section-title" style="margin-top:0;color:#085041">✔ What's moving</p><div class="event-row">
-  <div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">Type tags definition actively in dev</div>
-    <div class="event-detail">[unicity-ids] 'Define type tags for token and transaction data elements' (@ahtotruu, @martti007) is In Dev and is the foundational dependency for at least three downstream SDK and aggregator tasks. Progress here directly unblocks the aggregator-go update and both SDK type-tag updates.</div>
-  </div></div><div class="event-row">
+<div class="card" style="border-color:#E24B4A"><div class="org-header"><span class="badge" style="background:#FCEBEB;color:#791F1F">Apr26 release</span><span style="font-size:13px;color:#666">35/50 done &middot; 6 days to deadline</span><span class="badge" style="background:#FCEBEB;color:#791F1F;margin-left:auto">critical</span><a href="https://github.com/orgs/unicitynetwork/projects/1/views/2" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></div><div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden"><div style="background:#E24B4A;width:70%;height:100%;border-radius:4px"></div></div><div style="margin-bottom:14px"><span style="font-size:11px;color:#555;margin-right:14px"><strong>3</strong> In Dev</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>9</strong> Todo</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>2</strong> Test</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>1</strong> Blocked</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><p class="section-title" style="margin-top:0;color:#085041">✔ What's moving</p><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
     <div class="event-title">Aggregator type-tag update in progress</div>
-    <div class="event-detail">[aggregator-go] 'Update aggregator implementation to use the new type tags' (@MastaP) is In Dev, meaning the aggregator side of the type-tag rollout is moving in parallel with the definition work. This is a critical path item for TGE aggregation correctness.</div>
+    <div class="event-detail">[aggregator-go] TGE type-tag update is In Dev under @MastaP. This is a core dependency for SDK alignment across Java and JS SDKs.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">JS inclusion proof format update in dev</div>
-    <div class="event-detail">[state-transition-sdk-js] 'Update inclusion proof format' (@martti007) is actively In Dev, which is required for TGE-compliant proof verification in the JavaScript SDK.</div>
+    <div class="event-title">JS inclusion proof format underway</div>
+    <div class="event-detail">[state-transition-sdk-js] TGE inclusion proof format update is In Dev under @martti007. Completion unblocks SDK consistency required for TGE release.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">BFT sharding verification underway in test</div>
-    <div class="event-detail">[bft-core] 'Verify sharding support' (@lploom) is in Test, indicating the core BFT sharding logic has reached validation stage, which is a prerequisite for the three downstream SDK sharding support items.</div>
+    <div class="event-title">BFT sharding aggregator active</div>
+    <div class="event-detail">[aggregator-go] BFT-based sharding support is In Dev under @jait91. Progress here is needed before JS and Java BFT sharding items can close.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Java SDK V2 items in test phase</div>
-    <div class="event-detail">[state-transition-sdk-java] 'V2 Support payments and splits' and 'V2 General structure, verification and token transfers' (both @martti007) are in Test, showing the Java SDK V2 path is advancing toward completion.</div>
+    <div class="event-title">Java SDK V2 items in test</div>
+    <div class="event-detail">[state-transition-sdk-java] Two V2 items — payments/splits and general structure/verification — are in Test under @martti007, representing the furthest-along Java SDK work.</div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#1D9E75"></div>
+  <div class="event-body">
+    <div class="event-title">Aggregation tree proof format blocked but assigned</div>
+    <div class="event-detail">[aggregator-go] TGE aggregation tree and inclusion proof format update is Blocked with @jait91 and @b3y0urs3lf assigned, indicating active awareness even if stalled.</div>
   </div></div></div><div><p class="section-title" style="margin-top:0;color:#E24B4A">⚠ What worries</p><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">Blocked aggregator proof format is hard dependency</div>
-    <div class="event-detail">[aggregator-go] 'Update aggregation tree and inclusion proof formats' (@jait91, @b3y0urs3lf) is the only Blocked item and sits on the critical path. The JS and Java SDK inclusion proof format updates and both BFT sharding SDK items cannot be fully validated until this closes. A block on two owners with no stated resolution timeline is a direct release threat.</div>
+    <div class="event-title">One blocked item gates multiple dependents</div>
+    <div class="event-detail">[aggregator-go] TGE aggregation tree and inclusion proof formats (@jait91, @b3y0urs3lf) is Blocked. The JS and Java SDK inclusion proof format tasks cannot reach a consistent state until this aggregator-side format is resolved, creating a hard sequential dependency with only 6 days left.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">Type-tag chain: one In Dev item gates five others</div>
-    <div class="event-detail">'Define type tags' (@ahtotruu, @martti007) is still In Dev. Until it closes, 'Adding version tags to Unicity data structures' (Todo), 'Update SDK to use new type tags' in both JS and Java (Todo), and the aggregator-go type-tag update (In Dev) all carry unresolved dependency risk. Any slip here cascades across three repos.</div>
+    <div class="event-title">@martti007 owns 10 of 15 open items</div>
+    <div class="event-detail">@martti007 is the sole owner on 10 remaining tasks across [state-transition-sdk-js] and [state-transition-sdk-java], spanning Todo, In Dev, and Test states. Any slowdown, blocker, or context-switching for this individual directly threatens the entire release.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">@martti007 owns 10 of 17 open items alone</div>
-    <div class="event-detail">@martti007 is the sole or primary assignee on 10 remaining tasks spanning [state-transition-sdk-js], [state-transition-sdk-java], and [unicity-ids]. This is extreme single-person concentration risk. Any capacity issue, blocker, or context-switching cost for this individual directly threatens the release deadline.</div>
+    <div class="event-title">BFT sharding work spans three repos, not TGE-tagged</div>
+    <div class="event-detail">The BFT sharding items across [.github], [state-transition-sdk-js], and [state-transition-sdk-java] are all in Todo with no TGE tag, suggesting they may be scope additions. If these are required for TGE, they represent three unstarted items with 6 days remaining; if not required, they should be explicitly deferred now.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">BFT sharding: three Todo SDK items not started</div>
-    <div class="event-detail">[state-transition-sdk-js] and [state-transition-sdk-java] BFT sharding support items and the [.github] orchestration item (@ahtotruu, @lploom, @martti007) are all still Todo with 7 days remaining. These depend on [bft-core] test passing and the aggregator sharding item closing. There is no realistic path to completing all three SDK sharding items if upstream validation slips even one day.</div>
+    <div class="event-title">9 items still in Todo with 6 days to deadline</div>
+    <div class="event-detail">Nine tasks have not yet entered development, including foundational work like [unicity-ids] version tags (@ahtotruu) and [state-transition-sdk-java] V2 Unicity ID support (@martti007). Starting, completing, and testing these in 6 days is not credible without immediate parallel execution.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">Java V2 Unicity ID support not yet started</div>
-    <div class="event-detail">[state-transition-sdk-java] 'V2 Unicity ID support' (@martti007) is still Todo while two other Java V2 items are already in Test. This sequencing gap suggests a missing dependency link and risks reopening already-tested Java SDK work if the ID support changes require structural adjustments.</div>
+    <div class="event-title">Type-tag chain not yet closed end-to-end</div>
+    <div class="event-detail">The type-tag update sequence — aggregator ([aggregator-go], @MastaP, In Dev) → JS SDK (@martti007, Todo) → Java SDK (@martti007, Todo) — has not completed even the first link. All three must close sequentially before end-to-end TGE type-tag consistency is achieved.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">34% of items remain with 7 days to deadline</div>
-    <div class="event-detail">17 items remain across 4 stages including 9 in Todo, meaning more than a third of the release scope has not yet entered active development. At the current burn rate, completing all items by April 30 requires finishing roughly 2.4 items per day with no buffer for review, merge conflicts, or re-test cycles.</div>
+    <div class="event-title">[unicity-ids] version tag item unstarted, no parallel owner</div>
+    <div class="event-detail">[unicity-ids] TGE version tags (@ahtotruu) is in Todo and is likely upstream to SDK data structure changes. If this does not start immediately, downstream SDK work may need rework, and @ahtotruu has no backup assigned.</div>
   </div></div></div></div></div>
 
 <p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
