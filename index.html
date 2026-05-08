@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unicity Briefing &mdash; Thursday, 7 May 2026</title>
+<title>Unicity Briefing &mdash; Friday, 8 May 2026</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
@@ -79,50 +79,45 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 
 <div class="header">
   <h2>Unicity project &mdash; daily brief</h2>
-  <p>Thursday, 7 May 2026</p>
+  <p>Friday, 8 May 2026</p>
   <div class="header-meta">
-    <span class="window-badge">Coverage: Wednesday, 6 May 2026 &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 7 May 2026, 08:00 UTC</span>
+    <span class="window-badge">Coverage: Thursday, 7 May 2026 &middot; GitHub API (author + involves sweep)</span>
+    <span class="updated-badge">Updated: 8 May 2026, 07:00 UTC</span>
     
   </div>
 </div>
 
 <div class="metric-grid">
-  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">18</div></div>
+  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">8</div></div>
   <div class="metric"><div class="metric-label">Releases</div><div class="metric-val am">0</div></div>
   <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">23</div></div>
-  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">4</div></div>
-  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">0 / 16 / 2</div></div>
+  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">3</div></div>
+  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">0 / 2 / 6</div></div>
 </div>
 
 <div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">0 PRs merged</span></div><p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p></div>
-<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">16 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
+<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">2 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Detached Referral Visibility End-to-End</div>
-    <div class="event-detail">PRs #8 and #16 (sphere-api) extended the user-detail response to include the referral _id and expose detachedAt/detachedBy fields in referral entries. PR #2 (sphere-backoffice) fixed the _id fallback logic in the referral detach operation, and PR #5 (sphere-backoffice) renders a DETACHED badge on the corresponding admin rows. Together these changes give administrators a complete, accurate view of detached referral state directly in the back-office UI.</div>
-    <div class="event-meta"><code>sphere-api, sphere-backoffice</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">OAuth Reconnect, Token Refresh, and Redis State</div>
-    <div class="event-detail">PRs #10, #11, and #12 (sphere-api) delivered a multi-part OAuth overhaul: Redis-backed pendingStates with a cacheRedis shim, an account-swap-safe Reconnect flow across all four social providers, and a refresh lock with Discord refresh-on-401 and rotation orphan cleanup. PR #13 (sphere-api) builds on this by setting failCode=ACCOUNT_NOT_CONNECTED when a social connection is absent, and PR #5 (sphere-quest-frontend) surfaces a Connect button to the user whenever that fail code is returned. PR #4 (sphere-quest-frontend) adds an account-mismatch toast so users are immediately informed when a social account conflict is detected during the OAuth flow.</div>
-    <div class="event-meta"><code>sphere-api, sphere-quest-frontend</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">SSRF Mitigation and External API Hardening</div>
-    <div class="event-detail">PR #15 (sphere-api) introduced validation of external-API URLs to block server-side request forgery vectors, and gated the /test endpoint so it is only accessible on published projects. This closes a class of SSRF vulnerabilities where an attacker could supply arbitrary URLs to internal infrastructure. The change is a targeted security fix with no user-facing functional impact but significantly narrows the attack surface of the verifier subsystem.</div>
-    <div class="event-meta"><code>sphere-api</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">Admin Codebase Cleanup and Infrastructure Hygiene</div>
-    <div class="event-detail">PR #14 (sphere-api) applied post-umbrella final-review follow-ups, and PR #9 (sphere-api) dropped the dead actorRole='user' arm from the referrals logic. PR #4 (sphere-backoffice) renamed UserDetailModal to UserDetail, removing dead modal scaffolding, while PR #3 (sphere-backoffice) introduced component test infrastructure using React Testing Library and happy-dom. PR #2 (sphere-apps) renamed 'Boxy Run' to 'Boxy Run Arena' and updated its URL, keeping the app registry consistent with the current product naming.</div>
-    <div class="event-meta"><code>sphere-api, sphere-backoffice, sphere-apps</code></div>
-  </div></div><p class="section-title" style="margin-top:14px">Timeline — Wednesday, 6 May 2026</p><div class="timeline"><div class="tl-item tl-done"><span class="tl-time">Wed 16:30</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-apps/pull/2" class="tl-link">sphere-apps #2</a> — Rename 'Boxy Run' to 'Boxy Run Arena' and update URL</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 17:38</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-api/pull/8" class="tl-link">sphere-api #8</a> (fix(admin): include referral _id in user-detail response (#3)) &middot; <a href="https://github.com/unicity-sphere/sphere-backoffice/pull/2" class="tl-link">sphere-backoffice #2</a> (fix(admin): drop _id fallback in referral detach)</span></div><div class="tl-item tl-chore"><span class="tl-time">Wed 19:39</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-api/pull/9" class="tl-link">sphere-api #9</a> — chore(referrals): drop dead actorRole='user' arm</span></div><div class="tl-item tl-chore"><span class="tl-time">Wed 19:49</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-backoffice/pull/3" class="tl-link">sphere-backoffice #3</a> — chore(test): add component test infrastructure (RTL + happy-dom)</span></div><div class="tl-item tl-feat"><span class="tl-time">Wed 20:19</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-api/pull/10" class="tl-link">sphere-api #10</a> — feat(oauth): Redis-backed pendingStates + cacheRedis shim (#5)</span></div><div class="tl-item tl-feat"><span class="tl-time">Wed 20:36–20:38</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-quest-frontend/pull/4" class="tl-link">sphere-quest-frontend #4</a> (feat(social): render account-mismatch toast) &middot; <a href="https://github.com/unicity-sphere/sphere-api/pull/11" class="tl-link">sphere-api #11</a> (feat(oauth): account-swap-safe Reconnect flow across all four providers (#4))</span></div><div class="tl-item tl-feat"><span class="tl-time">Wed 20:43</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-api/pull/12" class="tl-link">sphere-api #12</a> — feat(oauth): refresh lock, Discord refresh-on-401, rotation orphan fix (#6)</span></div><div class="tl-item tl-chore"><span class="tl-time">Wed 20:50</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-backoffice/pull/4" class="tl-link">sphere-backoffice #4</a> — chore(admin): rename UserDetailModal to UserDetail (drop dead modal)</span></div><div class="tl-item tl-feat"><span class="tl-time">Wed 21:12–21:17</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-api/pull/13" class="tl-link">sphere-api #13</a> (feat(verifiers): set failCode=ACCOUNT_NOT_CONNECTED on missing social connection) &middot; <a href="https://github.com/unicity-sphere/sphere-quest-frontend/pull/5" class="tl-link">sphere-quest-frontend #5</a> (feat(quest): show Connect button when failCode=ACCOUNT_NOT_CONNECTED)</span></div><div class="tl-item tl-chore"><span class="tl-time">Wed 21:28</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-api/pull/14" class="tl-link">sphere-api #14</a> — chore(post-umbrella): final-review cleanup follow-ups</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 22:26</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-api/pull/15" class="tl-link">sphere-api #15</a> — fix(ssrf): validate external-api URLs + gate /test on published projects</span></div><div class="tl-item tl-fix"><span class="tl-time">Wed 22:54</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-api/pull/16" class="tl-link">sphere-api #16</a> (fix(admin): expose detachedAt/detachedBy in referral entries) &middot; <a href="https://github.com/unicity-sphere/sphere-backoffice/pull/5" class="tl-link">sphere-backoffice #5</a> (fix(admin): render DETACHED badge on detached referral rows)</span></div></div></div>
-<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">2 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
-  <div class="event-body">
-    <div class="event-title">Genesis UTB Documentation and JS Faucet Scaffold</div>
-    <div class="event-detail">PR #12 (unicity-node) adds documentation for the genesis UTB, providing a written reference for the initial unspent transaction bundle that bootstraps the network's ledger state. PR #1 (js-faucet) delivers the initial scaffold for the JavaScript faucet service, including end-to-end tests and a relay-override environment variable for flexible test and staging configurations. Together these two contributions advance protocol legibility and developer tooling simultaneously, giving both node operators and application developers concrete starting points for interacting with the network.</div>
-    <div class="event-meta"><code>unicity-node, js-faucet</code></div>
+    <div class="event-title">Sphere CLI bootstrap and pointer namespace wiring</div>
+    <div class="event-detail">PRs #10 and #11 together establish the foundational CLI experience for sphere-cli. PR #10 introduces a top-level init command, a dedicated pointer namespace, and an opt-in flag for surfacing mnemonics in non-TTY environments, giving operators a structured entry point for node bootstrapping. PR #11 closes a correctness gap where the pointer flush was skipping anchor publication on wallets with zero balance, ensuring the anchor is always committed regardless of wallet state. Together these changes make the CLI usable end-to-end for initial deployment and pointer lifecycle management.</div>
+    <div class="event-meta"><code>sphere-cli</code></div>
   </div></div></div>
+<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">6 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Java SDK state transition and proof verification overhaul</div>
+    <div class="event-detail">Five consecutive PRs by @martti007 substantially harden the state-transition-sdk-java. PR #59 updates inclusion proof verification logic and introduces explicit CBOR tags for typed encoding. PR #62 adds shard ID verification cross-checked against the state ID, preventing misrouted state transitions from being accepted silently. PR #63 adds full unicity ID support to the SDK data model, and PR #65 enforces stricter CBOR parsing, splits proof deduplication into a discrete step, and adds an issuer check against the unicity ID — closing the loop on provenance validation. Collectively these changes tighten the trust boundary around state proofs and prepare the SDK for production-grade identity-aware token flows.</div>
+    <div class="event-meta"><code>state-transition-sdk-java</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Predicate-based addressing and mint justification restructure</div>
+    <div class="event-detail">PR #61 replaces raw address references with predicate objects throughout the SDK, aligning the data model with a capability-oriented ownership scheme. As part of the same change, mint justification is moved to the mint root rather than being carried inline, which simplifies proof construction and makes the justification auditable at the root level. This refactor affects core token lifecycle methods and is a prerequisite for the unicity ID issuer checks introduced in PR #65.</div>
+    <div class="event-meta"><code>state-transition-sdk-java</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">NIP-33 DELETE cliff fix for hot relay pubkeys</div>
+    <div class="event-detail">PR #20 by @MastaP resolves a bug in the unicity-tokens-relay where NIP-33 parameterised-replaceable event DELETE operations were hitting a processing cliff when the originating pubkey was classified as hot. The fix moves the deletion driving logic to the tag side rather than relying on pubkey-side resolution, ensuring DELETE plans are evaluated and applied correctly under high-throughput key conditions. This matters for relay correctness because missed DELETEs would leave stale replaceable events visible to downstream consumers.</div>
+    <div class="event-meta"><code>unicity-tokens-relay</code></div>
+  </div></div><p class="section-title" style="margin-top:14px">Timeline — Thursday, 7 May 2026</p><div class="timeline"><div class="tl-item tl-done"><span class="tl-time">Thu 09:08–09:13</span><span class="tl-label"><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/65" class="tl-link">state-transition-sdk-java #65</a> (#64 Make CBOR more strict, split proof dedup, add unicity id issuer check) &middot; <a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/63" class="tl-link">state-transition-sdk-java #63</a> (#50 Add unicity id support) &middot; <a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/62" class="tl-link">state-transition-sdk-java #62</a> (#58 Add shard id verification against state id)</span></div><div class="tl-item tl-done"><span class="tl-time">Thu 09:14–09:15</span><span class="tl-label"><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/61" class="tl-link">state-transition-sdk-java #61</a> (#60 Use predicates instead of address, move mint justification to mint root) &middot; <a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/59" class="tl-link">state-transition-sdk-java #59</a> (#57, #55 Update inclusion proof verification, add cbor tags)</span></div><div class="tl-item tl-fix"><span class="tl-time">Thu 13:42</span><span class="tl-label"><a href="https://github.com/unicitynetwork/unicity-tokens-relay/pull/20" class="tl-link">unicity-tokens-relay #20</a> — fix: NIP-33 DELETE plan cliff on hot pubkeys — drive from tag side</span></div></div></div>
 
 <div class="card" style="border-color:#E24B4A">
   <div class="org-header">
@@ -189,7 +184,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-cli/pull/3" class="pr-link">ci: harden nightly integration workflow — drop artifact upload</a></div>
     <div class="board-detail"><code>sphere-cli #3</code> · Open PR not tracked on any board</div>
-  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Blocked 5 · In Dev 20 · Test 22 · Todo 68 · Done 285</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
+  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Blocked 5 · In Dev 20 · Test 22 · Todo 68 · Done 287</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
   <span class="chip chip-stale">STALE</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicitynetwork/aggregator-go/pull/51" class="pr-link">Streaming round processing with adaptive timing</a></div>
@@ -287,80 +282,72 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 <div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">sphere-sdk #124 — Relay DB at ~100 GB, offload token-transfer payloads urgently</div>
-    <div class="event-detail">Owner: @MastaP. Kind-31113 payloads are filling the relay DB (~100 GB reported). PR #124 proposes offloading to object storage but is still open. Needs immediate review and merge or a hotfix plan before storage pressure causes relay instability.</div>
-    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">critical</span></div>
+    <div class="event-title">state-transition-sdk-java #26 — Java SDK cucumber tests, 198 days open (@b3y0urs3lf)</div>
+    <div class="event-detail">Oldest open PR in the repo at 198 days with no board tracking. Owner or tech lead should decide whether to close, rebase, or set a concrete completion milestone this sprint. Needs explicit triage decision.</div>
+    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#E24B4A"></div>
+  <div class="event-body">
+    <div class="event-title">state-transition-sdk-java #43 &amp; #44 — state id rename + user-defined mint reasons, 157 days open (@martti007)</div>
+    <div class="event-detail">Both PRs have been open 157 days with no board card. Given the large recent Java SDK merge wave (#59–#65), these should be assessed for relevance and either rebased onto the current codebase or formally closed to reduce noise.</div>
+    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">state-transition-sdk-java #26, #43, #44, #53 — Long-standing PRs with no board tracking</div>
-    <div class="event-detail">Four Java SDK PRs are untracked on any board: #26 (WIP cucumber tests, 197 days, @b3y0urs3lf), #43 (rename request id → state id, 156 days, @martti007), #44 (user-defined mint reasons, 156 days, @martti007), #53 (general token minting structure, 43 days, @martti007). Team should decide whether to merge, close, or add to the Unicity Network board this sprint.</div>
-    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">close or revive</span></div>
+    <div class="event-title">bft-core #11 — EVM integration, 108 days open (@MastaP)</div>
+    <div class="event-detail">No board tracking and no visible recent activity. EVM scope is strategically significant; leadership should confirm whether this remains in active scope, assign a reviewer, or defer formally to avoid indefinite drift.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">decision needed</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">rfcs #20–#25 — Six Astrid RFCs open 42–45 days, no board tracking</div>
-    <div class="event-detail">Owner: @joshuajbouw. Capsule interface system, Distro system, Host ABI, Interceptor middleware chain, XDG VFS schemes, and A2UI Protocol RFCs have been open 42–45 days without board representation. A review meeting or async sign-off is needed to unblock dependent capsule implementation work.</div>
-    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">decision needed</span></div>
+    <div class="event-title">sphere-sdk #105 — UXF Inter-Wallet Transfer Protocol, 51/52 tasks done (@vrogojin)</div>
+    <div class="event-detail">This PR is one task away from completion and represents a major protocol implementation, yet it carries no board card. A reviewer should be assigned immediately so the final task and merge can be unblocked without further delay.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review needed</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">bft-core #11 — EVM PR open 107 days, no board tracking</div>
-    <div class="event-detail">Owner: @MastaP. The EVM integration PR has had no recorded activity for over three months and is absent from the Unicity Network board. Needs a triage decision: is this still in scope, does it need a rebase, or should it be closed?</div>
-    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">close or revive</span></div>
+    <div class="event-title">rfcs #20–#25 — Six Astrid RFC PRs, 43–46 days open (@joshuajbouw)</div>
+    <div class="event-detail">Six RFC PRs covering Capsule interface, Distro system, Host ABI, Interceptor middleware, XDG VFS schemes, and A2UI protocol are all untracked on the board and have had no visible reviewer engagement. These collectively define the Astrid architecture; a dedicated RFC review session or nominated reviewer per RFC is overdue.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">assign reviewer</span></div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">nostr-js-sdk #4 and nostr-sdk #4 — 90-day test PRs untracked</div>
-    <div class="event-detail">Owner: @b3y0urs3lf. Comprehensive unit-test PRs (366 new tests in nostr-sdk #4) have been open 90 days with no board entry. A reviewer should be assigned and a merge target set; stale test PRs block coverage baseline for downstream SDK consumers.</div>
-    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">assign reviewer</span></div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#378ADD"></div>
-  <div class="event-body">
-    <div class="event-title">Board hygiene — sphere-sdk #90 and aggregator-go #51 stale after merge</div>
-    <div class="event-detail">sphere-sdk #90 (auto-connect) remains 'Backlog' and aggregator-go #51 (streaming round processing) remains 'Todo' despite both PRs being merged. Board owners should close or move these tickets to 'Done' to keep sprint metrics accurate.</div>
+    <div class="event-title">Board hygiene — 2 stale 'merged' issues + 19 missing open PRs</div>
+    <div class="event-detail">sphere-sdk #90 and aggregator-go #51 remain on the board despite their PRs being merged. Additionally 19 open PRs across Unicity Network, Sphere, and Astrid boards have no board card at all. A board grooming pass is needed this week to close merged items and create cards for all untracked open PRs.</div>
     <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">decision needed</span></div>
   </div></div></div>
 
 <div class="card" style="border-color:#1D9E75">
   <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
-  <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
-  <div class="mc-detail">Four PRs open across three repos: capsule-context-engine #11 and capsule-prompt-builder #12 add required `direction` to `[[topic]]` manifest declarations; capsule-prompt-builder #11 and capsule-react #16 drop the imagined `{ data: ... }` wrapper from session-fetch and session/compact response paths respectively. No merges this window, but active on manifest correctness and response-shape fixes.</div>
-  <div style="margin-top:6px"><span class="tag">4 open PRs</span><span class="tag">manifest direction fix</span><span class="tag">session response shape</span><span class="tag">capsule-context-engine / capsule-prompt-builder / capsule-react</span></div>
-</div><div class="member-card">
   <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
-  <div class="mc-detail">Merged sphere-apps #2 renaming 'Boxy Run' to 'Boxy Run Arena' with URL update. Three PRs open in sphere-sdk: #124 offloads kind-31113 token-transfer payloads to object storage (relay DB at ~100 GB), #123 fixes dual WebSocket connections to the same Nostr relay, and #122 replaces the 60 s no-event health check with an EOSE probe. Also active as reviewer on six unicity-node and state-transition-sdk-java PRs.</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">3 open sphere-sdk PRs</span><span class="tag">relay DB size critical</span><span class="tag">WebSocket / health-check fixes</span></div>
+  <div class="mc-detail">Merged unicity-tokens-relay #20 fixing NIP-33 DELETE plan cliff on hot pubkeys. Has three open PRs across nostr-sdk and nostr-js-sdk addressing ping firehose issues, CLOSED frame handling, silent query timeouts, subscription leaks, and per-connection sub limit exhaustion. Also actively reviewing multiple state-transition-sdk-java PRs (#59, #61, #62, #63, #65) alongside the Java SDK team.</div>
+  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">nostr relay fixes</span><span class="tag">3 open PRs</span><span class="tag">sdk-java reviewer</span></div>
 </div><div class="member-card">
-  <div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div>
-  <div class="mc-detail">Prolific window: 14 PRs merged across sphere-api, sphere-backoffice, and sphere-quest-frontend covering OAuth hardening (refresh lock, Redis-backed pending states, account-swap-safe reconnect for all four providers), referral admin fixes (_id inclusion, detach badge, detachedAt/detachedBy exposure), SSRF URL validation, and social UX (ACCOUNT_NOT_CONNECTED flow, account-mismatch toast). No open PRs remain; also involved in resolving five pre-existing sphere-api issues.</div>
-  <div style="margin-top:6px"><span class="tag">14 merged</span><span class="tag">OAuth hardening</span><span class="tag">referral admin fixes</span><span class="tag">sphere-api / sphere-backoffice / sphere-quest-frontend</span></div>
+  <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
+  <div class="mc-detail">Driving website-next #2, a site-wide UI overhaul introducing the aurora design system with markdown content alignment. No merges this window; PR remains open and is the sole active focus.</div>
+  <div style="margin-top:6px"><span class="tag">1 open PR</span><span class="tag">aurora design system</span><span class="tag">website-next</span><span class="tag">UI overhaul</span></div>
+</div><div class="member-card">
+  <div class="mc-name">Risto Laanoja <span class="mc-handle">@ristik</span></div>
+  <div class="mc-detail">Contributing to two SIF tracks: sif #2 (YARA detection wiring completed) and sif #5 (ML training dataset identification). No merges this window; work is progressing on the detection and data pipeline side.</div>
+  <div style="margin-top:6px"><span class="tag">sif YARA wiring</span><span class="tag">ML dataset scoping</span><span class="tag">2 active PRs</span></div>
 </div><div class="member-card">
   <div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div>
-  <div class="mc-detail">Five PRs merged in state-transition-sdk-java: CBOR strictness + proof dedup (#65), unicity id support (#63), shard id verification (#62), predicate-based mint justification (#61), and inclusion proof / CBOR tags (#59). Two PRs still open: state-transition-sdk-js #114 (CBOR fixes, encoded predicate) and the long-standing state-transition-sdk-java #53 (general token minting/transferring structure, 43 days).</div>
-  <div style="margin-top:6px"><span class="tag">5 merged</span><span class="tag">2 open PRs</span><span class="tag">CBOR / predicate / shard hardening</span><span class="tag">state-transition-sdk-java / js</span></div>
-</div><div class="member-card">
-  <div class="mc-name"><span class="mc-handle">@ahtotruu</span></div>
-  <div class="mc-detail">One open PR: aggregator-go #150 'Request validation hardening', currently under review with @jait91 involved. No merges this window.</div>
-  <div style="margin-top:6px"><span class="tag">1 open PR</span><span class="tag">request validation</span><span class="tag">aggregator-go</span></div>
+  <div class="mc-detail">Merged a significant batch of five state-transition-sdk-java PRs (#59, #61, #62, #63, #65) covering inclusion proof verification, CBOR strictness, shard id verification, unicity id support, and proof dedup. Still has state-transition-sdk-java #53 open adding general token minting and transfer structure, plus two long-standing open PRs (#43, #44) exceeding 157 days.</div>
+  <div style="margin-top:6px"><span class="tag">5 merged</span><span class="tag">sdk-java core improvements</span><span class="tag">3 open PRs</span><span class="tag">long-standing debt</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@b3y0urs3lf</span></div>
-  <div class="mc-detail">involved in 7 items</div>
-  <div style="margin-top:6px"><span class="tag">state-transition-sdk-java</span><span class="tag">state-transition-sdk-js</span><span class="tag">unicity-node</span></div>
-</div><div class="member-card">
-  <div class="mc-name"><span class="mc-handle">@jait91</span></div>
-  <div class="mc-detail">involved in 1 item</div>
-  <div style="margin-top:6px"><span class="tag">aggregator-go</span></div>
+  <div class="mc-detail">Reviewed and was involved in the same five-PR state-transition-sdk-java merge wave (#59, #61, #62, #63, #65). Carries two long-standing open PRs: sdk-java #26 (cucumber test amendments, 198 days) and nostr-sdk/nostr-js-sdk unit test PRs (#4 each, 91 days), none of which are tracked on any board.</div>
+  <div style="margin-top:6px"><span class="tag">sdk-java reviewer</span><span class="tag">198-day open PR</span><span class="tag">test coverage debt</span><span class="tag">untracked PRs</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@lploom</span></div>
-  <div class="mc-detail">Merged unicity-node #12 documenting the genesis UTB. Still has unicity-node #3 'BFT snapshots' open at 41 days with no board tracking.</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">genesis UTB docs</span><span class="tag">BFT snapshots open 41d</span><span class="tag">unicity-node</span></div>
+  <div class="mc-detail">Active on sif #3, working to deploy the SIF gateway as a service. Also owns unicity-node #3 (BFT snapshots), which has been open 42 days and is untracked on the board.</div>
+  <div style="margin-top:6px"><span class="tag">sif GW deployment</span><span class="tag">unicity-node BFT snapshots</span><span class="tag">42-day open PR</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@vrogojin</span></div>
-  <div class="mc-detail">Merged js-faucet #1, delivering the initial scaffold with end-to-end tests and relay-override env support. No open PRs this window.</div>
-  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">js-faucet scaffold</span><span class="tag">e2e tests</span><span class="tag">relay-override env</span></div>
-</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@igmahl, @ristik, @jvsteiner, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
+  <div class="mc-detail">Merged sphere-cli #10 and #11, delivering top-level init with pointer namespace, non-TTY mnemonic opt-in, and a fix for flush-publish anchoring on empty wallets. Has sphere-sdk #105 open, nearly complete at 51 of 52 UXF Inter-Wallet Transfer Protocol plan tasks, but it is untracked on the board.</div>
+  <div style="margin-top:6px"><span class="tag">2 merged</span><span class="tag">sphere-cli UX fixes</span><span class="tag">UXF protocol 51/52 tasks</span><span class="tag">untracked PR</span></div>
+</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@joshuajbouw, @KruGoL, @jvsteiner, @ahtotruu, @jait91, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments — not just authored items.</div>
 </div>
@@ -370,87 +357,87 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <div style="overflow-x:auto"><table class="pr-table">
     <thead><tr><th>Age</th><th>PR</th><th>Author</th></tr></thead>
     <tbody><tr>
-  <td><span class="age-pill age-critical">197d</span></td>
+  <td><span class="age-pill age-critical">198d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/26" class="pr-link">[WIP] Java SDK cucumber test amendments</a>
     <div class="pr-repo">state-transition-sdk-java #26</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-critical">156d</span></td>
+  <td><span class="age-pill age-critical">157d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/43" class="pr-link">#40 Rename request id to state id, secure state id</a>
     <div class="pr-repo">state-transition-sdk-java #43</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-critical">156d</span></td>
+  <td><span class="age-pill age-critical">157d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/44" class="pr-link">Add user defined mint reasons</a>
     <div class="pr-repo">state-transition-sdk-java #44</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-critical">107d</span></td>
+  <td><span class="age-pill age-critical">108d</span></td>
   <td><a href="https://github.com/unicitynetwork/bft-core/pull/11" class="pr-link">EVM</a><span class="draft-tag">Draft</span>
     <div class="pr-repo">bft-core #11</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-critical">90d</span></td>
+  <td><span class="age-pill age-critical">91d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-js-sdk/pull/4" class="pr-link">test: add comprehensive unit tests for uncovered modules</a>
     <div class="pr-repo">nostr-js-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-critical">90d</span></td>
+  <td><span class="age-pill age-critical">91d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-sdk/pull/4" class="pr-link">Add comprehensive unit tests (366 new tests)</a>
     <div class="pr-repo">nostr-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-high">50d</span></td>
+  <td><span class="age-pill age-high">51d</span></td>
   <td><a href="https://github.com/unicity-astrid/capsule-memory/pull/3" class="pr-link">feat: KV-backed memory with add_memory tool and /memory-export command</a>
     <div class="pr-repo">capsule-memory #3</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">45d</span></td>
+  <td><span class="age-pill age-high">46d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/20" class="pr-link">RFC: Capsule interface system</a>
     <div class="pr-repo">rfcs #20</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">45d</span></td>
+  <td><span class="age-pill age-high">46d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/21" class="pr-link">RFC: Distro system</a>
     <div class="pr-repo">rfcs #21</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">45d</span></td>
+  <td><span class="age-pill age-high">46d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/22" class="pr-link">RFC: Host ABI</a>
     <div class="pr-repo">rfcs #22</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">45d</span></td>
+  <td><span class="age-pill age-high">46d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/23" class="pr-link">RFC: Interceptor middleware chain</a>
     <div class="pr-repo">rfcs #23</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">44d</span></td>
+  <td><span class="age-pill age-high">45d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/24" class="pr-link">RFC: XDG-aligned VFS schemes (config://, data://, cache://, state://)</a>
     <div class="pr-repo">rfcs #24</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">43d</span></td>
+  <td><span class="age-pill age-high">44d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/53" class="pr-link">#52 Add general structure, token minting and transfering functionality.</a>
     <div class="pr-repo">state-transition-sdk-java #53</div></td>
   <td class="pr-author">@martti007</td></tr><tr>
-  <td><span class="age-pill age-high">42d</span></td>
+  <td><span class="age-pill age-high">43d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/25" class="pr-link">RFC: Agent-Composed UI via A2UI Protocol</a>
     <div class="pr-repo">rfcs #25</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">41d</span></td>
+  <td><span class="age-pill age-high">42d</span></td>
   <td><a href="https://github.com/unicitynetwork/unicity-node/pull/3" class="pr-link">BFT snapshots</a>
     <div class="pr-repo">unicity-node #3</div></td>
   <td class="pr-author">@lploom</td></tr><tr>
-  <td><span class="age-pill age-medium">29d</span></td>
+  <td><span class="age-pill age-high">30d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-js/pull/106" class="pr-link">Feature/test infrastructure</a>
     <div class="pr-repo">state-transition-sdk-js #106</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-medium">27d</span></td>
+  <td><span class="age-pill age-medium">28d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-sdk/pull/105" class="pr-link">feat(uxf): UXF Inter-Wallet Transfer Protocol — implementation (51 of 52 plan tasks)</a>
     <div class="pr-repo">sphere-sdk #105</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-medium">23d</span></td>
+  <td><span class="age-pill age-medium">24d</span></td>
   <td><a href="https://github.com/unicitynetwork/finality-gadget/pull/11" class="pr-link">IPC client timeout</a>
     <div class="pr-repo">finality-gadget #11</div></td>
   <td class="pr-author">@lploom</td></tr><tr>
-  <td><span class="age-pill age-medium">21d</span></td>
+  <td><span class="age-pill age-medium">22d</span></td>
   <td><a href="https://github.com/unicitynetwork/unicity-node/pull/9" class="pr-link">feat: CI/CD fixes, documentation, security policy, and release automation</a>
     <div class="pr-repo">unicity-node #9</div></td>
   <td class="pr-author">@0xgetz</td></tr><tr>
-  <td><span class="age-pill age-medium">21d</span></td>
+  <td><span class="age-pill age-medium">22d</span></td>
   <td><a href="https://github.com/unicitynetwork/aggregator-go/pull/145" class="pr-link">fix: code quality improvements — Go version, CI race+lint, error mapping, bounded query, CHANGELOG</a>
     <div class="pr-repo">aggregator-go #145</div></td>
   <td class="pr-author">@0xgetz</td></tr><tr>
-  <td><span class="age-pill age-medium">15d</span></td>
+  <td><span class="age-pill age-medium">16d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere/pull/301" class="pr-link">fix(mobile): dedicated mobile layout with bottom navigation</a>
     <div class="pr-repo">sphere #301</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
@@ -458,7 +445,7 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <td><a href="https://github.com/unicity-sphere/sphere-cli/pull/3" class="pr-link">ci: harden nightly integration workflow — drop artifact upload</a>
     <div class="pr-repo">sphere-cli #3</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-low">9d</span></td>
+  <td><span class="age-pill age-low">10d</span></td>
   <td><a href="https://github.com/unicity-astrid/astrid/pull/700" class="pr-link">feat(cli): noun-verb redesign with admin surface</a>
     <div class="pr-repo">astrid #700</div></td>
   <td class="pr-author">@joshuajbouw</td></tr></tbody>
@@ -469,57 +456,57 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
     <div class="event-title">Java SDK V2 payments and splits in test</div>
-    <div class="event-detail">[state-transition-sdk-java] V2 Support payments and splits (@martti007) has reached the test phase, indicating active implementation work is underway. This is a core TGE feature covering token economic flows.</div>
+    <div class="event-detail">[state-transition-sdk-java] V2 Support payments and splits (@martti007) is in the test phase, indicating active validation work is underway. This is a core financial primitive for TGE and must close before April 30.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
     <div class="event-title">Java SDK V2 Unicity ID support in test</div>
-    <div class="event-detail">[state-transition-sdk-java] V2 Unicity ID support (@martti007) is in test, running in parallel with the payments work. Successful completion unblocks downstream verification logic.</div>
+    <div class="event-detail">[state-transition-sdk-java] V2 Unicity ID support (@martti007) is under test, directly dependent on the Unicity data structure versioning work in [unicity-ids] assigned to @ahtotruu. These two tracks must converge before release.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Java SDK general structure and verification in test</div>
-    <div class="event-detail">[state-transition-sdk-java] V2 General structure, verification and token transfers (@martti007) is in test phase, forming the foundational layer that the payments and ID items depend on.</div>
+    <div class="event-title">Java SDK general structure and verification testing</div>
+    <div class="event-detail">[state-transition-sdk-java] V2 General structure, verification and token transfers (@martti007) is in test, covering the foundational transfer logic. Failure here blocks all downstream Java SDK validation.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Java SDK type tag and inclusion proof updates in test</div>
-    <div class="event-detail">[state-transition-sdk-java] Update SDK implementation to use new type tags and Update inclusion proof format (both @martti007) are in test, directly tied to the version tagging work still open in [unicity-ids].</div>
+    <div class="event-title">Java SDK inclusion proof format update in test</div>
+    <div class="event-detail">[state-transition-sdk-java] Update inclusion proof format (@martti007) is actively being tested, a prerequisite for correct on-chain state verification at TGE.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">JS SDK TokenId validation fix in todo</div>
-    <div class="event-detail">[state-transition-sdk-js] TokenId length validation (@martti007) is scoped and assigned, addressing a security-relevant input validation gap that must close before TGE ships.</div>
+    <div class="event-title">Java SDK type tag update under test</div>
+    <div class="event-detail">[state-transition-sdk-java] Update SDK implementation to use the new type tags (@martti007) is in test, tightly coupled to the version tagging work (@ahtotruu) still in Todo in [unicity-ids].</div>
   </div></div></div><div><p class="section-title" style="margin-top:0;color:#E24B4A">⚠ What worries</p><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">Six items still in test with zero days remaining</div>
-    <div class="event-detail">All six [state-transition-sdk-java] items are in test as of now with the April 30 deadline today. Any test failures requiring rework have no buffer, making a clean cut-off effectively impossible without accepting known defects.</div>
+    <div class="event-title">Six items unfinished with zero days remaining</div>
+    <div class="event-detail">The deadline is April 30 and 9 items remain open — 6 in test and 3 still in Todo. There is no buffer. Any single item that fails test or stalls in Todo causes a release breach.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">martti007 is single point of failure across nine items</div>
-    <div class="event-detail">@martti007 owns all six Java SDK test items plus the JS SDK TokenId fix and the BFT sharding Java item — eight of nine open tasks. Any personal blocker, review bottleneck, or merge conflict instantly stalls the entire release with no backup owner.</div>
+    <div class="event-title">@martti007 is single point of failure for all 6 Java SDK items</div>
+    <div class="event-detail">All six [state-transition-sdk-java] open items are owned exclusively by @martti007, covering V2 payments, Unicity IDs, general structure, type tags, inclusion proofs, and BFT sharding. Any personal unavailability or context-switching collapses the entire Java SDK track.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">unicity-ids version tagging blocks Java SDK type tag update</div>
-    <div class="event-detail">[unicity-ids] Adding version tags to Unicity data structures (@ahtotruu) is still in Todo. The [state-transition-sdk-java] type tag update item explicitly depends on this; it cannot be fully validated until the upstream data structure definitions are finalised and tagged.</div>
+    <div class="event-title">[unicity-ids] version tagging still in Todo, blocks Java SDK</div>
+    <div class="event-detail">[unicity-ids] Adding version tags to Unicity data structures (@ahtotruu) has not started and directly blocks [state-transition-sdk-java] type tag update and V2 Unicity ID support currently in test. Tests cannot pass against a stable spec until this Todo closes.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">BFT sharding item is Todo with three owners and TGE scope</div>
-    <div class="event-detail">[.github] BFT-based sharding in Unicity aggregation (@ahtotruu, lploom, martti007) is still in Todo with the broadest ownership of any item. Multi-owner items without a single DRI routinely stall; this one is not yet started and martti007 is already overloaded across the Java SDK items.</div>
+    <div class="event-title">BFT sharding assigned to three owners, still in Todo</div>
+    <div class="event-detail">[.github] BFT-based sharding (@ahtotruu, lploom, martti007) is still in Todo with 0 days left. Multi-owner assignment with no test activity suggests coordination has not produced progress. The parallel [state-transition-sdk-java] BFT sharding item is also open, meaning both ends of this feature are unresolved.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">BFT sharding duplicated across repos with unclear sequencing</div>
-    <div class="event-detail">There are two BFT sharding items: one in [.github] (Todo, three owners) and one in [state-transition-sdk-java] (test, @martti007). It is not clear whether the Java SDK sharding item can pass test without the [.github] infrastructure item closing first, creating a hidden dependency chain.</div>
+    <div class="event-title">JS SDK token ID validation still in Todo</div>
+    <div class="event-detail">[state-transition-sdk-js] SDK Does Not Validate TokenId Length (@martti007) is a known correctness bug still in Todo. Shipping TGE with a JS SDK that accepts malformed token IDs is a functional and security risk.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#E24B4A"></div>
   <div class="event-body">
-    <div class="event-title">ahtotruu owns two Todo items with no test phase started</div>
-    <div class="event-detail">@ahtotruu owns [unicity-ids] version tagging and co-owns [.github] BFT sharding, both still in Todo. Neither has entered test, meaning the discovery-to-merge cycle must complete entirely within the deadline window, which is effectively zero days.</div>
+    <div class="event-title">No Todo items have moved to In Progress or Test</div>
+    <div class="event-detail">All three Todo items remain in Todo with no observed forward movement, indicating they have not been started or are blocked. With the deadline at April 30, there is insufficient time for a full Todo-to-done cycle on any of them under normal review and merge processes.</div>
   </div></div></div></div></div>
 
 <p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
