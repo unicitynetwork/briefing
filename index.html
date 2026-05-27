@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unicity Briefing &mdash; Tuesday, 26 May 2026</title>
+<title>Unicity Briefing &mdash; Wednesday, 27 May 2026</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
@@ -79,67 +79,82 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 
 <div class="header">
   <h2>Unicity project &mdash; daily brief</h2>
-  <p>Tuesday, 26 May 2026</p>
+  <p>Wednesday, 27 May 2026</p>
   <div class="header-meta">
-    <span class="window-badge">Coverage: Monday, 25 May 2026 &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 26 May 2026, 08:43 UTC</span>
+    <span class="window-badge">Coverage: Tuesday, 26 May 2026 &middot; GitHub API (author + involves sweep)</span>
+    <span class="updated-badge">Updated: 27 May 2026, 08:48 UTC</span>
     
   </div>
 </div>
 
 <div class="metric-grid">
-  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">19</div></div>
+  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">48</div></div>
   <div class="metric"><div class="metric-label">Releases</div><div class="metric-val am">0</div></div>
-  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">38</div></div>
-  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">3</div></div>
-  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">15 / 3 / 1</div></div>
+  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">37</div></div>
+  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">6</div></div>
+  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">26 / 16 / 6</div></div>
 </div>
 
-<div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">15 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
+<div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">26 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Per-domain WIT ABI migration across kernel and SDKs</div>
-    <div class="event-detail">PRs #752, #44, and #6 collectively migrate the entire Astrid stack from a monolithic WIT interface to a per-domain WIT host ABI. The kernel (#752) establishes the new host-side contract, the Rust SDK (#44) follows suit and switches the target to wasm32-unknown-unknown, and the JS SDK (#6) completes the migration on the JavaScript side. This architectural shift cleanly separates capability domains at the interface level, improving modularity and enabling more precise capability grants. The breaking changes across all three repos land together, ensuring the full toolchain remains consistent.</div>
-    <div class="event-meta"><code>astrid, sdk-rust, sdk-js</code></div>
+    <div class="event-title">Purge stale WASI target refs across all capsules</div>
+    <div class="event-detail">PRs #7, #18, #21, #14, #14, #16, #16, #17 swept through every capsule repo to remove obsolete wasi-target references from release workflows. These stale references were leftovers from an earlier build target strategy and risked producing broken CI pipelines or incorrect release artifacts. The cleanup is purely chore-level with no functional changes to capsule behaviour, but it hardens the release automation going forward.</div>
+    <div class="event-meta"><code>capsule-agents, capsule-memory, capsule-identity, capsule-http, capsule-hook-bridge, capsule-fs, capsule-context-engine, capsule-cli</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">v0.7.0 release: publishability fixes and packaging</div>
-    <div class="event-detail">A cluster of release-blocking issues were resolved to enable the v0.7.0 workspace publish. PR #49 made astrid-sys cargo-publishable, PR #766 moved the bundled AppArmor profile inside the astrid-cli crate, PR #764 made astrid-capsule cargo-publishable, and PR #762 re-enabled the chrono clock feature on crates calling Utc::now(). With those blockers cleared, the release commits landed in #47 (sdk-rust) and #758 (astrid), and the Homebrew tap was bumped in #5. These fixes ensure end-users can install Astrid directly via cargo install astrid and via Homebrew.</div>
-    <div class="event-meta"><code>astrid, sdk-rust, homebrew-tap</code></div>
+    <div class="event-title">Migrate all capsules to per-domain WIT + wasm32-unknown-unknown</div>
+    <div class="event-detail">A coordinated breaking-change wave (PRs #16 through #6 across 17 repos) replaced the shared monolithic WIT interface with per-domain WIT definitions and switched the compile target from wasm32-wasi to wasm32-unknown-unknown. Per-domain WIT gives each capsule a tightly scoped interface surface, reducing cross-capsule coupling and enabling independent versioning of component contracts. The target switch to wasm32-unknown-unknown removes the WASI runtime dependency, making capsules portable to any compliant Wasm host without requiring a WASI preview layer. This is a semver-breaking change for all downstream consumers who embed or link these capsules.</div>
+    <div class="event-meta"><code>capsule-skills, capsule-shell, capsule-session, capsule-router, capsule-registry, capsule-react, capsule-prompt-builder, capsule-openai-compat, capsule-openai, capsule-memory, capsule-identity, capsule-http, capsule-hook-bridge, capsule-fs, capsule-context-engine, capsule-cli, capsule-agents</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">KV CAS interface: canonical mismatch signal fix</div>
-    <div class="event-detail">PR #10 in the wit repo introduces a breaking fix to the kv-cas WIT interface, establishing cas-mismatch as the single canonical signal for a compare-and-swap mismatch condition. Previously the mismatch error path was ambiguous, risking inconsistent handling across guest implementations. Standardising on one signal simplifies error handling logic in all language SDKs and makes the contract explicit in the interface definition itself. This is a foundational correctness fix ahead of broader KV-CAS adoption.</div>
-    <div class="event-meta"><code>wit</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
+    <div class="event-title">Refresh Homebrew tap SHAs after 0.7.0 release retag</div>
+    <div class="event-detail">PR #6 updated the SHA256 checksums in the Homebrew formula following a retag of the 0.7.0 release. A retag invalidates previously computed archive hashes, so without this fix Homebrew installations would fail integrity verification. The change is purely metadata and does not alter the distributed binary content.</div>
+    <div class="event-meta"><code>homebrew-tap</code></div>
+  </div></div><p class="section-title" style="margin-top:14px">Timeline — Tuesday, 26 May 2026</p><div class="timeline"><div class="tl-item tl-chore"><span class="tl-time">Tue 11:44</span><span class="tl-label"><a href="https://github.com/unicity-astrid/homebrew-tap/pull/6" class="tl-link">homebrew-tap #6</a> — chore: refresh 0.7.0 SHAs after release retag</span></div><div class="tl-item tl-feat"><span class="tl-time">Tue 14:12–14:15</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-agents/pull/6" class="tl-link">capsule-agents #6</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-cli/pull/15" class="tl-link">capsule-cli #15</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-context-engine/pull/14" class="tl-link">capsule-context-engine #14</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-fs/pull/15" class="tl-link">capsule-fs #15</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-hook-bridge/pull/13" class="tl-link">capsule-hook-bridge #13</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-http/pull/13" class="tl-link">capsule-http #13</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-identity/pull/20" class="tl-link">capsule-identity #20</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-memory/pull/17" class="tl-link">capsule-memory #17</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown)</span></div><div class="tl-item tl-feat"><span class="tl-time">Tue 17:47</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-openai/pull/4" class="tl-link">capsule-openai #4</a> — feat!: migrate to per-domain WIT + wasm32-unknown-unknown</span></div><div class="tl-item tl-feat"><span class="tl-time">Wed 00:03–00:06</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-openai-compat/pull/18" class="tl-link">capsule-openai-compat #18</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-prompt-builder/pull/15" class="tl-link">capsule-prompt-builder #15</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-react/pull/19" class="tl-link">capsule-react #19</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-registry/pull/14" class="tl-link">capsule-registry #14</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-router/pull/13" class="tl-link">capsule-router #13</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-session/pull/13" class="tl-link">capsule-session #13</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-shell/pull/12" class="tl-link">capsule-shell #12</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/capsule-skills/pull/16" class="tl-link">capsule-skills #16</a> (feat!: migrate to per-domain WIT + wasm32-unknown-unknown)</span></div><div class="tl-item tl-chore"><span class="tl-time">Wed 00:44–00:45</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-cli/pull/17" class="tl-link">capsule-cli #17</a> (chore: scrub stale wasi-target references) &middot; <a href="https://github.com/unicity-astrid/capsule-context-engine/pull/16" class="tl-link">capsule-context-engine #16</a> (chore: scrub stale wasi-target references) &middot; <a href="https://github.com/unicity-astrid/capsule-fs/pull/16" class="tl-link">capsule-fs #16</a> (chore: scrub stale wasi-target references) &middot; <a href="https://github.com/unicity-astrid/capsule-hook-bridge/pull/14" class="tl-link">capsule-hook-bridge #14</a> (chore: scrub stale wasi-target references) &middot; <a href="https://github.com/unicity-astrid/capsule-http/pull/14" class="tl-link">capsule-http #14</a> (chore: scrub stale wasi-target references) &middot; <a href="https://github.com/unicity-astrid/capsule-identity/pull/21" class="tl-link">capsule-identity #21</a> (chore: scrub stale wasi-target references) &middot; <a href="https://github.com/unicity-astrid/capsule-memory/pull/18" class="tl-link">capsule-memory #18</a> (chore: scrub stale wasi-target references) &middot; <a href="https://github.com/unicity-astrid/capsule-agents/pull/7" class="tl-link">capsule-agents #7</a> (chore: scrub stale wasi-target reference in release workflow)</span></div></div></div>
+<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">16 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">JS SDK v0.1.0 launch: scope rename, CI, and release</div>
-    <div class="event-detail">The JavaScript SDK reached its initial public release through three sequential PRs. PR #10 renamed the npm scope from @astrid-os to @unicity-astrid, aligning the package identity with the project's current branding. PR #9 added a GitHub Actions release workflow that automatically generates release notes on tag push, establishing a repeatable publish process. PR #8 then committed the 0.1.0 release, making the JS SDK officially available to downstream consumers for the first time.</div>
-    <div class="event-meta"><code>sdk-js</code></div>
-  </div></div><p class="section-title" style="margin-top:14px">Timeline — Monday, 25 May 2026</p><div class="timeline"><div class="tl-item tl-feat"><span class="tl-time">Mon 13:31</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/752" class="tl-link">astrid #752</a> — feat(kernel)!: migrate to per-domain WIT host ABI</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 15:02</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/760" class="tl-link">astrid #760</a> — fix(capsule/net): TcpStream::{read_bytes,peek} surface cancellation as Closed</span></div><div class="tl-item tl-rel"><span class="tl-time">Mon 15:50</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/758" class="tl-link">astrid #758</a> — chore: release 0.7.0</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 16:17</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/762" class="tl-link">astrid #762</a> — fix(release): enable chrono `clock` feature on crates that call Utc::now()</span></div><div class="tl-item tl-chore"><span class="tl-time">Mon 20:13</span><span class="tl-label"><a href="https://github.com/unicity-astrid/homebrew-tap/pull/5" class="tl-link">homebrew-tap #5</a> — chore: bump astrid to 0.7.0</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 20:44</span><span class="tl-label"><a href="https://github.com/unicity-astrid/wit/pull/10" class="tl-link">wit #10</a> — fix(kv)!: cas-mismatch is the canonical mismatch signal on kv-cas</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 20:53</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/764" class="tl-link">astrid #764</a> — fix(release): make astrid-capsule cargo-publishable (unblocks cargo install astrid)</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 21:18</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/766" class="tl-link">astrid #766</a> — fix(release): move bundled AppArmor profile inside astrid-cli crate</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 23:58</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/44" class="tl-link">sdk-rust #44</a> (feat(sdk)!: migrate to per-domain WIT + wasm32-unknown-unknown) &middot; <a href="https://github.com/unicity-astrid/sdk-js/pull/6" class="tl-link">sdk-js #6</a> (feat(sdk-js)!: migrate to per-domain WIT host ABI)</span></div><div class="tl-item tl-rel"><span class="tl-time">Tue 00:12–00:13</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-js/pull/8" class="tl-link">sdk-js #8</a> (chore: release 0.1.0) &middot; <a href="https://github.com/unicity-astrid/sdk-rust/pull/47" class="tl-link">sdk-rust #47</a> (chore: release 0.7.0)</span></div><div class="tl-item tl-chore"><span class="tl-time">Tue 00:20</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-js/pull/9" class="tl-link">sdk-js #9</a> — ci: add release workflow (GitHub Release notes on tag push)</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 00:40</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/49" class="tl-link">sdk-rust #49</a> — fix(release): make astrid-sys cargo-publishable (unblocks v0.7.0 workspace publish)</span></div><div class="tl-item tl-chore"><span class="tl-time">Tue 00:48</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-js/pull/10" class="tl-link">sdk-js #10</a> — chore: rename npm scope @astrid-os → @unicity-astrid</span></div></div></div>
-<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">3 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
+    <div class="event-title">Profile mode token migration and safe re-enablement</div>
+    <div class="event-detail">PRs sphere#307 and sphere-sdk#289 deliver the complete legacy-to-Profile token migration path that was missing when sphere#305 was reverted via sphere#306. Sphere-sdk#289 implements bidirectional legacy↔Profile token storage migration so that existing tokens are transparently carried over when the Profile-backed providers are activated. Sphere#307 then re-enables Profile mode in the UXF build now that the safe migration path exists, making the earlier revert in #306 temporary as intended. Together these PRs close the data-loss risk that caused the original rollback.</div>
+    <div class="event-meta"><code>sphere, sphere-sdk</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Profile monotonicity and detach consolidation correctness</div>
-    <div class="event-detail">PRs #262 and #270 address a pair of related correctness issues in the profile monotonicity subsystem. PR #262 fixes in-place merging of unknown bundles during the monotonicity check, preventing silent data loss when encountering bundle types not previously seen. PR #270 unblocks spec section C.2 by implementing detach consolidation and simultaneously correcting over-reporting in the monotonicity logic. Together these changes ensure the profile layer accurately tracks and reconciles state across a wider range of real-world bundle sequences. The fixes are tied to tracked issues #255 and #268 respectively.</div>
+    <div class="event-title">OpLog oversize writes fixed with CID-reference indirection</div>
+    <div class="event-detail">PRs #287 and #288 address the same root issue (tracked in #285) across CommunicationsModule and GroupChatModule: writes that exceeded OpLog size limits were being stored inline, causing failures under large payloads. Both PRs migrate oversized entries to CID-references, storing the full payload in the block store and recording only the content identifier in the OpLog. PR #288 supersedes or complements #287, suggesting an iterative fix cycle within the same bug thread. This prevents silent data truncation and keeps OpLog entries within protocol-mandated bounds.</div>
     <div class="event-meta"><code>sphere-sdk</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">HTTP-only IPFS mode for wallet and CLI clients</div>
-    <div class="event-detail">PR #267 introduces an HTTP-only IPFS mode targeted at wallet and CLI client environments where a full IPFS node is unavailable or undesirable. This mode allows the sphere profile layer to interact with IPFS purely over HTTP, removing the dependency on a local daemon for these lighter-weight client contexts. The change is tagged against issue #266 and expands deployment flexibility for end-user-facing tooling. It is a meaningful step toward making the sphere SDK usable in constrained or browser-adjacent environments without sacrificing IPFS-backed content addressing.</div>
+    <div class="event-title">Profile transport reliability and blockstore performance</div>
+    <div class="event-detail">A series of targeted fixes hardened the Profile storage and transport stack: PR #273 decoupled per-flush HEAD verification from the at-least-once delivery gate to prevent spurious re-sends; PR #279 bounded helia.blockstore.get calls with an LRU cache and in-flight deduplication, capping memory growth under concurrent block fetches; PR #281 added a CBOR fallback for SENT-record deserialisation and introduced an aggregator-spent recovery sweep; and PR #283 resolved two §D residuals covering deterministic asset ordering and invoice round-trip correctness. Collectively these changes improve resilience for long-running Profile sessions with large block graphs.</div>
     <div class="event-meta"><code>sphere-sdk</code></div>
-  </div></div></div>
-<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">1 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Revert: commit reward token ID in PoW block</div>
-    <div class="event-detail">PR #5 reverts a prior change and reinstates the requirement that the reward token ID be committed inside the proof-of-work block. This restoration likely reflects a protocol-level decision that the commitment is necessary for security or auditability of the reward mechanism. Encoding the token ID in the PoW block ensures it is cryptographically bound to the work performed, preventing post-hoc substitution. The change is captured in the yellow paper TeX source, meaning it updates the canonical protocol specification rather than an implementation.</div>
-    <div class="event-meta"><code>unicity-yellowpaper-tex</code></div>
-  </div></div></div>
+    <div class="event-title">Observability, dedup persistence, and payments hardening</div>
+    <div class="event-detail">PR #276 introduced toggleable verbose debug logging with namespace filters, span tracking, and field redaction, giving operators fine-grained visibility without leaking sensitive data in production. PR #277 persisted Nostr event deduplication state across process restarts, closing a gap where duplicate events could be reprocessed after a crash or restart. PR #271 classified VerificationError(Recipient address mismatch) as a permanent payment failure, stopping infinite retry loops for structurally invalid invoices. Sphere-cli PR #29 fixed a UX regression from sphere-sdk#282 by routing wallet use confirmation output to STDERR, keeping STDOUT clean for scripted consumers.</div>
+    <div class="event-meta"><code>sphere-sdk, sphere-cli</code></div>
+  </div></div><p class="section-title" style="margin-top:14px">Timeline — Tuesday, 26 May 2026</p><div class="timeline"><div class="tl-item tl-fix"><span class="tl-time">Tue 11:37</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/271" class="tl-link">sphere-sdk #271</a> — fix(payments)(#269): classify VerificationError(Recipient address mismatch) as permanent</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 12:56</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/265" class="tl-link">sphere-sdk #265</a> — fix(profile)(#264): auto-merge monotonicity violations; gate broadcasts behind flag (default OFF)</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 13:46</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/273" class="tl-link">sphere-sdk #273</a> — fix(profile,transport)(#272): decouple per-flush HEAD-verify from at-least-once gate</span></div><div class="tl-item tl-feat"><span class="tl-time">Tue 15:35</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/276" class="tl-link">sphere-sdk #276</a> — feat(sphere-sdk)(#274): toggleable verbose debug logging with namespaces, spans, redaction</span></div><div class="tl-item tl-done"><span class="tl-time">Tue 17:21</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/277" class="tl-link">sphere-sdk #277</a> — perf(#275): persist Nostr event dedup across process restarts (#275)</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 19:23</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/279" class="tl-link">sphere-sdk #279</a> — fix(profile)(#278): bound helia.blockstore.get with LRU + in-flight dedup</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 21:27</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/281" class="tl-link">sphere-sdk #281</a> — fix(profile,recovery)(#280): SENT-record CBOR fallback + aggregator-spent recovery sweep</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 22:10</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/283" class="tl-link">sphere-sdk #283</a> (fix(payments,recovery)(#282): two §D residuals — deterministic asset order + invoice round-trip) &middot; <a href="https://github.com/unicity-sphere/sphere-cli/pull/29" class="tl-link">sphere-cli #29</a> (fix(cli)(sphere-sdk#282): route `wallet use` confirmation to STDERR)</span></div><div class="tl-item tl-chore"><span class="tl-time">Tue 22:28</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere/pull/304" class="tl-link">sphere #304</a> — chore(sdk): bump vendor-sphere-sdk to integration/all-fixes @ cca4530 (PRs #275/#278/#280/#282)</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 23:08</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere/pull/305" class="tl-link">sphere #305</a> — fix(uxf): switch UXF build to Profile-backed providers + Vite Node-stub aliases</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 23:20</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere/pull/306" class="tl-link">sphere #306</a> — Revert PR #305 — Profile providers swap loses existing tokens (no migration path)</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 23:44–23:48</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/287" class="tl-link">sphere-sdk #287</a> (fix(profile)(#285): migrate oversized OpLog writes to CID-references (Comms + GroupChat)) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/288" class="tl-link">sphere-sdk #288</a> (fix(profile)(#285): migrate oversized OpLog writes to CID-references (CommunicationsModule + GroupChatModule))</span></div><div class="tl-item tl-feat"><span class="tl-time">Wed 00:15</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/289" class="tl-link">sphere-sdk #289</a> — feat(profile)(#286): bidirectional legacy↔Profile token storage migration</span></div><div class="tl-item tl-feat"><span class="tl-time">Wed 01:04</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere/pull/307" class="tl-link">sphere #307</a> — feat(uxf): re-enable Profile mode with safe legacy→Profile token migration</span></div></div></div>
+<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">6 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Aggregator request validation and h2c gateway metrics</div>
+    <div class="event-detail">PR aggregator-go#153 hardened input validation on the aggregator's request handling path, rejecting malformed or out-of-spec submissions earlier in the pipeline to reduce downstream error surface. PR aggregator-subscription#34 added HTTP/2 cleartext (h2c) gateway proxying support alongside upstream metrics collection, enabling low-latency gRPC-style connectivity to the subscription service while providing visibility into upstream health. Together these changes strengthen both the correctness and observability of the aggregator stack.</div>
+    <div class="event-meta"><code>aggregator-go, aggregator-subscription</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Staging environment rollout for SIF</div>
+    <div class="event-detail">PR #49 provisioned a dedicated staging environment at sif.staging.unicity.network, giving the team an isolated pre-production target for validating SIF changes before they reach the production network. PR #47 added redaction support to SIF, enabling sensitive fields to be stripped from logs or outputs at the service layer. Having a staging environment in place makes the redaction feature, and future changes, safely testable against real infrastructure without production risk.</div>
+    <div class="event-meta"><code>sif</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">CORS fix for IPFS sidecar and website refresh</div>
+    <div class="event-detail">PR ipfs-storage#11 added CORS headers to the /sidecar/ Nginx location block, unblocking browser-side clients that were being refused cross-origin access to sidecar endpoints. PR website-next#6 delivers a batch of May 2026 feedback-driven updates to the public website, likely covering copy, layout, or feature changes surfaced from recent review cycles. The IPFS fix is operationally important for any web frontend that proxies sidecar requests directly from a browser context.</div>
+    <div class="event-meta"><code>ipfs-storage, website-next</code></div>
+  </div></div><p class="section-title" style="margin-top:14px">Timeline — Tuesday, 26 May 2026</p><div class="timeline"><div class="tl-item tl-feat"><span class="tl-time">Tue 09:08</span><span class="tl-label"><a href="https://github.com/unicitynetwork/website-next/pull/6" class="tl-link">website-next #6</a> — Feat/website may2026 feedback</span></div><div class="tl-item tl-feat"><span class="tl-time">Tue 15:37–15:41</span><span class="tl-label"><a href="https://github.com/unicitynetwork/aggregator-subscription/pull/34" class="tl-link">aggregator-subscription #34</a> (Add h2c gateway proxying and upstream metrics) &middot; <a href="https://github.com/unicitynetwork/aggregator-go/pull/153" class="tl-link">aggregator-go #153</a> (Request validation hardening)</span></div><div class="tl-item tl-feat"><span class="tl-time">Tue 19:33</span><span class="tl-label"><a href="https://github.com/unicitynetwork/sif/pull/47" class="tl-link">sif #47</a> — Add redactions</span></div><div class="tl-item tl-done"><span class="tl-time">Tue 21:15</span><span class="tl-label"><a href="https://github.com/unicitynetwork/sif/pull/49" class="tl-link">sif #49</a> — Roll out staging environment at sif.staging.unicity.network</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 23:09</span><span class="tl-label"><a href="https://github.com/unicitynetwork/ipfs-storage/pull/11" class="tl-link">ipfs-storage #11</a> — fix(nginx): add CORS headers to /sidecar/ location</span></div></div></div>
 
 <div class="card" style="border-color:#E24B4A">
   <div class="org-header">
     <span class="badge" style="background:#FCEBEB;color:#791F1F">Project board comparison</span>
     <span style="font-size:12px;color:#666">Stale statuses &middot; No Status &middot; open PRs not tracked</span>
   </div>
-  <p class="section-title">Astrid <a href="https://github.com/orgs/unicity-astrid/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 164 · In progress 13 · Done 306</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
+  <p class="section-title">Astrid <a href="https://github.com/orgs/unicity-astrid/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 165 · In progress 13 · Done 306</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
   <span class="chip chip-miss">MISSING</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-astrid/capsule-memory/pull/3" class="pr-link">feat: KV-backed memory with add_memory tool and /memory-export command</a></div>
@@ -194,7 +209,12 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-astrid/capsule-cli/pull/10" class="pr-link">chore(manifest): convert to Cargo-like [publish]/[subscribe] schema with canonical wit refs</a></div>
     <div class="board-detail"><code>capsule-cli #10</code> · Open PR not tracked on any board</div>
-  </div></div></div><p class="section-title">Sphere <a href="https://github.com/orgs/unicity-sphere/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 26 · In progress 13 · In review 1 · Ready 2 · Done 59</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">MISSING</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicity-astrid/rfcs/pull/27" class="pr-link">RFC: net.connect-tcp outbound TCP host function</a></div>
+    <div class="board-detail"><code>rfcs #27</code> · Open PR not tracked on any board</div>
+  </div></div></div><p class="section-title">Sphere <a href="https://github.com/orgs/unicity-sphere/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 26 · In progress 16 · In review 1 · Ready 2 · Done 59</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
   <span class="chip chip-stale">STALE</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/90" class="pr-link">Feat/auto connect</a></div>
@@ -234,7 +254,12 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/165" class="pr-link">fix(profile): close at-least-once invariant follow-up gaps + cross-device sync fixes</a></div>
     <div class="board-detail"><code>sphere-sdk #165</code> · Open PR not tracked on any board</div>
-  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Blocked 5 · In Dev 22 · Test 3 · Todo 66 · Done 329</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">MISSING</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/175" class="pr-link">docs: §12.3.1 SHIPPED + §12.3.2 → Issue #174 (per-token spent-state rescan)</a></div>
+    <div class="board-detail"><code>sphere-sdk #175</code> · Open PR not tracked on any board</div>
+  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Blocked 5 · In Dev 22 · Test 1 · Todo 66 · Done 331</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
   <span class="chip chip-stale">STALE</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicitynetwork/aggregator-go/pull/51" class="pr-link">Streaming round processing with adaptive timing</a></div>
@@ -309,16 +334,6 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/66" class="pr-link">Add BDD test suite covering V2 SDK functionality</a></div>
     <div class="board-detail"><code>state-transition-sdk-java #66</code> · Open PR not tracked on any board</div>
-  </div></div><div class="board-row">
-  <span class="chip chip-miss">MISSING</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/aggregator-go/pull/153" class="pr-link">Request validation hardening</a></div>
-    <div class="board-detail"><code>aggregator-go #153</code> · Open PR not tracked on any board</div>
-  </div></div><div class="board-row">
-  <span class="chip chip-miss">MISSING</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/sif/pull/47" class="pr-link">Add redactions</a></div>
-    <div class="board-detail"><code>sif #47</code> · Open PR not tracked on any board</div>
   </div></div></div>
 </div>
 
@@ -349,39 +364,91 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
     <div class="board-detail"><code>.github #12</code></div>
   </div></div></div></div>
 
-
+<div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div><div class="event-row">
+  <div class="event-dot" style="background:#E24B4A"></div>
+  <div class="event-body">
+    <div class="event-title">bft-core #11 — EVM (127 days, @MastaP)</div>
+    <div class="event-detail">Oldest open PR in the project at 127 days with no board tracking. Owner (@MastaP) should either recommit to an EVM integration timeline or close and convert to a tracked issue. Needs explicit decision from tech leads this week.</div>
+    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">close or revive</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#EF9F27"></div>
+  <div class="event-body">
+    <div class="event-title">nostr-js-sdk #4 + nostr-sdk #4 — Unit tests (110 days, @b3y0urs3lf)</div>
+    <div class="event-detail">Both PRs (366 new tests, comprehensive unit coverage) have been open 110 days with no board entry. Risk of growing stale against mainline. Assign a reviewer or confirm whether the test suites are still needed — board entries should be created regardless.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">close or revive</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">capsule-memory #3 + rfcs #20–25 — Capsule RFC suite (64–70 days, @joshuajbouw)</div>
+    <div class="event-detail">Six Astrid RFCs (interface system, distro, host ABI, interceptor chain, VFS schemes, A2UI) plus the KV-backed memory PR have been open 62–70 days with no board tracking. These appear to be foundational architecture documents; a review session should be scheduled and items added to the Astrid board to unblock downstream implementation work.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">decision needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#EF9F27"></div>
+  <div class="event-body">
+    <div class="event-title">unicity-node #3 — BFT snapshots (61 days, @lploom)</div>
+    <div class="event-detail">Open 61 days with no board entry on the Unicity Network board. No reviewer is visibly assigned. Needs a designated reviewer and board tracking; BFT snapshot support is likely a dependency for node reliability at scale.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">assign reviewer</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">aggregator-go #145 + unicity-node #9 — CI/quality improvements (41 days, @0xgetz)</div>
+    <div class="event-detail">Both PRs (aggregator-go code quality + Go version/CI/CHANGELOG, and unicity-node CI/CD + release automation) are 41 days old and untracked on any board. These are infrastructure hygiene PRs that tend to rot quickly; a reviewer should be assigned immediately and they should be added to the Unicity Network board.</div>
+    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">review needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#EF9F27"></div>
+  <div class="event-body">
+    <div class="event-title">Board hygiene — 20 open PRs missing from project boards</div>
+    <div class="event-detail">20 open PRs across Astrid, Sphere, and Unicity Network boards have no board tracking, including sphere #301, sphere-cli #3 and #9, bft-terraform #2, and all the long-standing items above. Two merged PRs (sphere-sdk #90, aggregator-go #51) are also still listed as Backlog/Todo. A board triage pass is overdue to close stale cards and add missing entries.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">decision needed</span></div>
+  </div></div></div>
 
 <div class="card" style="border-color:#1D9E75">
   <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
   <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
-  <div class="mc-detail">15 PRs merged, 25 open PRs, involved in 12 items</div>
-  <div style="margin-top:6px"><span class="tag">astrid</span><span class="tag">capsule-agents</span><span class="tag">capsule-cli</span><span class="tag">capsule-context-engine</span></div>
+  <div class="mc-detail">Merged 16 PRs across the capsule ecosystem: 8 chore cleanups scrubbing stale wasi-target references (capsule-agents #7, capsule-memory #18, capsule-identity #21, capsule-http #14, capsule-hook-bridge #14, capsule-fs #16, capsule-context-engine #16, capsule-cli #17) plus homebrew-tap #6 SHA refresh, and 6 breaking feat migrations to per-domain WIT + wasm32-unknown-unknown (capsule-skills #16, capsule-shell #12, capsule-session #13, capsule-router #13, capsule-registry #14, capsule-react #19). Has 6 open PRs including astrid #768 (HTTP admin API + invite tokens), sdk-js #11 (SDK runtime fix), capsule-system #8 (WIT migration), a performance fix for the idle event loop (capsule-context-engine #15), a lock-scope fix (capsule-shell #13), and a daemon leak fix (astrid #769).</div>
+  <div style="margin-top:6px"><span class="tag">16 merged</span><span class="tag">wasm32-unknown-unknown migration</span><span class="tag">capsule ecosystem</span><span class="tag">6 open PRs</span></div>
+</div><div class="member-card">
+  <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
+  <div class="mc-detail">Merged sif #49 rolling out the staging environment at sif.staging.unicity.network. Actively involved in sif #50 (audit log), sif #47 (redactions), aggregator-go #153 and #150 (request validation hardening), and aggregator-subscription #34 (h2c gateway proxying + upstream metrics). Long-standing bft-core #11 EVM PR (127 days) remains open and untracked on any board.</div>
+  <div style="margin-top:6px"><span class="tag">sif staging live</span><span class="tag">aggregator hardening</span><span class="tag">bft-core EVM stalled</span><span class="tag">1 merged</span></div>
 </div><div class="member-card">
   <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
-  <div class="mc-detail">1 PR merged</div>
-  <div style="margin-top:6px"><span class="tag">website-next</span></div>
+  <div class="mc-detail">Merged website-next #6 delivering the May 2026 feedback-driven website update. No open PRs or active reviews recorded this window.</div>
+  <div style="margin-top:6px"><span class="tag">1 merged</span><span class="tag">website update</span><span class="tag">website-next</span></div>
 </div><div class="member-card">
   <div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div>
-  <div class="mc-detail">1 open PR</div>
-  <div style="margin-top:6px"><span class="tag">sphere-api</span></div>
+  <div class="mc-detail">Driving S3 image upload feature across three open PRs: sphere-ui #2 (media upload components v0.1.16), sphere-api #25 (presign + confirm + delete + worker + replacement hooks backend), and sphere-api #24 (platform-wide S3 image upload integration). No merges this window; all three PRs are awaiting review.</div>
+  <div style="margin-top:6px"><span class="tag">S3 image upload</span><span class="tag">sphere-ui + sphere-api</span><span class="tag">3 open PRs</span><span class="tag">review needed</span></div>
 </div><div class="member-card">
   <div class="mc-name">Risto Laanoja <span class="mc-handle">@ristik</span></div>
-  <div class="mc-detail">1 open PR, involved in 2 items</div>
-  <div style="margin-top:6px"><span class="tag">state-transition-sdk-js</span><span class="tag">unicity-yellowpaper-tex</span></div>
+  <div class="mc-detail">Opened unicity-yellowpaper-tex #6 documenting scope and user stories for bridging external assets. Also involved in state-transition-sdk-js #117, which enforces that token IDs are bound to their mint network at genesis verification.</div>
+  <div style="margin-top:6px"><span class="tag">yellowpaper bridging</span><span class="tag">genesis verification</span><span class="tag">state-transition-sdk-js</span></div>
 </div><div class="member-card">
   <div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div>
-  <div class="mc-detail">1 open PR, involved in 2 items</div>
-  <div style="margin-top:6px"><span class="tag">.github</span><span class="tag">state-transition-sdk-java</span><span class="tag">state-transition-sdk-js</span></div>
+  <div class="mc-detail">Has state-transition-sdk-java #68 open migrating TGE minting from caller-supplied token IDs to networkId + salt. Also involved in .github #33 (testnet/mainnet asset distinction) and state-transition-sdk-js #117 (genesis token ID enforcement).</div>
+  <div style="margin-top:6px"><span class="tag">TGE minting migration</span><span class="tag">Java SDK</span><span class="tag">cross-repo TGE work</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@ahtotruu</span></div>
-  <div class="mc-detail">1 PR merged, 2 open PRs</div>
-  <div style="margin-top:6px"><span class="tag">.github</span><span class="tag">unicity-node</span><span class="tag">unicity-yellowpaper-tex</span></div>
+  <div class="mc-detail">Has two open PRs: .github #33 (distinction between testnet and mainnet assets) and unicity-node #13 (TGE block reward token handling amendment). Also reviewing aggregator-go #153 and #150 for request validation hardening.</div>
+  <div style="margin-top:6px"><span class="tag">TGE block rewards</span><span class="tag">testnet/mainnet distinction</span><span class="tag">aggregator review</span></div>
+</div><div class="member-card">
+  <div class="mc-name"><span class="mc-handle">@b3y0urs3lf</span></div>
+  <div class="mc-detail">Active reviewer on aggregator-go #153 and #150 (request validation hardening) and aggregator-subscription #34 (h2c proxying + metrics). Has two very long-standing open PRs — nostr-js-sdk #4 and nostr-sdk #4 (both 110 days, comprehensive unit tests) — as well as state-transition-sdk-js #106 (test infrastructure, 49 days), none of which are tracked on any board.</div>
+  <div style="margin-top:6px"><span class="tag">aggregator reviewer</span><span class="tag">3 stalled open PRs</span><span class="tag">test coverage debt</span><span class="tag">board gaps</span></div>
+</div><div class="member-card">
+  <div class="mc-name"><span class="mc-handle">@jait91</span></div>
+  <div class="mc-detail">Merged aggregator-go #153 (request validation hardening) and aggregator-subscription #34 (h2c gateway proxying + upstream metrics). Still involved in the predecessor aggregator-go #150 hardening PR.</div>
+  <div style="margin-top:6px"><span class="tag">2 merged</span><span class="tag">aggregator hardening</span><span class="tag">h2c proxying</span></div>
+</div><div class="member-card">
+  <div class="mc-name"><span class="mc-handle">@lploom</span></div>
+  <div class="mc-detail">Merged sif #47 (add redactions) and has sif #50 (audit log) open. Also involved in older audit log completion work (sif #19) and enabling modify actions (sif #13). Long-standing unicity-node #3 BFT snapshots PR (61 days) remains open and untracked on any board.</div>
+  <div style="margin-top:6px"><span class="tag">sif redactions merged</span><span class="tag">audit log in progress</span><span class="tag">BFT snapshots stalled</span><span class="tag">board gap</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@vrogojin</span></div>
-  <div class="mc-detail">3 PRs merged, 5 open PRs, involved in 4 items</div>
-  <div style="margin-top:6px"><span class="tag">.github</span><span class="tag">infra-probe</span><span class="tag">sphere-sdk</span><span class="tag">state-transition-sdk-js</span></div>
-</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@MastaP, @jvsteiner, @b3y0urs3lf, @jait91, @lploom, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
+  <div class="mc-detail">Extremely high-velocity window: merged 13 PRs across sphere and sphere-sdk covering Profile-backed token storage migration (sphere-sdk #289, #294), CID-reference fixes for oversized OpLog writes (sphere-sdk #287, #288), Nostr dedup persistence (sphere-sdk #277), wallet-storage mode controls in the banner (sphere #308), and Profile mode re-enablement (sphere #307), plus several supporting fixes and a revert of sphere #305. Has 6 open PRs continuing the Profile/SphereCryptographer interface work (sphere-sdk #286, #285, #290, #291, #292, #293). Also reviewed .github #33 and state-transition-sdk-js #117.</div>
+  <div style="margin-top:6px"><span class="tag">13 merged</span><span class="tag">Profile storage migration</span><span class="tag">sphere-sdk + sphere</span><span class="tag">6 open PRs</span></div>
+</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@jvsteiner, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments — not just authored items.</div>
 </div>
@@ -391,103 +458,103 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <div style="overflow-x:auto"><table class="pr-table">
     <thead><tr><th>Age</th><th>PR</th><th>Author</th></tr></thead>
     <tbody><tr>
-  <td><span class="age-pill age-critical">126d</span></td>
+  <td><span class="age-pill age-critical">127d</span></td>
   <td><a href="https://github.com/unicitynetwork/bft-core/pull/11" class="pr-link">EVM</a><span class="draft-tag">Draft</span>
     <div class="pr-repo">bft-core #11</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-critical">109d</span></td>
+  <td><span class="age-pill age-critical">110d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-js-sdk/pull/4" class="pr-link">test: add comprehensive unit tests for uncovered modules</a>
     <div class="pr-repo">nostr-js-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-critical">109d</span></td>
+  <td><span class="age-pill age-critical">110d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-sdk/pull/4" class="pr-link">Add comprehensive unit tests (366 new tests)</a>
     <div class="pr-repo">nostr-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-high">69d</span></td>
+  <td><span class="age-pill age-high">70d</span></td>
   <td><a href="https://github.com/unicity-astrid/capsule-memory/pull/3" class="pr-link">feat: KV-backed memory with add_memory tool and /memory-export command</a>
     <div class="pr-repo">capsule-memory #3</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">64d</span></td>
+  <td><span class="age-pill age-high">65d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/20" class="pr-link">RFC: Capsule interface system</a>
     <div class="pr-repo">rfcs #20</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">64d</span></td>
+  <td><span class="age-pill age-high">65d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/21" class="pr-link">RFC: Distro system</a>
     <div class="pr-repo">rfcs #21</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">64d</span></td>
+  <td><span class="age-pill age-high">65d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/22" class="pr-link">RFC: Host ABI</a>
     <div class="pr-repo">rfcs #22</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">64d</span></td>
+  <td><span class="age-pill age-high">65d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/23" class="pr-link">RFC: Interceptor middleware chain</a>
     <div class="pr-repo">rfcs #23</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">63d</span></td>
+  <td><span class="age-pill age-high">64d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/24" class="pr-link">RFC: XDG-aligned VFS schemes (config://, data://, cache://, state://)</a>
     <div class="pr-repo">rfcs #24</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">61d</span></td>
+  <td><span class="age-pill age-high">62d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/25" class="pr-link">RFC: Agent-Composed UI via A2UI Protocol</a>
     <div class="pr-repo">rfcs #25</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">60d</span></td>
+  <td><span class="age-pill age-high">61d</span></td>
   <td><a href="https://github.com/unicitynetwork/unicity-node/pull/3" class="pr-link">BFT snapshots</a>
     <div class="pr-repo">unicity-node #3</div></td>
   <td class="pr-author">@lploom</td></tr><tr>
-  <td><span class="age-pill age-high">48d</span></td>
+  <td><span class="age-pill age-high">49d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-js/pull/106" class="pr-link">Feature/test infrastructure</a>
     <div class="pr-repo">state-transition-sdk-js #106</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-high">46d</span></td>
+  <td><span class="age-pill age-high">47d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-sdk/pull/105" class="pr-link">feat(uxf): UXF Inter-Wallet Transfer Protocol — implementation (51 of 52 plan tasks)</a>
     <div class="pr-repo">sphere-sdk #105</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-high">40d</span></td>
+  <td><span class="age-pill age-high">41d</span></td>
   <td><a href="https://github.com/unicitynetwork/unicity-node/pull/9" class="pr-link">feat: CI/CD fixes, documentation, security policy, and release automation</a>
     <div class="pr-repo">unicity-node #9</div></td>
   <td class="pr-author">@0xgetz</td></tr><tr>
-  <td><span class="age-pill age-high">40d</span></td>
+  <td><span class="age-pill age-high">41d</span></td>
   <td><a href="https://github.com/unicitynetwork/aggregator-go/pull/145" class="pr-link">fix: code quality improvements — Go version, CI race+lint, error mapping, bounded query, CHANGELOG</a>
     <div class="pr-repo">aggregator-go #145</div></td>
   <td class="pr-author">@0xgetz</td></tr><tr>
-  <td><span class="age-pill age-high">34d</span></td>
+  <td><span class="age-pill age-high">35d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere/pull/301" class="pr-link">fix(mobile): dedicated mobile layout with bottom navigation</a>
     <div class="pr-repo">sphere #301</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-high">32d</span></td>
+  <td><span class="age-pill age-high">33d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-cli/pull/3" class="pr-link">ci: harden nightly integration workflow — drop artifact upload</a>
     <div class="pr-repo">sphere-cli #3</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-medium">21d</span></td>
+  <td><span class="age-pill age-medium">22d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-cli/pull/9" class="pr-link">feat(trader): add 'sphere trader withdraw' subcommand</a>
     <div class="pr-repo">sphere-cli #9</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-medium">21d</span></td>
+  <td><span class="age-pill age-medium">22d</span></td>
   <td><a href="https://github.com/unicitynetwork/bft-terraform/pull/2" class="pr-link">Add testnet2 environment with shared S3 state backend</a>
     <div class="pr-repo">bft-terraform #2</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-medium">21d</span></td>
+  <td><span class="age-pill age-medium">22d</span></td>
   <td><a href="https://github.com/unicitynetwork/bft-ansible/pull/2" class="pr-link">Add testnet2 deployment (flat sharding, RDS, sentinel, Alloy)</a>
     <div class="pr-repo">bft-ansible #2</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-medium">20d</span></td>
+  <td><span class="age-pill age-medium">21d</span></td>
   <td><a href="https://github.com/unicity-astrid/capsule-react/pull/16" class="pr-link">fix: drop the imagined { data: ... } wrapper from session/compact response reads</a>
     <div class="pr-repo">capsule-react #16</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">20d</span></td>
+  <td><span class="age-pill age-medium">21d</span></td>
   <td><a href="https://github.com/unicity-astrid/capsule-prompt-builder/pull/11" class="pr-link">fix: drop the imagined { data: ... } wrapper from session-fetch path</a>
     <div class="pr-repo">capsule-prompt-builder #11</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">16d</span></td>
+  <td><span class="age-pill age-medium">17d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-cli/pull/12" class="pr-link">feat(trader): add sphere trader withdraw subcommand</a>
     <div class="pr-repo">sphere-cli #12</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-medium">15d</span></td>
+  <td><span class="age-pill age-medium">16d</span></td>
   <td><a href="https://github.com/unicitynetwork/js-faucet/pull/2" class="pr-link">fix(faucet): use conservative transferMode for FAUCET_REQUEST sends</a>
     <div class="pr-repo">js-faucet #2</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-medium">15d</span></td>
+  <td><span class="age-pill age-medium">16d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/26" class="pr-link">RFC: Cargo-like manifest schema with WIT refs, registry, and BLAKE3 lock</a>
     <div class="pr-repo">rfcs #26</div></td>
   <td class="pr-author">@joshuajbouw</td></tr></tbody>
@@ -497,58 +564,53 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
 <div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge" style="background:#E1F5EE;color:#085041">Apr26 release</span><span style="font-size:13px;color:#666">50/50 done &middot; 0 days to deadline</span><span class="badge" style="background:#E1F5EE;color:#085041;margin-left:auto">on track</span><a href="https://github.com/orgs/unicitynetwork/projects/1/views/2" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></div><div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden"><div style="background:#1D9E75;width:100%;height:100%;border-radius:4px"></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><p class="section-title" style="margin-top:0;color:#085041">✔ What's moving</p><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">All 50 scope items completed on schedule</div>
-    <div class="event-detail">The full backlog of 50 items has been closed with 4 days remaining before the April 30 deadline. This buffer provides time for final smoke testing and go/no-go sign-off without schedule pressure.</div>
+    <div class="event-title">All 50 delivery items completed</div>
+    <div class="event-detail">Every tracked item in the Apr26 TGE release has been marked done. The full scope has been delivered ahead of the April 30 deadline, leaving zero outstanding work.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">TGE release window clear for deployment</div>
-    <div class="event-detail">With zero open items, the engineering and product teams can shift fully into release-day execution mode, including final smart contract deployment checks and token distribution readiness.</div>
+    <div class="event-title">TGE release scope fully closed</div>
+    <div class="event-detail">The 50/50 completion rate confirms no partial items or lingering sub-tasks remain in the release backlog. This gives the team a clean window for final verification before the deadline.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Final QA and regression window available</div>
-    <div class="event-detail">The 4-day runway before deadline allows a complete regression pass across all TGE components. Any last-minute issues surfaced in staging can be addressed without impacting the launch date.</div>
+    <div class="event-title">Buffer time available for final checks</div>
+    <div class="event-detail">With 0 days formally remaining but 100% completion achieved, the team has capacity to run end-to-end smoke tests, deployment validations, and go/no-go sign-offs without schedule pressure.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Stakeholder sign-off can proceed immediately</div>
-    <div class="event-detail">Completed scope enables legal, compliance, and executive sign-off to run in parallel right now rather than being gated by engineering. This is the highest-value use of the remaining window.</div>
+    <div class="event-title">Release candidate stabilization window open</div>
+    <div class="event-detail">Full item closure means engineering can freeze the release candidate and hand off to QA and release management for final gate reviews, reducing last-minute change risk.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Operational runbooks and monitoring ready to activate</div>
-    <div class="event-detail">With development done, DevOps and on-call teams should be finalizing incident response runbooks and blockchain monitoring dashboards to ensure the TGE event itself is fully observable from minute one.</div>
+    <div class="event-title">Stakeholder communication can proceed</div>
+    <div class="event-detail">With all items done, release notes, external announcements, and TGE participant communications can be finalized and scheduled without waiting on any blocking technical work.</div>
   </div></div></div><div><p class="section-title" style="margin-top:0;color:#1D9E75">⚠ What worries</p><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Zero open items may mask undiscovered defects</div>
-    <div class="event-detail">A 100% completion rate with no remaining items can create false confidence. If acceptance criteria were marked done without full end-to-end validation on mainnet-equivalent environments, defects will only surface at launch.</div>
+    <div class="event-title">No open items may mask undocumented debt</div>
+    <div class="event-detail">A 100% closed backlog with a hard deadline can create pressure to mark items done prematurely. There is no visibility here into whether any tasks were closed without full acceptance criteria met; a final audit of recently closed items is warranted.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">No visibility into post-completion verification steps</div>
-    <div class="event-detail">The data provided shows task closure but not whether each item passed independent QA sign-off. If verification is conflated with implementation completion, the release may be functionally incomplete despite showing 100%.</div>
+    <div class="event-title">Zero days of schedule contingency remain</div>
+    <div class="event-detail">The deadline is today. Any last-minute regression, infrastructure issue, or failed deployment check has no buffer to absorb it. A single blocking defect discovered in final smoke testing has no recovery time.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">4-day buffer is thin for critical-path rollback</div>
-    <div class="event-detail">If final deployment or smart contract migration fails during the launch window, 4 days is insufficient for a safe rollback, re-audit, and re-deployment cycle. There is no named rollback owner or contingency plan visible in the provided data.</div>
+    <div class="event-title">Post-completion verification not confirmed</div>
+    <div class="event-detail">Completion is self-reported via item counts. There is no evidence here of a signed-off go/no-go checklist, independent QA sign-off, or deployment verification in production or staging. These steps must be explicitly confirmed before the deadline passes.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Single-point-of-failure risk on TGE execution day</div>
-    <div class="event-detail">With all items closed, execution now depends on a small set of individuals running the actual token generation event. If key owners are unavailable on April 30, there is no buffer to redistribute responsibilities.</div>
+    <div class="event-title">Single-point-of-failure risk at launch moment</div>
+    <div class="event-detail">TGE events typically concentrate execution risk on a small number of individuals at the moment of token generation. If key owners are unavailable or on-call coverage is not confirmed for April 30, an incident has no clear responder.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">No items flagged for third-party or audit dependencies</div>
-    <div class="event-detail">TGE events typically require final sign-off from external auditors or exchange partners. None of these external dependencies are represented in the 50 items, meaning they may be untracked and could block launch independently.</div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">Post-launch monitoring and incident response undefined</div>
-    <div class="event-detail">The backlog shows no items related to post-TGE monitoring, on-call rotation, or incident escalation. A gap here means the team may be unprepared for the high-traffic, high-stakes period immediately after token generation.</div>
+    <div class="event-title">No rollback or contingency plan visible</div>
+    <div class="event-detail">There is no information here about a rollback procedure or contingency if the TGE execution fails at launch. For an irreversible token generation event, the absence of a documented abort or recovery path is a material risk.</div>
   </div></div></div></div></div>
 
 <p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
