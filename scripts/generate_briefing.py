@@ -103,8 +103,8 @@ for org in ORGS:
 long_prs.sort(key=lambda p: p['created_at'])
 print(f'Long-standing open PRs: {len(long_prs)}')
 
-# ── 4c. Apr26 release tracking ────────────────────────────────────────────────────────────────
-APR26_Q = '''
+# ── 4c. June release tracking ─────────────────────────────────────────────────────────────────
+RELEASE_Q = '''
 query($cursor: String) {
   organization(login: "unicitynetwork") {
     projectV2(number: 1) {
@@ -135,12 +135,12 @@ query($cursor: String) {
 apr26_all = []; apr26_open = []; apr26_done_items = []
 apr26_by_status = {}
 DONE_STATUSES_APR = {'done', 'closed', 'complete', 'completed', 'shipped'}
-deadline         = datetime(2026, 4, 30, tzinfo=timezone.utc)
+deadline         = datetime(2026, 6, 30, tzinfo=timezone.utc)
 days_to_deadline = max(0, (deadline - now).days)
 
 apr26_cursor = None
 while True:
-    result = gh_graphql(APR26_Q, {'cursor': apr26_cursor})
+    result = gh_graphql(RELEASE_Q, {'cursor': apr26_cursor})
     try:
         pd = result['data']['organization']['projectV2']['items']
         for node in pd['nodes']:
@@ -151,7 +151,7 @@ while True:
                 fname = fv['field'].get('name', '').lower()
                 if fname == 'status':  status  = fv['name']
                 if fname == 'release': release = fv['name']
-            if release != 'Apr26': continue
+            if release != 'June': continue
             c = node.get('content')
             if not c or not c.get('title'): continue
             status = status or 'No Status'
@@ -173,11 +173,11 @@ while True:
         if not pd['pageInfo']['hasNextPage']: break
         apr26_cursor = pd['pageInfo']['endCursor']
     except Exception as e:
-        print(f'  Apr26 fetch failed: {e}'); break
+        print(f'  June release fetch failed: {e}'); break
 
 apr26_total = len(apr26_all)
 apr26_pct   = int(len(apr26_done_items) / apr26_total * 100) if apr26_total else 0
-print(f'Apr26: {len(apr26_done_items)}/{apr26_total} done ({apr26_pct}%), {days_to_deadline} days left, {len(apr26_open)} open')
+print(f'June release: {len(apr26_done_items)}/{apr26_total} done ({apr26_pct}%), {days_to_deadline} days left, {len(apr26_open)} open')
 
 # ── 5. Board fetch — paginated, board_keys = ALL items, boards = non-Done only
 BOARD_Q = '''
@@ -416,7 +416,7 @@ except Exception as e:
     print(f'Enrichment parse error: {e}')
     member_narratives = {}; needs_attention = []
 
-# ── 9b. Claude call 3 — Apr26 release sentiment ───────────────────────────────────────────────
+# ── 9b. Claude call 3 — June release sentiment ───────────────────────────────────────────────
 def apr26_open_lines():
     lines = []
     for status in ['Todo', 'In Dev', 'Test', 'Blocked', 'No Status']:
@@ -430,8 +430,8 @@ def apr26_open_lines():
 
 apr26_sentiment = {'sentiment': 'unknown', 'badge_color': 'amber', 'moving': [], 'risks': []}
 if apr26_total > 0:
-    sentiment_prompt = f"""You are assessing the Apr26 TGE release for the Unicity project.
-Deadline: April 30, 2026 ({days_to_deadline} days from now)
+    sentiment_prompt = f"""You are assessing the June 2026 release for the Unicity project.
+Deadline: June 30, 2026 ({days_to_deadline} days from now)
 Progress: {len(apr26_done_items)} of {apr26_total} items done ({apr26_pct}%)
 
 Open items ({len(apr26_open)} remaining):
@@ -456,9 +456,9 @@ Respond ONLY with valid JSON no fences:
     raw3 = claude(sentiment_prompt, max_tokens=1200)
     try:
         apr26_sentiment = json.loads(raw3)
-        print(f'Apr26 sentiment: {apr26_sentiment.get("sentiment")} | {len(apr26_sentiment.get("moving",[]))} moving, {len(apr26_sentiment.get("risks",[]))} risks')
+        print(f'June release sentiment: {apr26_sentiment.get("sentiment")} | {len(apr26_sentiment.get("moving",[]))} moving, {len(apr26_sentiment.get("risks",[]))} risks')
     except Exception as e:
-        print(f'Apr26 sentiment parse error: {e}')
+        print(f'June release sentiment parse error: {e}')
 
 # ── 10. HTML helpers ────────────────────────────────────────────────────────────────────────────
 def esc(s):
@@ -673,9 +673,8 @@ def render_apr26_card():
     badge_css    = BADGE_CSS.get(badge_color, BADGE_CSS['amber'])
     border_color = BORDER_COLOR.get(badge_color, '#EF9F27')
     bar_color    = BORDER_COLOR.get(badge_color, '#EF9F27')
-    board_link   = 'https://github.com/orgs/unicitynetwork/projects/1/views/2'
+    board_link   = 'https://github.com/orgs/unicitynetwork/projects/1/views/20'
 
-    # Status breakdown chips
     status_chips = ''
     for status in ['In Dev', 'Todo', 'Test', 'Blocked', 'No Status']:
         items = apr26_by_status.get(status, [])
@@ -683,25 +682,20 @@ def render_apr26_card():
             status_chips += f'<span style="font-size:11px;color:#555;margin-right:14px"><strong>{len(items)}</strong> {esc(status)}</span>'
 
     out  = f'<div class="card" style="border-color:{border_color}">'
-    # Header
     out += f'<div class="org-header">'
-    out += f'<span class="badge" style="{badge_css}">Apr26 release</span>'
+    out += f'<span class="badge" style="{badge_css}">June release</span>'
     out += f'<span style="font-size:13px;color:#666">{len(apr26_done_items)}/{apr26_total} done &middot; {days_to_deadline} day{"s" if days_to_deadline!=1 else ""} to deadline</span>'
     out += f'<span class="badge" style="{badge_css};margin-left:auto">{esc(sentiment)}</span>'
     out += f'<a href="{board_link}" style="font-size:11px;color:#378ADD;font-family:\'SF Mono\',monospace;text-decoration:none">board \u2197</a>'
     out += '</div>'
-    # Progress bar
     out += f'<div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden">'
     out += f'<div style="background:{bar_color};width:{apr26_pct}%;height:100%;border-radius:4px"></div>'
     out += '</div>'
-    # Status breakdown
     if status_chips:
         out += f'<div style="margin-bottom:14px">{status_chips}</div>'
 
-    # Two-column layout: What's moving / What worries
     out += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
 
-    # What's moving
     out += '<div>'
     out += '<p class="section-title" style="margin-top:0;color:#085041">\u2714 What\'s moving</p>'
     for item in moving[:5]:
@@ -715,7 +709,6 @@ def render_apr26_card():
         out += '<p style="font-size:12px;color:#888">No active progress detected.</p>'
     out += '</div>'
 
-    # What worries
     out += '<div>'
     out += f'<p class="section-title" style="margin-top:0;color:{BORDER_COLOR.get(badge_color,"#D97706")}">\u26a0 What worries</p>'
     for item in risks[:6]:
@@ -729,8 +722,8 @@ def render_apr26_card():
         out += '<p style="font-size:12px;color:#888">No significant risks detected.</p>'
     out += '</div>'
 
-    out += '</div>'  # end grid
-    out += '</div>'  # end card
+    out += '</div>'
+    out += '</div>'
     return out
 
 def render_member_cards():
