@@ -357,7 +357,8 @@ raw = claude(theme_prompt)
 try:    themes = json.loads(raw)
 except: themes = {'astrid':[], 'sphere':[], 'network':[]}
 
-# ── 9. Claude call 2 — member narratives + needs attention ────────────────────────────────────
+# ── 9. Claude call 2 — member narratives (dedicated, 6k tokens) ───────────────────────────────
+# Split from needs-attention to avoid truncation on busy days (vrogojin alone can have 30+ PRs).
 def member_summary_lines():
     lines = []
     for member in MEMBERS:
@@ -373,6 +374,28 @@ def member_summary_lines():
         if inv_items:    lines.append(f'  involved: {inv_items}')
     return '\n'.join(lines)
 
+narrative_prompt = f"""You are writing the daily engineering briefing for the Unicity project. Period: {window_label}.
+
+TEAM ACTIVITY THIS WINDOW:
+{member_summary_lines() or 'No activity'}
+
+For each active team member write a narrative (2-3 sentences, specific: mention PR numbers, repo names, what they merged, what's open, what they reviewed). Also write 2-4 short tags.
+
+Example: "35 PRs merged: sdk-rust #7 + 7 capsule doc PRs + v0.3.0 release + 16 sdk-bump PRs across all capsule repos. 4 PRs open targeting state support and richer capsule memory/identity."
+Example tags: ["35 merged", "sdk-rust v0.3.0", "all capsule repos"]
+
+Respond ONLY with valid JSON object mapping username to narrative — no fences, no wrapper key:
+{{"joshuajbouw":{{"detail":"...","tags":["tag1","tag2"]}},"MastaP":{{"detail":"...","tags":["tag1"]}},...}}"""
+
+raw2 = claude(narrative_prompt, max_tokens=6000)
+try:
+    member_narratives = json.loads(raw2)
+    print(f'Narratives OK: {len(member_narratives)} members')
+except Exception as e:
+    print(f'Narrative parse error: {e}')
+    member_narratives = {}
+
+# ── 9b. Claude call 3 — needs attention (separate, 1.5k tokens) ──────────────────────────────
 def long_pr_summary():
     return '\n'.join(
         f'- {pr["repository_url"].split("/")[-1]} #{pr["number"]} "{pr["title"]}" by @{pr["user"]["login"]}'
@@ -380,10 +403,7 @@ def long_pr_summary():
         for pr in long_prs[:15]
     )
 
-narrative_prompt = f"""You are writing the daily engineering briefing for the Unicity project. Period: {window_label}.
-
-TEAM ACTIVITY THIS WINDOW:
-{member_summary_lines() or 'No activity'}
+attention_prompt = f"""You are writing the daily engineering briefing for the Unicity project. Period: {window_label}.
 
 LONG-STANDING OPEN PRs (>7 days):
 {long_pr_summary() or 'None'}
@@ -391,32 +411,22 @@ LONG-STANDING OPEN PRs (>7 days):
 BOARD ISSUES:
 {chr(10).join(f'- [{i["sev"].upper()}] {i["ref"]} ({i["org"]}): {i["title"]} — {i["msg"]}' for i in board_issues[:20]) or 'None'}
 
-Task 1 — For each active team member write a mc_detail narrative (2-3 sentences max, specific: mention PR numbers, repo names, what they merged, what's open, what they reviewed/commented on). Also write 2-4 short tags.
-
-Example good narrative: "35 PRs merged: sdk-rust #7 + 7 capsule doc PRs + v0.3.0 release + 16 sdk-bump PRs. 4 PRs open targeting state support and richer capsule memory/identity."
-Example tags: ["35 merged", "sdk-rust v0.3.0", "all capsule repos"]
-
-Task 2 — Write 3-6 "Needs attention" items from long PRs and board issues. Name exact PR/issue, age, owner, blocker, action needed.
+Write 3-6 "Needs attention" items. Name exact PR/issue, age, owner, blocker, action needed.
 Badge options: "review needed", "decision needed", "close or revive", "assign reviewer", "unblock", "critical"
 Badge colors: "purple", "amber", "blue", "red", "green"
 
-Respond ONLY with valid JSON no fences:
-{{
-  "member_narratives": {{"username": {{"detail": "...", "tags": ["tag1", "tag2"]}}}},
-  "needs_attention": [{{"title": "...", "badge": "...", "badge_color": "amber", "detail": ""}}]
-}}"""
+Respond ONLY with a valid JSON array no fences:
+[{{"title":"...","badge":"...","badge_color":"amber","detail":"..."}}]"""
 
-raw2 = claude(narrative_prompt, max_tokens=4000)
+raw3 = claude(attention_prompt, max_tokens=1500)
 try:
-    enriched = json.loads(raw2)
-    member_narratives = enriched.get('member_narratives', {})
-    needs_attention   = enriched.get('needs_attention', [])
-    print(f'Enrichment OK: {len(member_narratives)} narratives, {len(needs_attention)} attention items')
+    needs_attention = json.loads(raw3)
+    print(f'Needs attention OK: {len(needs_attention)} items')
 except Exception as e:
-    print(f'Enrichment parse error: {e}')
-    member_narratives = {}; needs_attention = []
+    print(f'Needs attention parse error: {e}')
+    needs_attention = []
 
-# ── 9b. Claude call 3 — June release sentiment ───────────────────────────────────────────────
+# ── 9c. Claude call 4 — June release sentiment ───────────────────────────────────────────────
 def apr26_open_lines():
     lines = []
     for status in ['Todo', 'In Dev', 'Test', 'Blocked', 'No Status']:
@@ -437,25 +447,20 @@ Progress: {len(apr26_done_items)} of {apr26_total} items done ({apr26_pct}%)
 Open items ({len(apr26_open)} remaining):
 {apr26_open_lines() or 'None'}
 
-Produce a structured release readiness assessment with two sections:
-
+Produce a structured release readiness assessment:
 1. "sentiment": one of "on track", "at risk", "critical"
 2. "badge_color": "green" / "amber" / "red"
-3. "moving": 3-5 items describing what is actively progressing. Each item:
-   - "title": short label (max 8 words)
-   - "detail": 1-2 sentences. Name specific tasks, repos, owners. Explain what is happening and why it matters for the release.
-4. "risks": 3-6 items describing concerns. Each item:
-   - "title": short label (max 8 words)
-   - "detail": 1-3 sentences. Be specific: name the exact tasks blocked, explain dependency chains (e.g. "X cannot start until Y closes"), call out single-person concentration risk, unassigned work, or items with no recent activity. Connect the dots between tasks.
+3. "moving": 3-5 items — what is actively progressing. Each: "title" (max 8 words), "detail" (1-2 sentences, specific: tasks, repos, owners).
+4. "risks": 3-6 items — concerns. Each: "title" (max 8 words), "detail" (1-3 sentences, name exact tasks blocked, dependency chains, concentration risk, unassigned work).
 
-Be direct. Do not hedge. Use repo names and owner handles where relevant.
+Be direct. Use repo names and owner handles.
 
 Respond ONLY with valid JSON no fences:
 {{"sentiment":"...","badge_color":"...","moving":[{{"title":"...","detail":"..."}}],"risks":[{{"title":"...","detail":"..."}}]}}"""
 
-    raw3 = claude(sentiment_prompt, max_tokens=1200)
+    raw4 = claude(sentiment_prompt, max_tokens=1200)
     try:
-        apr26_sentiment = json.loads(raw3)
+        apr26_sentiment = json.loads(raw4)
         print(f'June release sentiment: {apr26_sentiment.get("sentiment")} | {len(apr26_sentiment.get("moving",[]))} moving, {len(apr26_sentiment.get("risks",[]))} risks')
     except Exception as e:
         print(f'June release sentiment parse error: {e}')
@@ -695,7 +700,6 @@ def render_apr26_card():
         out += f'<div style="margin-bottom:14px">{status_chips}</div>'
 
     out += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'
-
     out += '<div>'
     out += '<p class="section-title" style="margin-top:0;color:#085041">\u2714 What\'s moving</p>'
     for item in moving[:5]:
@@ -721,7 +725,6 @@ def render_apr26_card():
     if not risks:
         out += '<p style="font-size:12px;color:#888">No significant risks detected.</p>'
     out += '</div>'
-
     out += '</div>'
     out += '</div>'
     return out
