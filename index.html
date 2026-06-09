@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Unicity Briefing &mdash; Monday, 8 June 2026</title>
+<title>Unicity Briefing &mdash; Tuesday, 9 June 2026</title>
 <style>*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
@@ -79,72 +79,87 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 
 <div class="header">
   <h2>Unicity project &mdash; daily brief</h2>
-  <p>Monday, 8 June 2026</p>
+  <p>Tuesday, 9 June 2026</p>
   <div class="header-meta">
-    <span class="window-badge">Coverage: Friday – Sunday &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 8 June 2026, 09:55 UTC</span>
+    <span class="window-badge">Coverage: Monday, 8 June 2026 &middot; GitHub API (author + involves sweep)</span>
+    <span class="updated-badge">Updated: 9 June 2026, 08:41 UTC</span>
     
   </div>
 </div>
 
 <div class="metric-grid">
-  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">60</div></div>
+  <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">44</div></div>
   <div class="metric"><div class="metric-label">Releases</div><div class="metric-val am">0</div></div>
-  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">44</div></div>
-  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">4</div></div>
-  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">30 / 30 / 0</div></div>
+  <div class="metric"><div class="metric-label">Open PRs &gt;7 days</div><div class="metric-val re">42</div></div>
+  <div class="metric"><div class="metric-label">Contributors</div><div class="metric-val pu">7</div></div>
+  <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">5 / 22 / 17</div></div>
 </div>
 
-<div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">30 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
+<div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">5 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Enumerate-Capabilities API Lands Across Full Stack</div>
-    <div class="event-detail">PRs #869 (astrid), #55 (sdk-rust), #16 (sdk-js), and #13 (wit) deliver end-to-end support for a new enumerate-capabilities system call. The WIT interface gains the enumerate-capabilities entry in astrid:sys@1.0.0, the host runtime de-stubs the capability check and implements the syscall, and both the Rust and JS/TS SDKs expose capabilities::enumerate / capabilities.enumerate surface. This gives capsule authors a first-class, portable way to introspect which capabilities are available at runtime rather than relying on trial-and-error or hard-coded assumptions.</div>
-    <div class="event-meta"><code>astrid, sdk-js, sdk-rust, wit</code></div>
+    <div class="event-title">MCP Server: Claude-Facing Capsule Tool Exposure</div>
+    <div class="event-detail">PR #880 introduces `astrid mcp serve`, a Model Context Protocol server that exposes capsule tools and wires consent flows directly to Claude. This gives AI agents a structured, audited surface to invoke Astrid capabilities without bypassing capability gating. The work builds on the persistent-stdin plumbing landed in PR #871, which added acceptance tests for persistent stdin and un-stubbed the `write-stdin`/`close-stdin` WIT bindings. PR #14 in the WIT repo follows up with documentation corrections to reflect those bindings as fully implemented rather than stubbed.</div>
+    <div class="event-meta"><code>unicity-astrid</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Persistent-Process Tier Registry and SDK Surface</div>
-    <div class="event-detail">The persistent-process tier is now a complete, cross-layer feature via PRs #867 (astrid), #53 (sdk-rust), #14 (sdk-js), and #12 (wit). The WIT definition extends astrid:process@1.0.0 with the persistent process tier contract, the host implements the corresponding registry, and both SDKs expose the new process management surface. Persistent processes allow capsules to maintain long-lived worker state across invocations, unlocking stateful agent patterns that were previously impossible within the ephemeral capsule model.</div>
-    <div class="event-meta"><code>astrid, sdk-js, sdk-rust, wit</code></div>
+    <div class="event-title">Persistent Process Grants and Spawn Gating</div>
+    <div class="event-detail">PR #873 adds an `allow_persistent` operator sub-grant that gates the `spawn-persistent` capability, giving capsule authors fine-grained control over which sub-processes may outlive their parent invocation. This closes a capability-escalation gap where a capsule could previously spawn persistent processes without an explicit operator endorsement. The sub-grant model follows the existing grant hierarchy and is exercised by the acceptance tests introduced in PR #871.</div>
+    <div class="event-meta"><code>unicity-astrid</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">IPC Manifest Overhaul: Drop Interceptors, Add Subscribe Tables</div>
-    <div class="event-detail">PR #863 is the core breaking change: [[interceptor]] and the ipc_* arrays are removed from the manifest format, with tables now being the sole IPC-intent surface and a new [subscribe] table adding priority semantics. Capsule manifests for capsule-agents (#9), capsule-openai (#6), capsule-system (#9), and capsule-cli (#23) are all migrated to the new [subscribe] / [publish] table format in lockstep. The capsule-cli proxy additionally gains forwarding for admin and correlated request topics that were previously dropped. This rationalises the manifest schema to a single, consistent declaration surface and eliminates the ambiguity between interceptor and subscription semantics.</div>
-    <div class="event-meta"><code>astrid, capsule-agents, capsule-openai, capsule-system, capsule-cli</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
+    <div class="event-title">WIT Submodule Hygiene Fix</div>
+    <div class="event-detail">PR #876 re-points the WIT submodule to the canonical `main` branch at commit `83ebc6c`, correcting a drift that left the workspace referencing a detached or non-canonical revision. This is a low-risk housekeeping change but is a prerequisite for downstream consumers and CI pipelines that resolve WIT interfaces by submodule SHA.</div>
+    <div class="event-meta"><code>unicity-astrid, wit</code></div>
+  </div></div><p class="section-title" style="margin-top:14px">Timeline — Monday, 8 June 2026</p><div class="timeline"><div class="tl-item tl-done"><span class="tl-time">Mon 12:56–12:57</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/871" class="tl-link">astrid #871</a> (test(process): persistent stdin acceptance + un-stub write-stdin/close-stdin WIT) &middot; <a href="https://github.com/unicity-astrid/astrid/pull/873" class="tl-link">astrid #873</a> (feat(capsule): add allow_persistent operator sub-grant gating spawn-persistent) &middot; <a href="https://github.com/unicity-astrid/wit/pull/14" class="tl-link">wit #14</a> (docs(process): un-stub implemented id-keyed write-stdin/close-stdin)</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 13:07</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/876" class="tl-link">astrid #876</a> — fix(wit): re-point submodule to canonical wit main (83ebc6c)</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 17:42</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/880" class="tl-link">astrid #880</a> — feat(mcp): astrid mcp serve — MCP server exposing capsule tools + consent to Claude</span></div></div></div>
+<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">22 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Capsule Runtime Hardening: Memory, Pooling, Sandboxing, Dispatcher</div>
-    <div class="event-detail">A cluster of runtime reliability PRs lands together: #840 introduces a per-principal peak-memory ledger with a WASM ResourceLimiter, #839 replaces the fixed 16-slot instance pool with a dynamic host-sized pool, and #838 splits the host semaphore into separate blocking and async-IO gates to reduce contention. PR #857 fixes a regression where the macOS sandbox was silently disabled on macOS 15+, and #841 prevents closed per-topic consumers from being handed back to callers, eliminating a burst-stall condition. Supporting capsule fixes include capsule-react #22 resolving a TurnState KV visibility race in orchestration responses, capsule-context-engine #19 bounding compaction hook fan-out to avoid unbounded waits, and capsule-registry #17 re-discovering providers on cold-principal model lookups. Collectively these changes make the capsule runtime significantly more predictable under load and on modern macOS hosts.</div>
-    <div class="event-meta"><code>astrid, capsule-react, capsule-context-engine, capsule-registry</code></div>
-  </div></div><p class="section-title" style="margin-top:14px">Timeline — Friday – Sunday</p><div class="timeline"><div class="tl-item tl-chore"><span class="tl-time">Fri 04:36</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/831" class="tl-link">astrid #831</a> — ci: stop building the openclaw QuickJS kernel in the Test job</span></div><div class="tl-item tl-chore"><span class="tl-time">Fri 16:49–16:50</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/833" class="tl-link">astrid #833</a> (chore!: remove astrid-openclaw and the OpenClaw plugin build path) &middot; <a href="https://github.com/unicity-astrid/astrid/pull/838" class="tl-link">astrid #838</a> (feat(capsule): split host_semaphore into blocking + async-IO gates)</span></div><div class="tl-item tl-feat"><span class="tl-time">Fri 17:14</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/839" class="tl-link">astrid #839</a> — feat(capsule): dynamic, host-sized instance pool (replaces fixed 16)</span></div><div class="tl-item tl-feat"><span class="tl-time">Fri 17:44</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/840" class="tl-link">astrid #840</a> — feat(capsule): per-principal peak-memory ledger + metering ResourceLimiter</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 18:00</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/841" class="tl-link">astrid #841</a> — fix(dispatcher): never hand back a closed per-topic consumer (burst stall)</span></div><div class="tl-item tl-feat"><span class="tl-time">Fri 18:19</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/842" class="tl-link">astrid #842</a> — feat(emit): astrid-emit — agent-agnostic stdio→bus hook pipe</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 18:45</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/844" class="tl-link">astrid #844</a> — fix(gateway): per-IP rate-limit pair-device/redeem</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 19:00</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/846" class="tl-link">astrid #846</a> — fix(kernel): audit failed token redeems with a failure outcome</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 19:12</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/848" class="tl-link">astrid #848</a> — fix(kernel): scope self:agent:list to the caller's own row</span></div><div class="tl-item tl-chore"><span class="tl-time">Sat 04:17</span><span class="tl-label"><a href="https://github.com/unicity-astrid/capsule-identity/pull/23" class="tl-link">capsule-identity #23</a> — chore(manifest): correct Capsule.toml version 0.2.0 → 0.1.0</span></div><div class="tl-item tl-refactor"><span class="tl-time">Sat 04:33–04:37</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/863" class="tl-link">astrid #863</a> (refactor(manifest)!: tables are the only IPC-intent surface — drop [[interceptor]] + ipc_* arrays, add [subscribe] priority) &middot; <a href="https://github.com/unicity-astrid/capsule-system/pull/9" class="tl-link">capsule-system #9</a> (refactor(manifest)!: migrate [[interceptor]] → [subscribe] handler entries) &middot; <a href="https://github.com/unicity-astrid/capsule-openai/pull/6" class="tl-link">capsule-openai #6</a> (refactor(manifest)!: migrate [[interceptor]] → [subscribe] handler entries) &middot; <a href="https://github.com/unicity-astrid/capsule-agents/pull/9" class="tl-link">capsule-agents #9</a> (refactor(manifest)!: migrate [[interceptor]] → [subscribe] handler entry) &middot; <a href="https://github.com/unicity-astrid/capsule-react/pull/22" class="tl-link">capsule-react #22</a> (fix(react): re-drive orchestration responses past the TurnState KV visibility race) &middot; <a href="https://github.com/unicity-astrid/capsule-context-engine/pull/19" class="tl-link">capsule-context-engine #19</a> (perf(context-engine): bound before-compaction hook fan-out wait (first-response + idle-grace)) &middot; <a href="https://github.com/unicity-astrid/capsule-registry/pull/17" class="tl-link">capsule-registry #17</a> (fix: re-discover providers on cold-principal get_active_model + declare llm describe topics)</span></div><div class="tl-item tl-feat"><span class="tl-time">Sat 04:44–04:45</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/851" class="tl-link">astrid #851</a> (feat(capsule): scope audit-feed subscriptions to the owner principal by default) &middot; <a href="https://github.com/unicity-astrid/capsule-cli/pull/23" class="tl-link">capsule-cli #23</a> (fix(proxy)!: forward admin/correlated request topics + migrate ipc_* arrays to [publish]/[subscribe] tables)</span></div><div class="tl-item tl-fix"><span class="tl-time">Sat 04:55</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/857" class="tl-link">astrid #857</a> — fix(sandbox): stop silently disabling the macOS sandbox on macOS 15+</span></div><div class="tl-item tl-feat"><span class="tl-time">Sat 18:14</span><span class="tl-label"><a href="https://github.com/unicity-astrid/wit/pull/12" class="tl-link">wit #12</a> — feat(process): persistent process tier on astrid:process@1.0.0</span></div><div class="tl-item tl-feat"><span class="tl-time">Sat 18:29</span><span class="tl-label"><a href="https://github.com/unicity-astrid/wit/pull/11" class="tl-link">wit #11</a> — feat(hook): add hook-event-request record</span></div><div class="tl-item tl-feat"><span class="tl-time">Sun 00:42</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/867" class="tl-link">astrid #867</a> — feat(process): implement the persistent-process tier registry</span></div><div class="tl-item tl-feat"><span class="tl-time">Sun 01:11</span><span class="tl-label"><a href="https://github.com/unicity-astrid/wit/pull/13" class="tl-link">wit #13</a> — feat(sys): add enumerate-capabilities to astrid:sys@1.0.0</span></div><div class="tl-item tl-feat"><span class="tl-time">Sun 02:48</span><span class="tl-label"><a href="https://github.com/unicity-astrid/astrid/pull/869" class="tl-link">astrid #869</a> (feat(sys): implement enumerate-capabilities, de-stub capability check) &middot; <a href="https://github.com/unicity-astrid/sdk-rust/pull/55" class="tl-link">sdk-rust #55</a> (feat(sdk): add capabilities::enumerate for sys enumerate-capabilities)</span></div><div class="tl-item tl-feat"><span class="tl-time">Sun 02:53</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-js/pull/16" class="tl-link">sdk-js #16</a> — feat(sdk): add capabilities.enumerate for sys enumerate-capabilities</span></div><div class="tl-item tl-feat"><span class="tl-time">Sun 06:13–06:16</span><span class="tl-label"><a href="https://github.com/unicity-astrid/sdk-rust/pull/53" class="tl-link">sdk-rust #53</a> (feat(process): persistent-process tier SDK surface) &middot; <a href="https://github.com/unicity-astrid/sdk-js/pull/14" class="tl-link">sdk-js #14</a> (feat(process): persistent-process tier SDK surface (JS/TS))</span></div></div></div>
-<div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">30 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">v2 Token Engine: Adapter, Factory, and Full Injection</div>
-    <div class="event-detail">Track A's core deliverable this period is a production-grade v2 token engine, built across PRs #407 (ITokenEngine adapter, factory, and identity), #409 (edge-case hardening), #411 (tokenId, on-chain memo, and data-token surface for Q1/Q2/Q3), and #418 (construction and injection of the v2 engine into Sphere using networkId from the trust base). PR #420 extends the work by persisting v2 token blobs through the storage build/parse pipeline, and #421 vendors the DIRECT:// derivation path to be fully v1-free with five golden-locked test vectors. Injecting the v2 engine on all address paths is confirmed by audit fixes in #425, and a live testnet2 end-to-end wallet payment path validates the full stack in #426. This track eliminates all remaining v1 engine dependencies and establishes a stable, auditable token layer for the network.</div>
-    <div class="event-meta"><code>sphere-sdk</code></div>
-  </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">Accounting Layer: Bulk Returns, Null-Sender Refunds, Invoice Pipeline</div>
-    <div class="event-detail">PR #405 adds returnAllInvoicePayments as a bulk companion to the existing single-invoice return, and sphere-cli #39 exposes this via a new invoice return command supporting both bulk and nametag targets. PR #400 routes invoice delivery through the token pipeline rather than a bypass path, closing a correctness gap. PR #413 fixes null-sender back-direction refunds by introducing a destinationAddress fallback for attribution, with #414 cleaning up the now-unnecessary workaround from #404. PR #402 wires publishUxfBundle into the OUTBOX/SENT accounting path and adds a recovery-exhaustion event. Together these changes make the accounting layer complete and consistent for the full invoice lifecycle including edge cases around refunds and delivery failures.</div>
+    <div class="event-title">UXF Swap Pipeline: Soak Testing and CLI Controls</div>
+    <div class="event-detail">PR #439 introduces a full swap-roundtrip soak test suite and a demo playbook tracking issue #437, validating the UXF swap flow under sustained load. PR #449 fixes a poison-pill scan in soak section 10 that was incorrectly aborting on otherwise clean runs. PR #436 corrects CID encoding by representing UXF child and predecessor references as CBOR Tag 42 CID-links rather than raw bytes, which is required for correct IPLD traversal. On the CLI side, PR #44 in sphere-cli adds `swap reject`, `swap cancel`, and `swap wait` commands, giving operators direct control over in-flight swap lifecycle from the terminal.</div>
     <div class="event-meta"><code>sphere-sdk, sphere-cli</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">State Transition SDK Migration (Track B)</div>
-    <div class="event-detail">A parallel migration track driven by @igmahl lands across PRs #408, #410, #412, and #416, progressively migrating state transition logic into the SDK. These PRs represent an iterative refactor that moves state machine ownership from application-layer code into a canonical SDK surface, improving reusability and testability. The incremental merge strategy allows continuous integration against the main branch while the larger structural change is assembled in slices.</div>
+    <div class="event-title">Transport and Relay Stability Fixes</div>
+    <div class="event-detail">PR #443 gates the mux relay subscription until module handlers have fully registered, eliminating a race where relay messages arrived before handlers were ready to process them (issue #442). PR #446 changes `getSwapStatus` to lazy-load terminal swap records from storage rather than holding them in memory, fixing a regression tracked in #445 where swaps could appear missing after a restart. PR #428 gates Nostr subscriptions on handler readiness (issue #423) using the same pattern, and PR #429 makes `AggregatorPinger` resilient to transient timing flakes (issue #424).</div>
     <div class="event-meta"><code>sphere-sdk</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">CLI UX Polish: Canonical Flags, Nametag Support, Help and Fixes</div>
-    <div class="event-detail">PR #33 establishes canonical CLI UX conventions including --json output, --help on all commands, structured asset-pair input, and auto-help on errors. PRs #35 and #37 fix invoice amounts to be interpreted as human-readable units rather than raw values, and #38 adds bare-namespace help for the invoice, swap, group, and market command groups. PR #17 allows @nametag as a valid --target for invoice commands, and #415 / #43 fix a nametag-binding Nostr publish to be fire-and-forget so it does not block the init flow. PR #41 corrects bulk-return amount display and scrubs the associated integration test. These changes bring the CLI to a consistent, user-facing quality bar ahead of broader testnet use.</div>
-    <div class="event-meta"><code>sphere-cli, sphere-sdk</code></div>
-  </div></div><p class="section-title" style="margin-top:14px">Timeline — Friday – Sunday</p><div class="timeline"><div class="tl-item tl-fix"><span class="tl-time">Fri 11:49</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/400" class="tl-link">sphere-sdk #400</a> (fix(accounting)(#397): route invoice delivery through the token pipeline) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/402" class="tl-link">sphere-sdk #402</a> (feat(accounting)(#401): wire publishUxfBundle into OUTBOX/SENT + recovery exhaustion event)</span></div><div class="tl-item tl-chore"><span class="tl-time">Fri 13:06</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-cli/pull/34" class="tl-link">sphere-cli #34</a> (chore: merge integration/all-fixes into main (50-commit rollup)) &middot; <a href="https://github.com/unicity-sphere/sphere-cli/pull/17" class="tl-link">sphere-cli #17</a> (fix(invoice): accept @nametag as --target)</span></div><div class="tl-item tl-feat"><span class="tl-time">Fri 13:15</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-cli/pull/33" class="tl-link">sphere-cli #33</a> — feat(cli)(#32): canonical UX — --json, --help, asset-pair input, auto-help on errors</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 14:01</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-cli/pull/35" class="tl-link">sphere-cli #35</a> — fix(cli): bump SDK pin past #397 + treat invoice amounts as human units</span></div><div class="tl-item tl-done"><span class="tl-time">Fri 14:44</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/403" class="tl-link">sphere-sdk #403</a> — test(soak): adapt to canonical CLI UX (sphere-cli #32 + #35)</span></div><div class="tl-item tl-done"><span class="tl-time">Fri 18:44</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/407" class="tl-link">sphere-sdk #407</a> — Track A: v2 token engine (ITokenEngine adapter + factory + identity)</span></div><div class="tl-item tl-feat"><span class="tl-time">Fri 18:50</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/408" class="tl-link">sphere-sdk #408</a> — Feat/migrate state transition sdk</span></div><div class="tl-item tl-done"><span class="tl-time">Fri 19:51</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/409" class="tl-link">sphere-sdk #409</a> — Track A: engine hardening (edge-case tests)</span></div><div class="tl-item tl-feat"><span class="tl-time">Fri 23:52</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/410" class="tl-link">sphere-sdk #410</a> — Feat/migrate state transition sdk track b</span></div><div class="tl-item tl-done"><span class="tl-time">Sat 02:27</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/411" class="tl-link">sphere-sdk #411</a> — Track A: engine surface — tokenId, on-chain memo, data tokens (Q1/Q2/Q3)</span></div><div class="tl-item tl-feat"><span class="tl-time">Sat 11:27</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/412" class="tl-link">sphere-sdk #412</a> — Feat/migrate state transition sdk</span></div><div class="tl-item tl-fix"><span class="tl-time">Sat 11:37</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-cli/pull/37" class="tl-link">sphere-cli #37</a> (fix(cli)(#36): invoice pay --amount accepts human units) &middot; <a href="https://github.com/unicity-sphere/sphere-cli/pull/38" class="tl-link">sphere-cli #38</a> (fix(cli): bare-namespace help for invoice / swap / group / market) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/405" class="tl-link">sphere-sdk #405</a> (feat(accounting): add returnAllInvoicePayments — bulk companion to returnInvoicePayment)</span></div><div class="tl-item tl-feat"><span class="tl-time">Sat 11:42</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-cli/pull/39" class="tl-link">sphere-cli #39</a> (feat(cli): invoice return — bulk + nametag (depends on sphere-sdk #405)) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/406" class="tl-link">sphere-sdk #406</a> (test(soak)+docs: extend accounting roundtrip with partial-pay + bulk-return + repeat-pay)</span></div><div class="tl-item tl-fix"><span class="tl-time">Sat 11:55</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/413" class="tl-link">sphere-sdk #413</a> — fix(accounting)(#404): attribute null-sender back-direction refunds via destinationAddress fallback</span></div><div class="tl-item tl-chore"><span class="tl-time">Sat 12:12</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/414" class="tl-link">sphere-sdk #414</a> — chore(soak)+docs: drop #404 workaround now that #413 is merged</span></div><div class="tl-item tl-fix"><span class="tl-time">Sun 10:22</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-cli/pull/41" class="tl-link">sphere-cli #41</a> — fix(cli)(#40): bulk-return amount display + integration test scrub</span></div><div class="tl-item tl-feat"><span class="tl-time">Sun 12:02</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/416" class="tl-link">sphere-sdk #416</a> — Feat/migrate state transition sdk track b</span></div><div class="tl-item tl-done"><span class="tl-time">Sun 16:39</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/417" class="tl-link">sphere-sdk #417</a> — Track A: make split output order an explicit contract</span></div><div class="tl-item tl-done"><span class="tl-time">Sun 19:18</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/418" class="tl-link">sphere-sdk #418</a> — Track A: A4-int — construct + inject v2 engine in Sphere (networkId from trust base)</span></div><div class="tl-item tl-done"><span class="tl-time">Sun 20:36–20:39</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/420" class="tl-link">sphere-sdk #420</a> (Track A: A5 — persist v2 token blobs through storage build/parse) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/415" class="tl-link">sphere-sdk #415</a> (fix(sphere)(sphere-cli#42): nametag-binding Nostr publish goes fire-and-forget)</span></div><div class="tl-item tl-fix"><span class="tl-time">Sun 20:50</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-cli/pull/43" class="tl-link">sphere-cli #43</a> — fix(cli)(#42): trim init --nametag test budget; bump SDK SHA past sphere-sdk #415</span></div><div class="tl-item tl-done"><span class="tl-time">Sun 23:06</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/421" class="tl-link">sphere-sdk #421</a> — Track A: Σ4 slice 1 — vendor DIRECT:// derivation (v1-free, golden-locked ×5)</span></div><div class="tl-item tl-done"><span class="tl-time">Sun 23:45</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/425" class="tl-link">sphere-sdk #425</a> — Track A: audit fixes — inject v2 engine on all address paths</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 00:11</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/426" class="tl-link">sphere-sdk #426</a> — Track A: live testnet2 e2e — wallet payment path (PaymentsModule + real engine)</span></div></div></div>
-<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">0 PRs merged</span></div><p style="font-size:13px;color:#888;padding:4px 0">No activity this period.</p></div>
+    <div class="event-title">Profile, Identity, and Payments Hardening</div>
+    <div class="event-detail">PR #385 removes identity and seed material from OrbitDB entirely, ensuring sensitive key material is never persisted in the distributed log. PR #422 pins OpLog blocks at `depth=0` and emits a one-shot Helia config snapshot to fix profile pointer reliability (issue #419). PR #338 adds a PID-liveness probe that clears stale CLI file locks on startup, resolving the deadlock scenario described in issue #336. On the payments side, PR #438 ships v2 self-mint and top-up flows, and PR #431 stabilises the transient-classification assertion in the negative-LRU test to eliminate flakiness.</div>
+    <div class="event-meta"><code>sphere-sdk</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
+  <div class="event-body">
+    <div class="event-title">Network Config, Aggregator API Key, and Test Isolation</div>
+    <div class="event-detail">PR #441 adds a `testnet2` network preset, aligning the SDK with the newly deployed sharded testnet infrastructure. PR #440 removes the hardcoded aggregator API key default and requires an explicitly injected value, preventing accidental use of a shared credential in production builds. PRs #432 and #433 introduce per-test `TEST_DIR` isolation for eight previously flake-prone integration test files, addressing intermittent failures caused by shared filesystem state across parallel test runs. PR #192 promotes the `errMessage` helper to a shared utility and fixes lossy stringification in `NametagMinter`.</div>
+    <div class="event-meta"><code>sphere-sdk</code></div>
+  </div></div><p class="section-title" style="margin-top:14px">Timeline — Monday, 8 June 2026</p><div class="timeline"><div class="tl-item tl-fix"><span class="tl-time">Mon 10:11–10:12</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/430" class="tl-link">sphere-sdk #430</a> (fix(profile): stabilize pin-count assertion in OrbitDB-write-failure retry test) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/431" class="tl-link">sphere-sdk #431</a> (fix(payments): stabilize transient-classification assertion in negative-LRU test)</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 10:18</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/432" class="tl-link">sphere-sdk #432</a> — test(integration): per-test TEST_DIR for nametag-normalization to fix full-suite flake</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 10:32–10:34</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/385" class="tl-link">sphere-sdk #385</a> (fix(profile)(security): keep identity / seed material out of OrbitDB) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/422" class="tl-link">sphere-sdk #422</a> (fix(profile)(sphere-sdk#419): pin OpLog blocks at depth=0 + emit one-shot Helia config snapshot) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/428" class="tl-link">sphere-sdk #428</a> (fix(sphere-sdk)(#423): gate Nostr subscription on handler readiness) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/429" class="tl-link">sphere-sdk #429</a> (fix(sphere-sdk)(#424): make AggregatorPinger flake-resilient) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/323" class="tl-link">sphere-sdk #323</a> (fix(infra)(#321): aggregator-proxy /health passes through to backend) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/324" class="tl-link">sphere-sdk #324</a> (fix(infra)(#321): relay rejects all publishes — empty allowlist root cause)</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 10:42</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/192" class="tl-link">sphere-sdk #192</a> — fix(core)(#191): promote errMessage helper; fix lossy NametagMinter stringification</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 10:54</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/433" class="tl-link">sphere-sdk #433</a> — test(integration): per-test TEST_DIR for 7 remaining flake-prone test files</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 11:00</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/326" class="tl-link">sphere-sdk #326</a> — feat(infra)(#321): proxy serves trust-base + faucet surfaces verified nametag</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 12:07</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/338" class="tl-link">sphere-sdk #338</a> — fix(profile/pointer): PID-liveness probe to clear stale CLI file locks (#336)</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 15:57</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/436" class="tl-link">sphere-sdk #436</a> — fix(uxf)(#435): encode UXF child + predecessor refs as Tag 42 CID-links</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 18:00</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/438" class="tl-link">sphere-sdk #438</a> — feat(payments): v2 self-mint / top-up</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 19:21</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/440" class="tl-link">sphere-sdk #440</a> — feat(config): require injected aggregator apiKey (drop hardcoded default)</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 20:15</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/441" class="tl-link">sphere-sdk #441</a> — feat(networks): add testnet2 network preset</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 21:07</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-cli/pull/44" class="tl-link">sphere-cli #44</a> (feat(cli): swap reject/cancel/wait commands (sphere-sdk#437)) &middot; <a href="https://github.com/unicity-sphere/sphere-sdk/pull/439" class="tl-link">sphere-sdk #439</a> (feat(uxf): swap-roundtrip soak + demo playbook (#437))</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 00:06</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/443" class="tl-link">sphere-sdk #443</a> — fix(transport)(sphere-sdk#442): gate mux relay sub until module handlers register</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 00:12</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/446" class="tl-link">sphere-sdk #446</a> — fix(swap)(sphere-sdk#445): lazy-load terminal swaps from storage in getSwapStatus</span></div><div class="tl-item tl-fix"><span class="tl-time">Tue 00:48</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/449" class="tl-link">sphere-sdk #449</a> — fix(uxf)(sphere-sdk#437): soak section 10 poison-pill scan aborts on clean runs</span></div></div></div>
+<div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">17 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Testnet2 Sharded BFT Deployment and Infrastructure</div>
+    <div class="event-detail">PR #2 in bft-terraform provisions a self-contained sharded testnet v2 environment in `eu-central-1`, and bft-ansible PR #2 delivers the full Ansible deploy for an 8-shard × 2 HA BFT network with self-hosted observability. Subsequent bft-ansible PRs (#3–#7) harden the deployment: PR #3 trims monitoring cardinality from ~50.6k to ~29k series by dropping MongoDB collectors and adding Alloy drop-rules; PR #4 wires 17 Grafana-managed alerting rules to Discord; PR #5 fixes a dead `ShardNoLeader` alert and adds secret/idempotency/fail-loud hardening. PRs #6 and #7 bump the gateway binary to commit `9de0820` (carrying a CORS `X-State-ID` fix) and raise the gateway `--idle-timeout` to 75000 ms to exceed the 60-second ALB idle timeout and avoid 502 errors on connection reuse.</div>
+    <div class="event-meta"><code>bft-terraform, bft-ansible</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Aggregator CORS, Hotfixes, and Subscription Backports</div>
+    <div class="event-detail">PR #38 adds `X-State-ID` to the CORS preflight allowed-headers list and makes the full allowed-headers set env-configurable, unblocking browser clients that set this header. PR #39 backports v1-legacy hotfixes — including the CORS fix — to `main` for testnet v2 compatibility, ensuring the subscription service on the new network benefits from fixes originally developed against the production v1 path.</div>
+    <div class="event-meta"><code>aggregator-subscription</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Observability: VictoriaMetrics Migration and ML Inference Scaling</div>
+    <div class="event-detail">PR #61 migrates metrics collection for both staging and production to a self-hosted VictoriaMetrics instance, removing a dependency on an externally managed metrics backend and reducing per-series cost. PR #60 raises the PromptShield CPU cap from 4 to 8 cores on both prod and staging to accommodate ML inference workloads without throttling. PR #56 from @lploom introduces a dedicated ML inference pool, separating inference compute from general service capacity and allowing independent scaling.</div>
+    <div class="event-meta"><code>sif</code></div>
+  </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">Astrid Capsule SIF Bootstrap and Faucet Fix</div>
+    <div class="event-detail">PRs #1–#4 in astrid-capsule-sif bring the repository to a working state: dependabot PRs #1 and #2 bump `actions/cache` and `actions/checkout` to current versions; PR #3 (Copilot) fixes CI checkout auth fallback for the `sdk-rust` dependency; PR #4 performs a breaking manifest migration moving interceptors to the `[subscribe]` handler-plus-priority form required by the current Astrid capsule runtime. In unicity-faucet, PR #2 switches token files to date-sharded directories and prunes old shards, resolving an `ENOSPC` condition that was hit at approximately 10 million files in a flat directory.</div>
+    <div class="event-meta"><code>astrid-capsule-sif, unicity-faucet</code></div>
+  </div></div><p class="section-title" style="margin-top:14px">Timeline — Monday, 8 June 2026</p><div class="timeline"><div class="tl-item tl-done"><span class="tl-time">Mon 13:25–13:26</span><span class="tl-label"><a href="https://github.com/unicitynetwork/bft-terraform/pull/2" class="tl-link">bft-terraform #2</a> (testnet2: self-contained sharded testnet v2 environment (eu-central-1)) &middot; <a href="https://github.com/unicitynetwork/bft-ansible/pull/2" class="tl-link">bft-ansible #2</a> (testnet2: sharded BFT network (8 shards × 2 HA) — full Ansible deploy + self-hosted observability)</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 13:56</span><span class="tl-label"><a href="https://github.com/unicitynetwork/unicity-faucet/pull/2" class="tl-link">unicity-faucet #2</a> — fix: date-shard token files and prune old shards (ENOSPC at ~10M files)</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 14:07</span><span class="tl-label"><a href="https://github.com/unicitynetwork/bft-ansible/pull/3" class="tl-link">bft-ansible #3</a> — testnet2: trim monitoring cardinality (~50.6k → ~29k series) — mongo collectors + Alloy drop-rules</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 15:32</span><span class="tl-label"><a href="https://github.com/unicitynetwork/sif/pull/56" class="tl-link">sif #56</a> — ML inference pool</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 15:57</span><span class="tl-label"><a href="https://github.com/unicitynetwork/bft-ansible/pull/4" class="tl-link">bft-ansible #4</a> — testnet2: Grafana-managed alerting → Discord (17 rules)</span></div><div class="tl-item tl-chore"><span class="tl-time">Mon 16:27–16:32</span><span class="tl-label"><a href="https://github.com/unicitynetwork/astrid-capsule-sif/pull/2" class="tl-link">astrid-capsule-sif #2</a> (chore(ci): bump actions/checkout from 4 to 6) &middot; <a href="https://github.com/unicitynetwork/astrid-capsule-sif/pull/1" class="tl-link">astrid-capsule-sif #1</a> (chore(ci): bump actions/cache from 4 to 5) &middot; <a href="https://github.com/unicitynetwork/sif/pull/60" class="tl-link">sif #60</a> (chore: raise promptshield CPU cap 4→8 (prod + staging) for ML inference)</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 16:39</span><span class="tl-label"><a href="https://github.com/unicitynetwork/astrid-capsule-sif/pull/3" class="tl-link">astrid-capsule-sif #3</a> — Fix CI checkout auth fallback for sdk-rust dependency</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 19:29</span><span class="tl-label"><a href="https://github.com/unicitynetwork/astrid-capsule-sif/pull/4" class="tl-link">astrid-capsule-sif #4</a> (fix(manifest)!: migrate interceptors to [subscribe] handler+priority form) &middot; <a href="https://github.com/unicitynetwork/bft-ansible/pull/5" class="tl-link">bft-ansible #5</a> (testnet2: address review — fix dead ShardNoLeader alert + secret/idempotency/fail-loud hardening)</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 22:06</span><span class="tl-label"><a href="https://github.com/unicitynetwork/sif/pull/61" class="tl-link">sif #61</a> — feat(observability): migrate metrics to self-hosted VictoriaMetrics (staging + prod)</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 22:14</span><span class="tl-label"><a href="https://github.com/unicitynetwork/aggregator-subscription/pull/38" class="tl-link">aggregator-subscription #38</a> — Allow X-State-ID in CORS preflight; make allowed headers env-configurable</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 23:23</span><span class="tl-label"><a href="https://github.com/unicitynetwork/aggregator-subscription/pull/39" class="tl-link">aggregator-subscription #39</a> — Backport v1-legacy hotfixes to main (testnet v2)</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 23:37</span><span class="tl-label"><a href="https://github.com/unicitynetwork/bft-ansible/pull/6" class="tl-link">bft-ansible #6</a> — testnet2: bump gateway to 9de0820 (CORS X-State-ID fix + idle-timeout backport)</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 23:55</span><span class="tl-label"><a href="https://github.com/unicitynetwork/bft-ansible/pull/7" class="tl-link">bft-ansible #7</a> — testnet2: gateway --idle-timeout 75000 (exceed 60s ALB idle, avoid 502-on-reuse)</span></div></div></div>
 
 <div class="card" style="border-color:#E24B4A">
   <div class="org-header">
     <span class="badge" style="background:#FCEBEB;color:#791F1F">Project board comparison</span>
     <span style="font-size:12px;color:#666">Stale statuses &middot; No Status &middot; open PRs not tracked</span>
   </div>
-  <p class="section-title">Astrid <a href="https://github.com/orgs/unicity-astrid/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 184 · In progress 18 · Done 343</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
+  <p class="section-title">Astrid <a href="https://github.com/orgs/unicity-astrid/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 185 · In progress 17 · Done 347</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#791F1F">✗ NOT ON BOARD</span></div><div class="board-row">
   <span class="chip chip-miss">MISSING</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-astrid/capsule-memory/pull/3" class="pr-link">feat: KV-backed memory with add_memory tool and /memory-export command</a></div>
@@ -229,7 +244,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-astrid/sdk-js/pull/12" class="pr-link">feat(contracts): regenerate bundle with hook-event-request</a></div>
     <div class="board-detail"><code>sdk-js #12</code> · Open PR not tracked on any board</div>
-  </div></div></div><p class="section-title">Sphere <a href="https://github.com/orgs/unicity-sphere/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 27 · In Test 1 · In progress 16 · Ready 3 · Done 67</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
+  </div></div></div><p class="section-title">Sphere <a href="https://github.com/orgs/unicity-sphere/projects/1/views/1" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Backlog 27 · In Test 1 · In progress 15 · Ready 3 · Done 68</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
   <span class="chip chip-stale">STALE</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/90" class="pr-link">Feat/auto connect</a></div>
@@ -257,14 +272,14 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   </div></div><div class="board-row">
   <span class="chip chip-miss">MISSING</span>
   <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/175" class="pr-link">docs: §12.3.1 SHIPPED + §12.3.2 → Issue #174 (per-token spent-state rescan)</a></div>
-    <div class="board-detail"><code>sphere-sdk #175</code> · Open PR not tracked on any board</div>
+    <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/350" class="pr-link">Handle lowercase transport address schemes</a></div>
+    <div class="board-detail"><code>sphere-sdk #350</code> · Open PR not tracked on any board</div>
   </div></div><div class="board-row">
   <span class="chip chip-miss">MISSING</span>
   <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-sdk/pull/194" class="pr-link">feat(e2e): foundation for full local-stack mode (relay + mongo + aggregator + ipfs)</a></div>
-    <div class="board-detail"><code>sphere-sdk #194</code> · Open PR not tracked on any board</div>
-  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Blocked 5 · In Dev 21 · Test 1 · Todo 66 · Done 334</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
+    <div class="board-title"><a href="https://github.com/unicity-sphere/sphere-cli/pull/30" class="pr-link">Reject partial integer option parsing</a></div>
+    <div class="board-detail"><code>sphere-cli #30</code> · Open PR not tracked on any board</div>
+  </div></div></div><p class="section-title">Unicity Network <a href="https://github.com/orgs/unicitynetwork/projects/1/views/17" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a><span style="font-size:11px;color:#888;margin-left:8px">Blocked 5 · In Dev 21 · Test 1 · Todo 67 · Done 335</span></p><div class="board-wrap"><div class="board-head"><span style="font-size:11px;font-weight:700;color:#D97706">⚠ STALE STATUS</span></div><div class="board-row">
   <span class="chip chip-stale">STALE</span>
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicitynetwork/aggregator-go/pull/51" class="pr-link">Streaming round processing with adaptive timing</a></div>
@@ -302,16 +317,6 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   </div></div><div class="board-row">
   <span class="chip chip-miss">MISSING</span>
   <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/bft-terraform/pull/2" class="pr-link">testnet2: self-contained sharded testnet v2 environment (eu-central-1)</a></div>
-    <div class="board-detail"><code>bft-terraform #2</code> · Open PR not tracked on any board</div>
-  </div></div><div class="board-row">
-  <span class="chip chip-miss">MISSING</span>
-  <div class="board-body">
-    <div class="board-title"><a href="https://github.com/unicitynetwork/bft-ansible/pull/2" class="pr-link">testnet2: sharded BFT network (8 shards × 2 HA) — full Ansible deploy + self-hosted observability</a></div>
-    <div class="board-detail"><code>bft-ansible #2</code> · Open PR not tracked on any board</div>
-  </div></div><div class="board-row">
-  <span class="chip chip-miss">MISSING</span>
-  <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicitynetwork/js-faucet/pull/2" class="pr-link">fix(faucet): use conservative transferMode for FAUCET_REQUEST sends</a></div>
     <div class="board-detail"><code>js-faucet #2</code> · Open PR not tracked on any board</div>
   </div></div><div class="board-row">
@@ -344,6 +349,16 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="board-body">
     <div class="board-title"><a href="https://github.com/unicitynetwork/js-faucet/pull/3" class="pr-link">feat(acp-adapter): expose SPHERE_AGGREGATOR_URL + SPHERE_TRUSTBASE_URL env overrides</a></div>
     <div class="board-detail"><code>js-faucet #3</code> · Open PR not tracked on any board</div>
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">MISSING</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicitynetwork/ipfs-storage/pull/14" class="pr-link">config(sidecar): bump SIDECAR_CACHE_MAX_ENTRIES 10k -&gt; 100k (#13)</a></div>
+    <div class="board-detail"><code>ipfs-storage #14</code> · Open PR not tracked on any board</div>
+  </div></div><div class="board-row">
+  <span class="chip chip-miss">MISSING</span>
+  <div class="board-body">
+    <div class="board-title"><a href="https://github.com/unicitynetwork/ipfs-storage/pull/15" class="pr-link">feat(nginx)(sphere-sdk-#370): expose /api/v0/dag/import + /api/v0/dag/export</a></div>
+    <div class="board-detail"><code>ipfs-storage #15</code> · Open PR not tracked on any board</div>
   </div></div></div>
 </div>
 
@@ -380,37 +395,33 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
   <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
-  <div class="mc-detail">Joshua drove a sweeping 15-PR merge wave across sdk-js, sdk-rust, astrid, and wit repos, landing the full persistent-process tier (WIT surface, runtime registry, and SDK bindings in both JS and Rust), the enumerate-capabilities syscall end-to-end, a macOS 15+ sandbox fix (astrid #857), scoped audit-feed subscriptions (astrid #851), and the [[interceptor]] → [subscribe] manifest migration across capsule-agents, capsule-openai, capsule-system, and astrid. Six PRs remain open covering the allow_persistent operator sub-grant (astrid #873), stdin acceptance tests and un-stubbed write-stdin/close-stdin (astrid #871, wit #14), SDK release bumps (sdk-js #15, sdk-rust #54), and porting background-process tools to the new tier in capsule-shell #16. He is also actively involved in RFC #31 for reattachable background processes and manifest modernisation PRs across capsule-hook-bridge, capsule-http, capsule-fs, and capsule-cli.</div>
-  <div style="margin-top:6px"><span class="tag">15 merged</span><span class="tag">persistent-process tier</span><span class="tag">enumerate-capabilities</span><span class="tag">manifest migration</span></div>
+  <div class="mc-detail">Joshua merged six PRs this window spanning the MCP server, capsule persistence gating, WIT submodule hygiene, and the SIF capsule manifest migration: astrid #880 ships the MCP server exposing capsule tools and consent to Claude, #871 and #876 lock in the persistent-stdin WIT path and correct the submodule pointer, and astrid-capsule-sif #4 migrates interceptors to the new [subscribe] handler+priority form. He has four PRs open — #881 and #877 address per-principal managed-settings injection and quota enforcement on the ipc::recv path, #878 resolves invoking-principal profile resolution on that same path, and rfcs #32 drafts the capsule-served MCP resource interface. He is also actively involved in reviewing the broader MCP client exposure work (astrid #879), the SIF common policy control thread (sif #51), and CI auth hardening for the capsule-sif SDK dependency.</div>
+  <div style="margin-top:6px"><span class="tag">6 merged</span><span class="tag">MCP server shipped</span><span class="tag">capsule persistence gating</span><span class="tag">ipc::recv hardening</span></div>
 </div><div class="member-card">
   <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
-  <div class="mc-detail">Pavel has two substantial infrastructure PRs open targeting a sharded testnet2 environment: bft-terraform #2 provisions a self-contained 8-shard EU deployment on AWS, while bft-ansible #2 layers the full Ansible orchestration with self-hosted observability on top. He is also engaged in four broader reviews covering RocksDB-backed disk SMT for BFT shard mode (aggregator-go #156), HA leadership-churn SMT corruption fix (aggregator-go #158), ML inference pool work (sif #56), and a training-manifest refactor (sif #57).</div>
-  <div style="margin-top:6px"><span class="tag">testnet2 infra</span><span class="tag">8-shard BFT</span><span class="tag">Terraform + Ansible</span><span class="tag">SMT/HA reviews</span></div>
-</div><div class="member-card">
-  <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
-  <div class="mc-detail">Igor merged four sphere-sdk PRs (#408, #410, #412, #416) all advancing the state-transition SDK migration on Track B, progressively completing the migrate-state-transition-sdk work across two tracks in parallel. No open PRs remain from Igor this window, indicating the Track B migration slice reached a clean merge point.</div>
-  <div style="margin-top:6px"><span class="tag">4 merged</span><span class="tag">state-transition SDK</span><span class="tag">Track B migration</span><span class="tag">sphere-sdk</span></div>
+  <div class="mc-detail">Pavel landed a sweeping 13-PR batch this window: bft-terraform #2 and bft-ansible #2–#7 together stand up the full sharded testnet v2 environment on AWS eu-central-1 (8 shards × 2 HA), complete with Grafana-managed Discord alerting, trimmed monitoring cardinality (~50.6k → ~29k series), and gateway idle-timeout and CORS fixes; sif #61 migrates metrics to self-hosted VictoriaMetrics, #60 raises the PromptShield CPU cap for ML inference, and aggregator-subscription #38–#39 backport the X-State-ID CORS header fix to both main and the legacy v1 branch. Open PRs include sif #62 addressing the flaky inference-pool budget-exhaustion test, sif #58 tackling audit-log event drops, and aggregator-subscription #33 eliminating a double JSON-RPC parse on authorized requests. He is also engaged in the ML inference pool work (sif #56, #59) and the MvP threading model review (sif #9).</div>
+  <div style="margin-top:6px"><span class="tag">13 merged</span><span class="tag">testnet v2 live</span><span class="tag">VictoriaMetrics migration</span><span class="tag">CORS + gateway hardening</span></div>
 </div><div class="member-card">
   <div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div>
-  <div class="mc-detail">Alexander merged nine sphere-sdk PRs driving the Track A v2 token engine from initial adapter/factory (#407) through edge-case hardening (#409), engine surface extensions for tokenId and data tokens (#411), explicit split-output ordering (#417), v2 engine injection into Sphere (#418), persistent v2 token blob storage (#420), DIRECT:// derivation (#421), audit fixes across all address paths (#425), and a live testnet2 e2e wallet payment path (#426). He is involved in sphere-sdk #427, which fixes .d.ts generation via tsc to resolve a rollup-plugin-dts segfault that likely surfaced from the volume of new engine code.</div>
-  <div style="margin-top:6px"><span class="tag">9 merged</span><span class="tag">v2 token engine</span><span class="tag">Track A</span><span class="tag">testnet2 e2e</span></div>
+  <div class="mc-detail">Alexander merged four sphere-sdk PRs this window: #441 adds the testnet2 network preset, #440 enforces injected aggregator API keys dropping the hardcoded default, #438 introduces v2 self-mint/top-up payments, and #451 fixes the v2 send gate to check recipient chainPubkey rather than DirectAddress. He remains involved in sphere-sdk #427, which resolves a DTS rollup-plugin-dts segfault by switching to tsc-generated declaration files.</div>
+  <div style="margin-top:6px"><span class="tag">4 merged</span><span class="tag">testnet2 preset</span><span class="tag">payments v2</span><span class="tag">API key enforcement</span></div>
 </div><div class="member-card">
-  <div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div>
-  <div class="mc-detail">Martti opened two related state-transition-sdk-js PRs: #122 identifying that the Unicity ID mint transaction is missing a network ID, and #123 implementing the fix by adding network ID to the mint transaction. The pair follows the standard issue-then-fix pattern and is pending review.</div>
-  <div style="margin-top:6px"><span class="tag">2 open PRs</span><span class="tag">network-id fix</span><span class="tag">state-transition-sdk-js</span><span class="tag">Unicity ID mint</span></div>
+  <div class="mc-name">Risto Laanoja <span class="mc-handle">@ristik</span></div>
+  <div class="mc-detail">Risto is engaged in the ongoing sif #8 thread defining the target MvP architecture. No merges or open PRs are attributed to him this window.</div>
+  <div style="margin-top:6px"><span class="tag">architecture review</span><span class="tag">sif MvP</span></div>
 </div><div class="member-card">
-  <div class="mc-name"><span class="mc-handle">@jait91</span></div>
-  <div class="mc-detail">Two aggregator-go PRs are open under this contributor: #156 adding a RocksDB-backed disk SMT for BFT shard mode and #158 fixing SMT corruption during HA leadership churn. Both are directly relevant to testnet2 BFT infrastructure stability and align closely with Pavel's concurrent infrastructure work.</div>
-  <div style="margin-top:6px"><span class="tag">2 open PRs</span><span class="tag">RocksDB SMT</span><span class="tag">HA leadership churn</span><span class="tag">aggregator-go</span></div>
+  <div class="mc-name">Jamie Steiner <span class="mc-handle">@jvsteiner</span></div>
+  <div class="mc-detail">Jamie is involved in three open sif issues this window — #22 (complete dashboard), #51 (common policy control), and #52 (dashboard policy edit support) — but has no merges recorded in this period.</div>
+  <div style="margin-top:6px"><span class="tag">dashboard work</span><span class="tag">policy editing</span><span class="tag">sif MvP</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@lploom</span></div>
-  <div class="mc-detail">One open PR is attributed to this contributor: sif #56 introducing an ML inference pool. The PR is currently under review and intersects with Pavel's involvement in the same repository.</div>
-  <div style="margin-top:6px"><span class="tag">1 open PR</span><span class="tag">ML inference pool</span><span class="tag">sif</span></div>
+  <div class="mc-detail">lploom landed the ML inference pool PR (sif #56) and remains involved in the MvP threading model review (sif #9). No further open PRs are attributed this window.</div>
+  <div style="margin-top:6px"><span class="tag">sif #56 merged</span><span class="tag">ML inference pool</span><span class="tag">threading model</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@vrogojin</span></div>
-  <div class="mc-detail">Vladislav merged an exceptional 17 PRs across sphere-sdk and sphere-cli, systematically eliminating test flakiness (per-test TEST_DIR isolation in sphere-sdk #431–#433, AggregatorPinger resilience in #429, Nostr subscription gating in #428, OrbitDB retry stabilisation in #430), fixing production issues (nametag Nostr publish fire-and-forget in #415, null-sender refund attribution in #413, pin OpLog blocks at depth=0 in #422), and shipping the invoice bulk-return feature end-to-end (sphere-sdk #405, sphere-cli #39, with soak-test coverage in #406 and a follow-up cleanup in #414). One open PR remains — sphere-cli #40 capturing follow-ups from the invoice payment and bulk-return work — and he is involved in four longer-running sphere-sdk PRs covering extended-durability DMs, CAR dag import/export performance, full local-stack e2e, and a stale-token recovery probe.</div>
-  <div style="margin-top:6px"><span class="tag">17 merged</span><span class="tag">test flake elimination</span><span class="tag">invoice bulk-return</span><span class="tag">sphere-sdk + sphere-cli</span></div>
-</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@ristik, @jvsteiner, @ahtotruu, @b3y0urs3lf, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
+  <div class="mc-detail">With 17 sphere-sdk and sphere-cli PRs merged this window, vrogojin delivered a broad stability and feature push: swap-roundtrip soak and demo playbook (sphere-sdk #439, sphere-cli #44), lazy terminal-swap loading (#446), mux relay gating (#443), UXF CID-link encoding (#436), and a large batch of flake-elimination PRs covering per-test TEST_DIR isolation (#431–#433), AggregatorPinger resilience (#429), Nostr subscription gating (#428), profile pin/OpLog fixes (#422, #430), and identity/seed security hardening (#385, #338). Five PRs remain open targeting deeper reliability issues: a 100%-CPU pre-shutdown loop on pointer-retry exhaustion (#450), mux gate bootstrap assertion gaps (#448), terminal-swap blindness in SwapModule (#447), at-least-once durability for TOKEN_TRANSFER (#444), and the parent swap-roundtrip tracking PR (#437).</div>
+  <div style="margin-top:6px"><span class="tag">17 merged</span><span class="tag">swap soak + CLI commands</span><span class="tag">flake elimination sweep</span><span class="tag">5 open reliability PRs</span></div>
+</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@igmahl, @martti007, @ahtotruu, @b3y0urs3lf, @jait91, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments — not just authored items.</div>
 </div>
@@ -420,55 +431,55 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <div style="overflow-x:auto"><table class="pr-table">
     <thead><tr><th>Age</th><th>PR</th><th>Author</th></tr></thead>
     <tbody><tr>
-  <td><span class="age-pill age-critical">139d</span></td>
+  <td><span class="age-pill age-critical">140d</span></td>
   <td><a href="https://github.com/unicitynetwork/bft-core/pull/11" class="pr-link">EVM</a><span class="draft-tag">Draft</span>
     <div class="pr-repo">bft-core #11</div></td>
   <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-critical">122d</span></td>
+  <td><span class="age-pill age-critical">123d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-js-sdk/pull/4" class="pr-link">test: add comprehensive unit tests for uncovered modules</a>
     <div class="pr-repo">nostr-js-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-critical">122d</span></td>
+  <td><span class="age-pill age-critical">123d</span></td>
   <td><a href="https://github.com/unicitynetwork/nostr-sdk/pull/4" class="pr-link">Add comprehensive unit tests (366 new tests)</a>
     <div class="pr-repo">nostr-sdk #4</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-high">82d</span></td>
+  <td><span class="age-pill age-high">83d</span></td>
   <td><a href="https://github.com/unicity-astrid/capsule-memory/pull/3" class="pr-link">feat: KV-backed memory with add_memory tool and /memory-export command</a>
     <div class="pr-repo">capsule-memory #3</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">77d</span></td>
+  <td><span class="age-pill age-high">78d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/20" class="pr-link">RFC: Capsule interface system</a>
     <div class="pr-repo">rfcs #20</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">77d</span></td>
+  <td><span class="age-pill age-high">78d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/21" class="pr-link">RFC: Distro system</a>
     <div class="pr-repo">rfcs #21</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">77d</span></td>
+  <td><span class="age-pill age-high">78d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/22" class="pr-link">RFC: Host ABI</a>
     <div class="pr-repo">rfcs #22</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">77d</span></td>
+  <td><span class="age-pill age-high">78d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/23" class="pr-link">RFC: Interceptor middleware chain</a>
     <div class="pr-repo">rfcs #23</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">76d</span></td>
+  <td><span class="age-pill age-high">77d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/24" class="pr-link">RFC: XDG-aligned VFS schemes (config://, data://, cache://, state://)</a>
     <div class="pr-repo">rfcs #24</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">74d</span></td>
+  <td><span class="age-pill age-high">75d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/25" class="pr-link">RFC: Agent-Composed UI via A2UI Protocol</a>
     <div class="pr-repo">rfcs #25</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">61d</span></td>
+  <td><span class="age-pill age-high">62d</span></td>
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-js/pull/106" class="pr-link">Feature/test infrastructure</a>
     <div class="pr-repo">state-transition-sdk-js #106</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-high">53d</span></td>
+  <td><span class="age-pill age-high">54d</span></td>
   <td><a href="https://github.com/unicitynetwork/unicity-node/pull/9" class="pr-link">feat: CI/CD fixes, documentation, security policy, and release automation</a>
     <div class="pr-repo">unicity-node #9</div></td>
   <td class="pr-author">@0xgetz</td></tr><tr>
-  <td><span class="age-pill age-high">53d</span></td>
+  <td><span class="age-pill age-high">54d</span></td>
   <td><a href="https://github.com/unicitynetwork/aggregator-go/pull/145" class="pr-link">fix: code quality improvements — Go version, CI race+lint, error mapping, bounded query, CHANGELOG</a>
     <div class="pr-repo">aggregator-go #145</div></td>
   <td class="pr-author">@0xgetz</td></tr><tr>
@@ -476,39 +487,31 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <td><a href="https://github.com/unicity-sphere/sphere/pull/301" class="pr-link">fix(mobile): dedicated mobile layout with bottom navigation</a>
     <div class="pr-repo">sphere #301</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-high">45d</span></td>
+  <td><span class="age-pill age-high">46d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-cli/pull/3" class="pr-link">ci: harden nightly integration workflow — drop artifact upload</a>
     <div class="pr-repo">sphere-cli #3</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-high">34d</span></td>
+  <td><span class="age-pill age-high">35d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-cli/pull/9" class="pr-link">feat(trader): add 'sphere trader withdraw' subcommand</a>
     <div class="pr-repo">sphere-cli #9</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
   <td><span class="age-pill age-high">34d</span></td>
-  <td><a href="https://github.com/unicitynetwork/bft-terraform/pull/2" class="pr-link">testnet2: self-contained sharded testnet v2 environment (eu-central-1)</a>
-    <div class="pr-repo">bft-terraform #2</div></td>
-  <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-high">34d</span></td>
-  <td><a href="https://github.com/unicitynetwork/bft-ansible/pull/2" class="pr-link">testnet2: sharded BFT network (8 shards × 2 HA) — full Ansible deploy + self-hosted observability</a>
-    <div class="pr-repo">bft-ansible #2</div></td>
-  <td class="pr-author">@MastaP</td></tr><tr>
-  <td><span class="age-pill age-high">33d</span></td>
   <td><a href="https://github.com/unicity-astrid/capsule-react/pull/16" class="pr-link">fix: drop the imagined { data: ... } wrapper from session/compact response reads</a>
     <div class="pr-repo">capsule-react #16</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-high">33d</span></td>
+  <td><span class="age-pill age-high">34d</span></td>
   <td><a href="https://github.com/unicity-astrid/capsule-prompt-builder/pull/11" class="pr-link">fix: drop the imagined { data: ... } wrapper from session-fetch path</a>
     <div class="pr-repo">capsule-prompt-builder #11</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
-  <td><span class="age-pill age-medium">29d</span></td>
+  <td><span class="age-pill age-high">30d</span></td>
   <td><a href="https://github.com/unicity-sphere/sphere-cli/pull/12" class="pr-link">feat(trader): add sphere trader withdraw subcommand</a>
     <div class="pr-repo">sphere-cli #12</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-medium">28d</span></td>
+  <td><span class="age-pill age-medium">29d</span></td>
   <td><a href="https://github.com/unicitynetwork/js-faucet/pull/2" class="pr-link">fix(faucet): use conservative transferMode for FAUCET_REQUEST sends</a>
     <div class="pr-repo">js-faucet #2</div></td>
   <td class="pr-author">@vrogojin</td></tr><tr>
-  <td><span class="age-pill age-medium">28d</span></td>
+  <td><span class="age-pill age-medium">29d</span></td>
   <td><a href="https://github.com/unicity-astrid/rfcs/pull/26" class="pr-link">RFC: Cargo-like manifest schema with WIT refs, registry, and BLAKE3 lock</a>
     <div class="pr-repo">rfcs #26</div></td>
   <td class="pr-author">@joshuajbouw</td></tr><tr>
@@ -516,63 +519,71 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <td><a href="https://github.com/unicitynetwork/state-transition-sdk-java/pull/66" class="pr-link">Add BDD test suite covering V2 SDK functionality</a>
     <div class="pr-repo">state-transition-sdk-java #66</div></td>
   <td class="pr-author">@b3y0urs3lf</td></tr><tr>
-  <td><span class="age-pill age-medium">24d</span></td>
-  <td><a href="https://github.com/unicity-sphere/sphere-sdk/pull/153" class="pr-link">fix(payments): W5 — init-time recovery probe for stale 'transferring' tokens (#147 follow-up)</a>
-    <div class="pr-repo">sphere-sdk #153</div></td>
+  <td><span class="age-pill age-medium">20d</span></td>
+  <td><a href="https://github.com/unicity-astrid/rfcs/pull/27" class="pr-link">RFC: net.connect-tcp outbound TCP host function</a>
+    <div class="pr-repo">rfcs #27</div></td>
+  <td class="pr-author">@joshuajbouw</td></tr><tr>
+  <td><span class="age-pill age-medium">19d</span></td>
+  <td><a href="https://github.com/unicitynetwork/finality-gadget/pull/18" class="pr-link">test: FGP audit coverage (#1-#12) + hardening gap-documentation (#17)</a>
+    <div class="pr-repo">finality-gadget #18</div></td>
+  <td class="pr-author">@b3y0urs3lf</td></tr><tr>
+  <td><span class="age-pill age-medium">19d</span></td>
+  <td><a href="https://github.com/unicitynetwork/infra-probe/pull/1" class="pr-link">fix(aggregator): classify submit_commitment/get_inclusion_proof failures as unreachable</a>
+    <div class="pr-repo">infra-probe #1</div></td>
   <td class="pr-author">@vrogojin</td></tr></tbody>
   </table></div>
 </div>
 
-<div class="card" style="border-color:#EF9F27"><div class="org-header"><span class="badge" style="background:#FAEEDA;color:#633806">June release</span><span style="font-size:13px;color:#666">3/7 done &middot; 21 days to deadline</span><span class="badge" style="background:#FAEEDA;color:#633806;margin-left:auto">at risk</span><a href="https://github.com/orgs/unicitynetwork/projects/1/views/20" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></div><div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden"><div style="background:#EF9F27;width:42%;height:100%;border-radius:4px"></div></div><div style="margin-bottom:14px"><span style="font-size:11px;color:#555;margin-right:14px"><strong>2</strong> In Dev</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>1</strong> Todo</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>1</strong> Test</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><p class="section-title" style="margin-top:0;color:#085041">✔ What's moving</p><div class="event-row">
+<div class="card" style="border-color:#EF9F27"><div class="org-header"><span class="badge" style="background:#FAEEDA;color:#633806">June release</span><span style="font-size:13px;color:#666">3/7 done &middot; 20 days to deadline</span><span class="badge" style="background:#FAEEDA;color:#633806;margin-left:auto">at risk</span><a href="https://github.com/orgs/unicitynetwork/projects/1/views/20" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></div><div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden"><div style="background:#EF9F27;width:42%;height:100%;border-radius:4px"></div></div><div style="margin-bottom:14px"><span style="font-size:11px;color:#555;margin-right:14px"><strong>2</strong> In Dev</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>1</strong> Todo</span><span style="font-size:11px;color:#555;margin-right:14px"><strong>1</strong> Test</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><p class="section-title" style="margin-top:0;color:#085041">✔ What's moving</p><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Disk-backed SMT in active development</div>
-    <div class="event-detail">@jait91 is building disk-backed SMT in aggregator-go. This is a core infrastructure item; progress should be tracked closely given 21 days remain.</div>
+    <div class="event-title">Disk-backed SMT actively in development</div>
+    <div class="event-detail">@jait91 is implementing disk-backed SMT in aggregator-go. This is a core infrastructure item currently In Dev with 20 days remaining.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Java TGE minting migration in test</div>
-    <div class="event-detail">@martti007 has state-transition-sdk-java [TGE] token minting migration in test phase. Being in test is a positive signal but sign-off is not yet confirmed.</div>
+    <div class="event-title">Java TGE minting migration in testing</div>
+    <div class="event-detail">state-transition-sdk-java item for migrating minting from caller-supplied token ids to networkId+salt is owned by @martti007 and has reached Test phase, suggesting near-completion.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
     <div class="event-title">Testnet/mainnet asset distinction in queue</div>
-    <div class="event-detail">@martti007 and vrogojin have the .github asset distinction task in Todo. Dual ownership provides coverage but work has not started yet.</div>
+    <div class="event-detail">The .github asset distinction task is assigned to @martti007 and vrogojin and sits in Todo, meaning it has owners and can be picked up immediately once capacity frees.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
     <div class="event-title">Three of seven items already completed</div>
-    <div class="event-detail">42% completion with 21 days left provides a baseline, but all four remaining items carry meaningful complexity or risk.</div>
+    <div class="event-detail">42% completion provides a baseline, but the remaining four items span Todo through Test, indicating an uneven pipeline with no clear acceleration trend.</div>
   </div></div></div><div><p class="section-title" style="margin-top:0;color:#EF9F27">⚠ What worries</p><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">Unassigned yellowpaper bridging task in Dev</div>
-    <div class="event-detail">[unicity-yellowpaper-tex] documenting scope and user stories for bridging external assets is In Dev but has no assigned owner. Unassigned work in active development is a direct schedule risk; this task needs an owner immediately.</div>
+    <div class="event-title">Unassigned yellowpaper bridging document blocks release</div>
+    <div class="event-detail">unicity-yellowpaper-tex task documenting scope and user stories for bridging external assets is @unassigned and still In Dev. With no owner, there is no accountable party to drive it to completion before June 30.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">Only 42% complete with 21 days left</div>
-    <div class="event-detail">Four items remain across Todo, Dev, and Test stages. The pipeline is wide — work is spread across all pre-done stages simultaneously, increasing coordination overhead and late-stage bottleneck risk.</div>
+    <div class="event-title">20 days, 58% of work still open</div>
+    <div class="event-detail">Four items remain across three stages (Todo, Dev, Test) with only 20 days left. Even if all items are straightforward, the pipeline has no buffer for rework or review cycles.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">Single engineer on two open items</div>
-    <div class="event-detail">@martti007 owns both the .github testnet/mainnet distinction (Todo) and the Java TGE minting migration (Test). Concentration on one person creates a bottleneck if either item requires rework or blocks the other.</div>
+    <div class="event-title">@martti007 owns two of four open items</div>
+    <div class="event-detail">Both the .github testnet/mainnet distinction and the Java TGE minting migration are tied to @martti007. Single-owner concentration means illness, PTO, or context-switching directly threatens two open items simultaneously.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">Disk-backed SMT scope and duration unclear</div>
-    <div class="event-detail">aggregator-go disk-backed SMT (@jait91) is a low-level storage change with high integration risk. No completion signal is visible; if this slips, downstream testing windows shrink critically.</div>
+    <div class="event-title">Disk-backed SMT scope and complexity unknown</div>
+    <div class="event-detail">aggregator-go disk-backed SMT is still In Dev under @jait91 with no indication of how close it is to a testable state. If it slips to Test this week, there is minimal time for issue resolution before June 30.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">Yellowpaper doc delay can block bridging work</div>
-    <div class="event-detail">External asset bridging documentation in unicity-yellowpaper-tex is a likely dependency for engineering decisions elsewhere. Being unassigned and In Dev simultaneously suggests it may be a blocker that is not yet recognized as one.</div>
+    <div class="event-title">No items currently in review or done pipeline</div>
+    <div class="event-detail">The Test stage has only one item and the Todo stage still has one item not yet started. The absence of items transitioning to Done in the final stretch is a leading indicator of deadline pressure.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#EF9F27"></div>
   <div class="event-body">
-    <div class="event-title">No buffer for late-stage defects in Java SDK</div>
-    <div class="event-detail">The Java TGE minting migration is in Test with 21 days left. If test failures surface requiring code changes, the round-trip back through Dev and Test may not fit the June 30 deadline.</div>
+    <div class="event-title">Bridging external assets doc may gate other work</div>
+    <div class="event-detail">Documentation of bridging scope and user stories in unicity-yellowpaper-tex could be a prerequisite for validating or signing off on related engineering work. Its unassigned status risks creating a cross-repo blocker with no resolution owner.</div>
   </div></div></div></div></div>
 
 <p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
