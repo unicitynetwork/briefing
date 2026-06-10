@@ -267,7 +267,6 @@ for org in ORGS:
     print(f'  Board {org}: {len(items_out)} non-Done | {dict(sorted(status_counts.items()))}')
 
 # ── 5b. SIF project board (project #4 in unicitynetwork) ─────────────────────────────────────
-# SIF uses: "In progress", "In review", "In test", "Backlog", "Ready", "Done"
 sif_items = []
 sif_cursor = None
 while True:
@@ -614,11 +613,6 @@ def board_status_line(org):
     return ' \u00b7 '.join(parts)
 
 def render_standup_card():
-    """
-    Standup dashboard — designed for Google Meet screen sharing.
-    Shows In Progress and In Test items per org + SIF project with assignees.
-    Status matching is case-insensitive to handle both 'In Dev' and 'In progress' styles.
-    """
     # Case-insensitive matching — covers both main boards (In Dev) and SIF (In progress)
     STANDUP_DEV_L  = {'in dev', 'in development', 'in progress', 'in review', 'review'}
     STANDUP_TEST_L = {'test', 'testing', 'in test', 'qa'}
@@ -639,7 +633,7 @@ def render_standup_card():
             'board': 'https://github.com/orgs/unicity-sphere/projects/1/views/1',
         },
         'unicitynetwork': {
-            'label': 'Network',
+            'label': 'Protocol',          # renamed from Network
             'dot':   '#378ADD',
             'bg':    '#E6F1FB',
             'text':  '#0C447C',
@@ -675,11 +669,10 @@ def render_standup_card():
 </a>'''
 
     def render_col(key, item_list):
-        cfg  = ORG_CFG[key]
-        dev  = [i for i in item_list if i['status'].lower() in STANDUP_DEV_L]
-        test = [i for i in item_list if i['status'].lower() in STANDUP_TEST_L]
-        blk  = [i for i in item_list if i['status'].lower() in BLOCKED_STATUSES]
-        is_sif = key == '_sif'
+        cfg      = ORG_CFG[key]
+        dev      = [i for i in item_list if i['status'].lower() in STANDUP_DEV_L]
+        test     = [i for i in item_list if i['status'].lower() in STANDUP_TEST_L]
+        is_sif   = key == '_sif'
         dev_kind  = 'sif_dev'  if is_sif else 'dev'
         test_kind = 'sif_test' if is_sif else 'test'
 
@@ -690,37 +683,27 @@ def render_standup_card():
   <a href="{cfg['board']}" style="font-size:10px;color:{cfg['dot']};font-family:'SF Mono',Monaco,monospace;text-decoration:none;margin-left:auto;opacity:.7">board \u2197</a>
 </div>'''
 
+        # In Progress — show ALL, no cap
         out += f'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#378ADD;margin-bottom:6px">\U0001f527\u00a0In Progress\u00a0({len(dev)})</div>'
         if dev:
-            for item in dev[:6]: out += standup_item(item, dev_kind)
-            if len(dev) > 6: out += f'<div style="font-size:11px;color:#aaa;padding:2px 0">+ {len(dev)-6} more</div>'
+            for item in dev:
+                out += standup_item(item, dev_kind)
         else:
             out += '<div style="font-size:12px;color:#bbb;padding:5px 0;font-style:italic">\u2713 Nothing in progress</div>'
 
+        # In Test — keep with cap 4
         out += f'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#D97706;margin:10px 0 6px">\U0001f9ea\u00a0In Test\u00a0({len(test)})</div>'
         if test:
-            for item in test[:4]: out += standup_item(item, test_kind)
-            if len(test) > 4: out += f'<div style="font-size:11px;color:#aaa;padding:2px 0">+ {len(test)-4} more</div>'
+            for item in test[:4]:
+                out += standup_item(item, test_kind)
+            if len(test) > 4:
+                out += f'<div style="font-size:11px;color:#aaa;padding:2px 0">+ {len(test)-4} more</div>'
         else:
             out += '<div style="font-size:12px;color:#bbb;padding:5px 0;font-style:italic">\u2713 Nothing in test</div>'
 
-        if blk:
-            out += f'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#E24B4A;margin:10px 0 6px">\u26d4\u00a0Blocked\u00a0({len(blk)})</div>'
-            for item in blk[:2]:
-                t = item['title'][:56] + '\u2026' if len(item['title']) > 56 else item['title']
-                owners = item.get('assignees', [])
-                o = '\u00a0'.join(f'@{a}' for a in owners) if owners else 'unassigned'
-                out += f'''<a href="{esc(item['url'])}" style="text-decoration:none;display:block;margin-bottom:5px">
-  <div style="background:rgba(226,75,74,0.07);border:1px solid rgba(226,75,74,0.25);border-radius:6px;padding:6px 8px">
-    <code style="font-size:10px;color:#888;background:transparent;padding:0;display:block;margin-bottom:2px">{esc(item['repo'])} #{item['number']}</code>
-    <div style="font-size:12px;font-weight:500;color:#1a1a18;line-height:1.35;margin-bottom:3px">{esc(t)}</div>
-    <div style="font-size:11px;font-family:'SF Mono',Monaco,monospace;color:#E24B4A;font-weight:500">{esc(o)}</div>
-  </div>
-</a>'''
         out += '</div>'
         return out
 
-    # Aggregate counts across all boards + SIF
     all_sources = {
         'unicity-astrid': boards.get('unicity-astrid', []),
         'unicity-sphere':  boards.get('unicity-sphere', []),
@@ -729,7 +712,6 @@ def render_standup_card():
     }
     total_dev  = sum(len([i for i in v if i['status'].lower() in STANDUP_DEV_L])  for v in all_sources.values())
     total_test = sum(len([i for i in v if i['status'].lower() in STANDUP_TEST_L]) for v in all_sources.values())
-    total_blk  = sum(len([i for i in v if i['status'].lower() in BLOCKED_STATUSES]) for v in all_sources.values())
 
     out  = '<div style="background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;overflow:hidden;margin-bottom:12px">'
     out += f'<div style="background:#111827;padding:12px 20px;display:flex;align-items:center;gap:10px">'
@@ -738,8 +720,6 @@ def render_standup_card():
     out += f'<div style="margin-left:auto;display:flex;gap:16px;align-items:center">'
     out += f'<span style="font-size:12px;color:rgba(255,255,255,.55)"><span style="color:#6FA3E0;font-weight:700">{total_dev}</span> in progress</span>'
     out += f'<span style="font-size:12px;color:rgba(255,255,255,.55)"><span style="color:#F0B429;font-weight:700">{total_test}</span> in test</span>'
-    if total_blk:
-        out += f'<span style="font-size:12px;color:rgba(255,255,255,.55)"><span style="color:#FC8181;font-weight:700">{total_blk}</span> blocked</span>'
     out += '</div></div>'
     out += '<div style="display:flex">'
     out += render_col('unicity-astrid', boards.get('unicity-astrid', []))
