@@ -179,7 +179,7 @@ apr26_total = len(apr26_all)
 apr26_pct   = int(len(apr26_done_items) / apr26_total * 100) if apr26_total else 0
 print(f'June release: {len(apr26_done_items)}/{apr26_total} done ({apr26_pct}%), {days_to_deadline} days left, {len(apr26_open)} open')
 
-# ── 5. Board fetch — paginated, board_keys = ALL items, boards = non-Done only
+# ── 5. Board fetch — paginated, includes assignees for standup dashboard
 BOARD_Q = '''
 query($org: String!, $num: Int!, $cursor: String) {
   organization(login: $org) {
@@ -198,8 +198,16 @@ query($org: String!, $num: Int!, $cursor: String) {
             }
           }
           content {
-            ... on PullRequest { number title url state mergedAt isDraft repository { name } }
-            ... on Issue        { number title url state closedAt          repository { name } }
+            ... on PullRequest {
+              number title url state mergedAt isDraft
+              repository { name }
+              assignees(first: 3) { nodes { login } }
+            }
+            ... on Issue {
+              number title url state closedAt
+              repository { name }
+              assignees(first: 3) { nodes { login } }
+            }
           }
         }
       }
@@ -238,10 +246,12 @@ for org in ORGS:
                     status = fv.get('name'); break
         c = node.get('content')
         if not c: continue
-        repo = c.get('repository',{}).get('name',''); number = c.get('number')
-        is_pr = 'isDraft' in c or 'mergedAt' in c
+        repo   = c.get('repository',{}).get('name','')
+        number = c.get('number')
+        is_pr  = 'isDraft' in c or 'mergedAt' in c
         status = status or 'No Status'
         status_counts[status] = status_counts.get(status, 0) + 1
+        assignees = [a['login'] for a in c.get('assignees',{}).get('nodes',[])]
         if repo and number: board_keys.add((repo, number))
         if status.lower() not in DONE_STATUSES:
             items_out.append({
@@ -251,6 +261,7 @@ for org in ORGS:
                 'title':     c.get('title',''), 'url': c.get('url',''),
                 'state':     c.get('state',''), 'merged_at': c.get('mergedAt'),
                 'is_draft':  c.get('isDraft', False),
+                'assignees': assignees,
             })
     boards[org] = items_out; board_counts[org] = status_counts
     print(f'  Board {org}: {len(items_out)} non-Done | {dict(sorted(status_counts.items()))}')
@@ -358,7 +369,6 @@ try:    themes = json.loads(raw)
 except: themes = {'astrid':[], 'sphere':[], 'network':[]}
 
 # ── 9. Claude call 2 — member narratives (dedicated, 6k tokens) ───────────────────────────────
-# Split from needs-attention to avoid truncation on busy days (vrogojin alone can have 30+ PRs).
 def member_summary_lines():
     lines = []
     for member in MEMBERS:
@@ -563,6 +573,127 @@ def board_status_line(org):
     parts = [f'{k} {v}' for k,v in sorted(counts.items()) if k.lower() not in DONE_STATUSES]
     if done_val: parts.append(f'Done {done_val}')
     return ' \u00b7 '.join(parts)
+
+def render_standup_card():
+    """
+    Standup dashboard — designed for Google Meet screen sharing.
+    Shows In Progress and In Test items per org with assignees.
+    Compact, high-contrast, readable at distance.
+    """
+    STANDUP_DEV  = {'In Dev','In Development','In Progress','In Review','Review'}
+    STANDUP_TEST = {'Test','Testing','In Test','QA'}
+
+    ORG_CFG = {
+        'unicity-astrid': {
+            'label': 'Astrid',
+            'dot':   '#7F77DD',
+            'bg':    '#EEEDFE',
+            'text':  '#3C3489',
+            'board': 'https://github.com/orgs/unicity-astrid/projects/1/views/1',
+        },
+        'unicity-sphere': {
+            'label': 'Sphere',
+            'dot':   '#1D9E75',
+            'bg':    '#E1F5EE',
+            'text':  '#085041',
+            'board': 'https://github.com/orgs/unicity-sphere/projects/1/views/1',
+        },
+        'unicitynetwork': {
+            'label': 'Network',
+            'dot':   '#378ADD',
+            'bg':    '#E6F1FB',
+            'text':  '#0C447C',
+            'board': 'https://github.com/orgs/unicitynetwork/projects/1/views/17',
+        },
+    }
+
+    def standup_item(item, kind='dev'):
+        title  = item['title']
+        short  = title[:58] + '\u2026' if len(title) > 58 else title
+        ref    = f'{item["repo"]} #{item["number"]}'
+        owners = item.get('assignees', [])
+        owner_str = '\u00a0'.join(f'@{a}' for a in owners) if owners else 'unassigned'
+        owner_color = '#7F77DD' if kind == 'dev' else '#D97706'
+        if not owners: owner_color = '#bbb'
+        item_bg = 'rgba(55,138,221,0.06)' if kind == 'dev' else 'rgba(217,119,6,0.07)'
+        border  = 'rgba(55,138,221,0.25)' if kind == 'dev' else 'rgba(217,119,6,0.3)'
+        return f'''<a href="{esc(item['url'])}" style="text-decoration:none;display:block;margin-bottom:5px">
+  <div style="background:{item_bg};border:1px solid {border};border-radius:6px;padding:7px 9px">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+      <code style="font-size:10px;color:#888;background:transparent;padding:0;flex-shrink:0">{esc(ref)}</code>
+    </div>
+    <div style="font-size:12.5px;font-weight:500;color:#1a1a18;line-height:1.35;margin-bottom:4px">{esc(short)}</div>
+    <div style="font-size:11px;font-family:'SF Mono',Monaco,monospace;color:{owner_color};font-weight:500">{esc(owner_str)}</div>
+  </div>
+</a>'''
+
+    def render_col(org):
+        cfg    = ORG_CFG[org]
+        items  = boards.get(org, [])
+        dev    = [i for i in items if i['status'] in STANDUP_DEV]
+        test   = [i for i in items if i['status'] in STANDUP_TEST]
+        blk    = [i for i in items if i['status'].lower() in BLOCKED_STATUSES]
+        out  = f'<div style="padding:16px 18px;border-right:1px solid rgba(0,0,0,0.07);flex:1;min-width:0">'
+        # Column header
+        out += f'''<div style="display:flex;align-items:center;gap:7px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid {cfg['dot']}">
+  <div style="width:10px;height:10px;border-radius:50%;background:{cfg['dot']};flex-shrink:0"></div>
+  <span style="font-size:13px;font-weight:700;color:{cfg['text']};letter-spacing:.01em">{cfg['label']}</span>
+  <a href="{cfg['board']}" style="font-size:10px;color:{cfg['dot']};font-family:'SF Mono',Monaco,monospace;text-decoration:none;margin-left:auto;opacity:.7">board \u2197</a>
+</div>'''
+        # In Development
+        out += f'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#378ADD;margin-bottom:7px">\U0001f527\u00a0In Development\u00a0({len(dev)})</div>'
+        if dev:
+            for item in dev[:6]: out += standup_item(item, 'dev')
+            if len(dev) > 6:
+                out += f'<div style="font-size:11px;color:#aaa;padding:3px 0">+ {len(dev)-6} more</div>'
+        else:
+            out += '<div style="font-size:12px;color:#bbb;padding:6px 0 4px;font-style:italic">\u2713 Nothing in progress</div>'
+        # In Test
+        out += f'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#D97706;margin:12px 0 7px">\U0001f9ea\u00a0In Test\u00a0({len(test)})</div>'
+        if test:
+            for item in test[:4]: out += standup_item(item, 'test')
+            if len(test) > 4:
+                out += f'<div style="font-size:11px;color:#aaa;padding:3px 0">+ {len(test)-4} more</div>'
+        else:
+            out += '<div style="font-size:12px;color:#bbb;padding:6px 0 4px;font-style:italic">\u2713 Nothing in test</div>'
+        # Blocked (if any)
+        if blk:
+            out += f'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#E24B4A;margin:12px 0 7px">\u26d4\u00a0Blocked\u00a0({len(blk)})</div>'
+            for item in blk[:3]:
+                title  = item['title'][:58] + '\u2026' if len(item['title']) > 58 else item['title']
+                owners = item.get('assignees', [])
+                owner_str = '\u00a0'.join(f'@{a}' for a in owners) if owners else 'unassigned'
+                out += f'''<a href="{esc(item['url'])}" style="text-decoration:none;display:block;margin-bottom:5px">
+  <div style="background:rgba(226,75,74,0.07);border:1px solid rgba(226,75,74,0.25);border-radius:6px;padding:7px 9px">
+    <code style="font-size:10px;color:#888;background:transparent;padding:0">{esc(item['repo'])} #{item['number']}</code>
+    <div style="font-size:12.5px;font-weight:500;color:#1a1a18;line-height:1.35;margin:3px 0">{esc(title)}</div>
+    <div style="font-size:11px;font-family:'SF Mono',Monaco,monospace;color:#E24B4A;font-weight:500">{esc(owner_str)}</div>
+  </div>
+</a>'''
+        out += '</div>'
+        return out
+
+    total_dev  = sum(len([i for i in boards.get(o,[]) if i['status'] in STANDUP_DEV])  for o in ORGS)
+    total_test = sum(len([i for i in boards.get(o,[]) if i['status'] in STANDUP_TEST]) for o in ORGS)
+    total_blk  = sum(len([i for i in boards.get(o,[]) if i['status'].lower() in BLOCKED_STATUSES]) for o in ORGS)
+
+    out  = '<div style="background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;overflow:hidden;margin-bottom:12px">'
+    # Header bar
+    out += f'<div style="background:#111827;padding:13px 20px;display:flex;align-items:center;gap:10px">'
+    out += f'<span style="font-size:14px;font-weight:700;color:#fff;letter-spacing:-.01em">Daily Standup</span>'
+    out += f'<span style="font-size:13px;color:rgba(255,255,255,.45);font-weight:400">{esc(report_date)}</span>'
+    out += f'<div style="margin-left:auto;display:flex;gap:16px;align-items:center">'
+    out += f'<span style="font-size:12px;color:rgba(255,255,255,.55)"><span style="color:#6FA3E0;font-weight:700">{total_dev}</span> in progress</span>'
+    out += f'<span style="font-size:12px;color:rgba(255,255,255,.55)"><span style="color:#F0B429;font-weight:700">{total_test}</span> in test</span>'
+    if total_blk:
+        out += f'<span style="font-size:12px;color:rgba(255,255,255,.55)"><span style="color:#FC8181;font-weight:700">{total_blk}</span> blocked</span>'
+    out += '</div></div>'
+    # Columns
+    out += '<div style="display:flex">'
+    for org in ORGS:
+        out += render_col(org)
+    out += '</div></div>'
+    return out
 
 def render_board_section():
     if not board_issues and not any(board_counts.values()):
@@ -789,9 +920,10 @@ n_sphere  = len(org_prs.get('unicity-sphere', []))
 n_network = len(org_prs.get('unicitynetwork', []))
 rel_str   = ' &middot; '.join(f'<span class="badge badge-release">{esc(r)}</span>' for r in releases)
 boards_ok = any(board_counts.values())
-needs_html   = render_needs_attention()
-blocked_html = render_blocked_items()
-apr26_html   = render_apr26_card()
+needs_html    = render_needs_attention()
+blocked_html  = render_blocked_items()
+apr26_html    = render_apr26_card()
+standup_html  = render_standup_card()
 
 CSS = '''*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a18;background:#f5f4f0;padding:1.5rem}
@@ -883,6 +1015,8 @@ HTML = f'''<!DOCTYPE html>
     {rel_str}
   </div>
 </div>
+
+{standup_html}
 
 <div class="metric-grid">
   <div class="metric"><div class="metric-label">PRs merged</div><div class="metric-val hi">{total_merged}</div></div>
