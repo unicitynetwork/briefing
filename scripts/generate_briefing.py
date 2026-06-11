@@ -355,7 +355,7 @@ for org, items in boards.items():
 
 print(f'Blocked items: {len(blocked_items)}')
 
-# ── 7. involves sweep — 2s sleep per call stays under 30/min
+# ── 7. involves sweep — 2.5s sleep keeps rate comfortably under 24/min
 member_data = {m: {'authored_merged':[], 'authored_open':[], 'involved':[]} for m in MEMBERS}
 seen_per_member = {m: set() for m in MEMBERS}
 
@@ -363,7 +363,7 @@ for member in MEMBERS:
     for org in ORGS:
         for kind in ('pr', 'issue'):
             items = gh_search(f'involves:{member} updated:>={window_start} is:{kind} org:{org}')
-            time.sleep(2)
+            time.sleep(2.5)
             for item in items:
                 uid = (item['number'], item['repository_url'])
                 if uid in seen_per_member[member]: continue
@@ -613,7 +613,6 @@ def board_status_line(org):
     return ' \u00b7 '.join(parts)
 
 def render_standup_card():
-    # Case-insensitive matching — covers both main boards (In Dev) and SIF (In progress)
     STANDUP_DEV_L  = {'in dev', 'in development', 'in progress', 'in review', 'review'}
     STANDUP_TEST_L = {'test', 'testing', 'in test', 'qa'}
 
@@ -633,7 +632,7 @@ def render_standup_card():
             'board': 'https://github.com/orgs/unicity-sphere/projects/1/views/1',
         },
         'unicitynetwork': {
-            'label': 'Protocol',          # renamed from Network
+            'label': 'Protocol',
             'dot':   '#378ADD',
             'bg':    '#E6F1FB',
             'text':  '#0C447C',
@@ -683,7 +682,6 @@ def render_standup_card():
   <a href="{cfg['board']}" style="font-size:10px;color:{cfg['dot']};font-family:'SF Mono',Monaco,monospace;text-decoration:none;margin-left:auto;opacity:.7">board \u2197</a>
 </div>'''
 
-        # In Progress — show ALL, no cap
         out += f'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#378ADD;margin-bottom:6px">\U0001f527\u00a0In Progress\u00a0({len(dev)})</div>'
         if dev:
             for item in dev:
@@ -691,7 +689,6 @@ def render_standup_card():
         else:
             out += '<div style="font-size:12px;color:#bbb;padding:5px 0;font-style:italic">\u2713 Nothing in progress</div>'
 
-        # In Test — keep with cap 4
         out += f'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#D97706;margin:10px 0 6px">\U0001f9ea\u00a0In Test\u00a0({len(test)})</div>'
         if test:
             for item in test[:4]:
@@ -1117,4 +1114,4 @@ with urllib.request.urlopen(req) as r:
     result = json.loads(r.read())
     print(f'Pushed: {result["commit"]["sha"]}')
 
-print('Done. https://unicitynetwork.github.io/briefing/')
+print('Done. https://unicityneticity.github.io/briefing/')
