@@ -304,6 +304,44 @@ while True:
 
 print(f'SIF: {len(sif_items)} non-Done items')
 
+# ── 5c. Concierge project board (project #1 in unicity-concierge) ─────────────────────────────
+concierge_items = []
+concierge_cursor = None
+while True:
+    result = gh_graphql(BOARD_Q, {'org': 'unicity-concierge', 'num': 1, 'cursor': concierge_cursor})
+    try:
+        pd = result['data']['organization']['projectV2']['items']
+        if not concierge_items: print(f'  Concierge board: {pd["totalCount"]} items')
+        for node in pd['nodes']:
+            status = None
+            for fv in node.get('fieldValues',{}).get('nodes',[]):
+                if fv and 'name' in fv and isinstance(fv.get('field'), dict):
+                    if 'status' in fv['field'].get('name','').lower():
+                        status = fv.get('name'); break
+            if status is None:
+                for fv in node.get('fieldValues',{}).get('nodes',[]):
+                    if fv and 'name' in fv and isinstance(fv.get('field'), dict):
+                        status = fv.get('name'); break
+            c = node.get('content')
+            if not c: continue
+            repo      = c.get('repository',{}).get('name','')
+            number    = c.get('number')
+            status    = status or 'No Status'
+            assignees = [a['login'] for a in c.get('assignees',{}).get('nodes',[])]
+            if status.lower() not in DONE_STATUSES:
+                concierge_items.append({
+                    'status':    status,
+                    'number':    number, 'repo': repo,
+                    'title':     c.get('title',''), 'url': c.get('url',''),
+                    'assignees': assignees,
+                })
+        if not pd['pageInfo']['hasNextPage']: break
+        concierge_cursor = pd['pageInfo']['endCursor']
+    except Exception as e:
+        print(f'  Concierge board failed: {e}'); break
+
+print(f'Concierge: {len(concierge_items)} non-Done items')
+
 # ── 6. Board issues ────────────────────────────────────────────────────────────────────────────
 IN_DEV = {'In Dev','In Development','In Progress','In Review','Review','Test','Testing','Blocked','In Prod','Ready','Todo','Backlog'}
 board_issues = []
@@ -645,6 +683,13 @@ def render_standup_card():
             'text':  '#3730A3',
             'board': 'https://github.com/orgs/unicitynetwork/projects/4/views/2',
         },
+        '_concierge': {
+            'label': 'Concierge',
+            'dot':   '#0891B2',
+            'bg':    '#E0F7FA',
+            'text':  '#0E4F5E',
+            'board': 'https://github.com/orgs/unicity-concierge/projects/1/views/1',
+        },
     }
 
     def standup_item(item, kind='dev'):
@@ -653,12 +698,23 @@ def render_standup_card():
         ref    = f'{item["repo"]} #{item["number"]}'
         owners = item.get('assignees', [])
         owner_str   = '\u00a0'.join(f'@{a}' for a in owners) if owners else 'unassigned'
-        owner_color = '#7F77DD' if kind == 'dev' else ('#6366F1' if kind == 'sif_dev' else '#D97706')
+        is_sif = kind.startswith('sif')
+        is_con = kind.startswith('con')
+        if is_con:
+            owner_color = '#0891B2' if 'dev' in kind else '#D97706'
+            item_bg = 'rgba(8,145,178,0.06)'; border = 'rgba(8,145,178,0.25)'
+            if 'test' in kind:
+                item_bg = 'rgba(217,119,6,0.07)'; border = 'rgba(217,119,6,0.3)'
+        elif is_sif:
+            owner_color = '#6366F1' if 'dev' in kind else '#D97706'
+            item_bg = 'rgba(99,102,241,0.06)'; border = 'rgba(99,102,241,0.25)'
+            if 'test' in kind:
+                item_bg = 'rgba(217,119,6,0.07)'; border = 'rgba(217,119,6,0.3)'
+        else:
+            owner_color = '#7F77DD' if kind == 'dev' else '#D97706'
+            item_bg = 'rgba(55,138,221,0.06)' if kind == 'dev' else 'rgba(217,119,6,0.07)'
+            border  = 'rgba(55,138,221,0.25)' if kind == 'dev' else 'rgba(217,119,6,0.3)'
         if not owners: owner_color = '#bbb'
-        item_bg = 'rgba(99,102,241,0.06)' if 'sif' in kind else ('rgba(55,138,221,0.06)' if kind == 'dev' else 'rgba(217,119,6,0.07)')
-        border  = 'rgba(99,102,241,0.25)' if 'sif' in kind else ('rgba(55,138,221,0.25)' if kind == 'dev' else 'rgba(217,119,6,0.3)')
-        if 'test' in kind and 'sif' not in kind:
-            item_bg = 'rgba(217,119,6,0.07)'; border = 'rgba(217,119,6,0.3)'
         return f'''<a href="{esc(item['url'])}" style="text-decoration:none;display:block;margin-bottom:5px">
   <div style="background:{item_bg};border:1px solid {border};border-radius:6px;padding:6px 8px">
     <code style="font-size:10px;color:#888;background:transparent;padding:0;display:block;margin-bottom:2px">{esc(ref)}</code>
@@ -672,8 +728,9 @@ def render_standup_card():
         dev      = [i for i in item_list if i['status'].lower() in STANDUP_DEV_L]
         test     = [i for i in item_list if i['status'].lower() in STANDUP_TEST_L]
         is_sif   = key == '_sif'
-        dev_kind  = 'sif_dev'  if is_sif else 'dev'
-        test_kind = 'sif_test' if is_sif else 'test'
+        is_con   = key == '_concierge'
+        dev_kind  = 'sif_dev' if is_sif else ('con_dev' if is_con else 'dev')
+        test_kind = 'sif_test' if is_sif else ('con_test' if is_con else 'test')
 
         out  = f'<div style="padding:14px 15px;border-right:1px solid rgba(0,0,0,0.07);flex:1;min-width:0">'
         out += f'''<div style="display:flex;align-items:center;gap:7px;margin-bottom:12px;padding-bottom:9px;border-bottom:2px solid {cfg['dot']}">
@@ -706,6 +763,7 @@ def render_standup_card():
         'unicity-sphere':  boards.get('unicity-sphere', []),
         'unicitynetwork':  boards.get('unicitynetwork', []),
         '_sif':            sif_items,
+        '_concierge':      concierge_items,
     }
     total_dev  = sum(len([i for i in v if i['status'].lower() in STANDUP_DEV_L])  for v in all_sources.values())
     total_test = sum(len([i for i in v if i['status'].lower() in STANDUP_TEST_L]) for v in all_sources.values())
@@ -723,6 +781,7 @@ def render_standup_card():
     out += render_col('unicity-sphere',  boards.get('unicity-sphere', []))
     out += render_col('unicitynetwork',  boards.get('unicitynetwork', []))
     out += render_col('_sif',            sif_items)
+    out += render_col('_concierge',      concierge_items)
     out += '</div></div>'
     return out
 
@@ -1114,4 +1173,4 @@ with urllib.request.urlopen(req) as r:
     result = json.loads(r.read())
     print(f'Pushed: {result["commit"]["sha"]}')
 
-print('Done. https://unicityneticity.github.io/briefing/')
+print('Done. https://unicitynetwork.github.io/briefing/')
