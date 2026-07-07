@@ -82,7 +82,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <p>Tuesday, 7 July 2026</p>
   <div class="header-meta">
     <span class="window-badge">Coverage: Monday, 6 July 2026 &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 7 July 2026, 12:22 UTC</span>
+    <span class="updated-badge">Updated: 7 July 2026, 12:23 UTC</span>
     
   </div>
 </div>
@@ -407,30 +407,30 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 
 <div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">1 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Astrid 0.9.3 cut and shipped</div>
-    <div class="event-detail">PR #1157 lands the 0.9.3 release chore for the Astrid component, bumping the version marker and finalising any associated changelog or metadata updates. This is a routine but necessary housekeeping merge that keeps the release train moving and gives downstream consumers a stable tagged reference. No functional changes are expected beyond the version bump itself.</div>
+    <div class="event-title">Astrid 0.9.3 Release Checkpoint</div>
+    <div class="event-detail">PR #1157 cuts the 0.9.3 release of the Astrid component via a standard chore commit. This marks a versioned checkpoint for downstream consumers of the library. No feature changes are bundled; the PR exists solely to advance the published semver tag.</div>
     <div class="event-meta"><code>unicity-astrid</code></div>
   </div></div></div>
 <div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">5 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Subscription quota gating with 429/401 upgrade routing</div>
-    <div class="event-detail">PR #404 completes Phase 4 of the subscription enforcement rollout by introducing a dual-mode quota gate: a proactive pre-send check that blocks outbound messages before they hit the network, and a reactive path that intercepts 429 and 401 responses and routes them through the upgrade flow. This prevents wasted sends against exhausted quotas and gives users a direct upgrade prompt rather than a raw error. PR #402 accompanies this by aligning the wallet-side logic with the live SGW gateway contract, ensuring the client speaks the correct protocol version against the production gateway. Together these two PRs close the gap between sandbox behaviour and the live subscription enforcement surface.</div>
+    <div class="event-title">Subscription Quota Gating and SGW Contract Alignment</div>
+    <div class="event-detail">PRs #404 and #402 complete the subscription enforcement layer for the wallet. PR #404 (Phase 4) introduces a dual-mode quota gate: a proactive pre-send block that prevents requests from leaving the client when quota is known to be exhausted, and reactive upgrade routing that intercepts 429 and 401 responses from the gateway to trigger plan-upgrade flows. PR #402 aligns the wallet-side subscription logic with the live SGW gateway contract, ensuring the client-side model matches what the gateway now enforces in production. Together these PRs close the loop between client-side quota awareness and server-side enforcement.</div>
     <div class="event-meta"><code>unicity-sphere</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Single-source Grafana dashboards and alert rules</div>
-    <div class="event-detail">PR #28 restructures the wallet-api Grafana dashboard so that the dashboard JSON and alert definitions are authored once inside the application repository and pushed out to infrastructure, eliminating drift between the two. PR #27 adds a developer guide documenting the end-to-end workflow for updating that dashboard and its alert rules so the process is repeatable without tribal knowledge. PR #93 wires two newly introduced intent metrics into the live dashboard and attaches alert rules so operators gain immediate visibility into intent processing behaviour. Collectively these three PRs establish a single source of truth for observability configuration and reduce the operational burden of keeping dashboards in sync with application changes.</div>
-    <div class="event-meta"><code>unicity-sphere, sphere-infra, wallet-api</code></div>
+    <div class="event-title">Grafana Dashboard and Alerting Single-Sourced from App Repo</div>
+    <div class="event-detail">PRs #28, #27, and #93 overhaul how the wallet-api Grafana dashboard and alert rules are managed. PR #28 restructures the sphere-infra pipeline so that the wallet-api dashboard and its alerts are single-sourced directly from the application repository, eliminating drift between infra and app definitions. PR #93 wires two new intent metrics into the dashboard and codifies their alert rules, giving operators visibility into intent-processing behaviour. PR #27 adds a companion documentation guide so engineers know the exact process for updating dashboard JSON and alert configurations going forward. The combined change reduces operational toil and makes dashboard-as-code the enforced pattern for this service.</div>
+    <div class="event-meta"><code>unicity-sphere, unicity-sphere/sphere-infra, unicity-sphere/wallet-api</code></div>
   </div></div><p class="section-title" style="margin-top:14px">Timeline — Monday, 6 July 2026</p><div class="timeline"><div class="tl-item tl-done"><span class="tl-time">Mon 09:47</span><span class="tl-label"><a href="https://github.com/unicity-sphere/wallet-api/pull/93" class="tl-link">wallet-api #93</a> — docs(grafana): wire the two new intent metrics into the dashboard + alert rules</span></div><div class="tl-item tl-done"><span class="tl-time">Mon 13:43</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-infra/pull/27" class="tl-link">sphere-infra #27</a> — docs(grafana-metrics): guide for updating the wallet-api dashboard &amp; alerts</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 14:59–15:03</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere/pull/404" class="tl-link">sphere #404</a> (feat(subscription): quota gate — proactive pre-send block + reactive 429/401 upgrade routing (Phase 4)) &middot; <a href="https://github.com/unicity-sphere/sphere/pull/402" class="tl-link">sphere #402</a> (feat(subscription): align wallet with live SGW gateway contract)</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 17:10</span><span class="tl-label"><a href="https://github.com/unicity-sphere/sphere-infra/pull/28" class="tl-link">sphere-infra #28</a> — feat(grafana-metrics): single-source the wallet-api dashboard + alerts from the app repo</span></div></div></div>
 <div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">4 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Production domain launch on www.unicity.ai</div>
-    <div class="event-detail">PR #14 configures the production web deployment to serve on www.unicity.ai as the primary domain while retaining web.unicity.network as a live alias, giving the project a canonical consumer-facing URL. PR #15 fixes the accompanying certificate provisioning script, correcting the cert-validation polling loop and adding DNS-zone hints to deploy-cert.sh so TLS certificates are issued reliably without manual intervention. Together these two changes make the new domain production-ready with automated certificate lifecycle management.</div>
+    <div class="event-title">Production Domain Launch on www.unicity.ai</div>
+    <div class="event-detail">PRs #14 and #15 bring the Unicity public website to production on its primary domain. PR #14 configures the web server to serve production traffic on www.unicity.ai while retaining web.unicity.network as a live alias, ensuring backward-compatible URL continuity. PR #15 fixes two infrastructure issues in deploy-cert.sh: incorrect polling logic for TLS certificate validation and missing DNS-zone hints that were causing certificate provisioning to fail or stall. Together these changes make the production deployment pipeline reliable and establish the canonical public URL for the project.</div>
     <div class="event-meta"><code>website-next</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Token split phase 2 across SDK and yellow paper</div>
-    <div class="event-detail">PR #12 advances the token-split implementation inside the Rust state-transition SDK, extending the protocol-level logic that governs how tokens are partitioned during a split operation. PR #8 updates the yellow paper LaTeX source in parallel, keeping the formal specification aligned with the implementation changes landed in the SDK. Maintaining this parity between code and specification ensures that the yellow paper remains an accurate normative reference and reduces the risk of spec drift as the token model evolves.</div>
+    <div class="event-title">Token Split Phase 2 Across SDK and Yellow Paper</div>
+    <div class="event-detail">PRs #12 and #12 (respectively #12 in state-transition-sdk-rust and #8 in unicity-yellowpaper-tex) advance the second phase of the token-split work across both the Rust SDK and the protocol specification. The Rust SDK changes implement or extend the data structures and transition logic required to represent split tokens in the state machine. The yellow paper update keeps the formal specification in sync with the implementation, ensuring the written protocol definition reflects the new token-split semantics. Coordinating these two PRs together prevents specification drift and gives implementers a single consistent reference.</div>
     <div class="event-meta"><code>state-transition-sdk-rust, unicity-yellowpaper-tex</code></div>
   </div></div></div>
 
@@ -675,41 +675,41 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
   <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
-  <div class="mc-detail">Joshua shipped the astrid 0.9.3 release, merging the release PR #1157 and its companion release-prep PR #1156. He was also involved in astrid #1135, a 10-package Rust dependency bump across the repo. Activity this window was focused squarely on the astrid release cycle.</div>
-  <div style="margin-top:6px"><span class="tag">astrid v0.9.3 released</span><span class="tag">10-dep Rust bump</span><span class="tag">release cycle</span></div>
+  <div class="mc-detail">Joshua landed the astrid 0.9.3 release this window, merging the release PR #1157 and its companion release-prep PR #1156. He also shepherded a 10-package Rust dependency bump (astrid #1135) across the crate, keeping the dependency graph current ahead of the next development cycle.</div>
+  <div style="margin-top:6px"><span class="tag">astrid v0.9.3 released</span><span class="tag">10-dep rust bump</span><span class="tag">release housekeeping</span></div>
 </div><div class="member-card">
   <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
-  <div class="mc-detail">Pavel had a high-output window, merging five PRs across four repos: Grafana dashboard/alert single-sourcing and docs for wallet-api (sphere-infra #28, #27, wallet-api #93), a cert-validation and DNS polling fix for the deploy script (website-next #15), and the production switch to www.unicity.ai (website-next #14). He also has three open PRs in aggregator-subscription covering an admission semaphore for write-throughput capping at ~350 req/s (#56), a per-user API-key utilization endpoint (#54), and Sphere-based auth for key generation (#53), while staying involved in the cross-repo SMT v6a migration and SDK hardening efforts.</div>
-  <div style="margin-top:6px"><span class="tag">5 PRs merged</span><span class="tag">www.unicity.ai live</span><span class="tag">Grafana single-source</span><span class="tag">aggregator-subscription gateway cap</span></div>
+  <div class="mc-detail">Pavel had a high-output window across five repos: he merged wallet-api #93 (wiring two new intent metrics into the Grafana dashboard and alert rules), sphere-infra #28 and #27 (single-sourcing the wallet-api dashboard from the app repo plus a contributor guide), and website-next #14 and #15 (serving prod on www.unicity.ai and fixing certificate-validation polling in deploy-cert.sh). He carries three open PRs in aggregator-subscription — an admission semaphore capping write throughput at ~350 req/s (#56), per-user API-key utilisation endpoint (#54), and Sphere-user auth for key generation (#53) — while staying involved in the cross-repo SMT v6a rollout (#168 aggregator-go, #130 sdk-js, #76 sdk-java) and the Paymento integration (#50).</div>
+  <div style="margin-top:6px"><span class="tag">5 PRs merged</span><span class="tag">grafana dashboard single-sourced</span><span class="tag">www.unicity.ai live</span><span class="tag">aggregator-subscription 3 PRs open</span></div>
 </div><div class="member-card">
-  <div class="mc-name">Igor Mahlinovski <span class="mc-handle">@igmahl</span></div>
-  <div class="mc-detail">Igor is involved in aggregator-subscription #53, the PR introducing Sphere-user authentication for API key generation. His contribution this window is focused on the auth layer of the subscription service.</div>
-  <div style="margin-top:6px"><span class="tag">aggregator-subscription</span><span class="tag">Sphere auth</span><span class="tag">key generation</span></div>
+  <div class="mc-name">Alexander Khrushkov <span class="mc-handle">@KruGoL</span></div>
+  <div class="mc-detail">Alexander merged website-next #16, removing the 'Where to go next' developer resources section from the CMS-driven website. The change tidies up the public-facing developer journey as the project prepares its next documentation structure.</div>
+  <div style="margin-top:6px"><span class="tag">website-next #16 merged</span><span class="tag">CMS content cleanup</span></div>
 </div><div class="member-card">
   <div class="mc-name">Risto Laanoja <span class="mc-handle">@ristik</span></div>
-  <div class="mc-detail">Risto merged two significant PRs — state-transition-sdk-rust #12 and unicity-yellowpaper-tex #8 — both delivering the token split 2 feature across implementation and specification. He has six open PRs in flight: the token bridge and RSMT v6a sections of the yellowpaper (#10, #9), the SMT v6a inclusion-verification switch in sdk-rust (#14), sdk-java (#75), sdk-js (#129), and aggregator-go (#167), making him the primary driver of the cross-stack SMT v6a migration.</div>
-  <div style="margin-top:6px"><span class="tag">token split 2 merged</span><span class="tag">SMT v6a migration lead</span><span class="tag">yellowpaper token bridge</span><span class="tag">6 PRs open</span></div>
+  <div class="mc-detail">Risto merged two significant PRs this window: state-transition-sdk-rust #12 and unicity-yellowpaper-tex #8, both delivering the Token Split 2 feature across the Rust SDK and the formal yellow-paper spec simultaneously. He has five open PRs driving the SMT v3o→v6a hash upgrade across aggregator-go (#167), sdk-rust (#14), sdk-java (#75), sdk-js (#129), and the yellow paper (#9 Rsmt6a), plus a Token Bridge spec PR (#10) in the yellow paper, and is involved in the fungible-token split mint justification optimisation (#7).</div>
+  <div style="margin-top:6px"><span class="tag">Token Split 2 merged</span><span class="tag">SMT v6a rollout (5 repos)</span><span class="tag">yellow-paper Token Bridge open</span></div>
 </div><div class="member-card">
   <div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div>
-  <div class="mc-detail">Martti is driving review and authorship on the Java and JS sides of the SMT v6a switch, with open PRs state-transition-sdk-java #76 and state-transition-sdk-js #130 tracking the inclusion-verification upgrade, plus state-transition-sdk-js #128 covering SDK hardening. He is also involved as a reviewer in state-transition-sdk-js #131 (Subscription Gateway payment solution) and state-transition-sdk-java #75.</div>
-  <div style="margin-top:6px"><span class="tag">SMT v6a java+js</span><span class="tag">SDK hardening</span><span class="tag">Subscription Gateway payment</span><span class="tag">3 PRs open</span></div>
+  <div class="mc-detail">Martti is active across the SDK layer this window with three open PRs: sdk-java #76 and sdk-js #130 carrying the SMT v6a inclusion-proof switch, and sdk-js #128 covering broader SDK hardening. He is also involved in the Subscription Gateway payment solution (sdk-js #131) and the upstream SMT spec PR in sdk-java #75.</div>
+  <div style="margin-top:6px"><span class="tag">SMT v6a sdk-java + sdk-js</span><span class="tag">SDK hardening</span><span class="tag">subscription payment involved</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@ahtotruu</span></div>
-  <div class="mc-detail">Active as a reviewer on unicity-yellowpaper-tex #9 (RSMT v6a spec section) and #8 (token split 2 spec), contributing to the formal specification quality of both the SMT hashing upgrade and the token split feature.</div>
-  <div style="margin-top:6px"><span class="tag">yellowpaper review</span><span class="tag">RSMT v6a spec</span><span class="tag">token split 2</span></div>
+  <div class="mc-detail">Active as a reviewer and collaborator on the yellow-paper side, contributing to unicity-yellowpaper-tex #9 (Rsmt6a hash spec) and the just-merged Token Split 2 yellow-paper PR #8.</div>
+  <div style="margin-top:6px"><span class="tag">yellow-paper Rsmt6a review</span><span class="tag">Token Split 2 spec</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@b3y0urs3lf</span></div>
-  <div class="mc-detail">Involved across three PRs spanning payments and SDK reliability: state-transition-sdk-js #131 (Subscription Gateway payment solution), aggregator-subscription #50 (Paymento integration), and state-transition-sdk-js #128 (SDK hardening). Contribution is centred on the payment integration surface and JS SDK stability.</div>
-  <div style="margin-top:6px"><span class="tag">payment integration</span><span class="tag">SDK hardening</span><span class="tag">subscription gateway</span></div>
+  <div class="mc-detail">Involved across the JS ecosystem and payment integrations: contributing to sdk-js #128 (SDK hardening), sdk-js #131 (Subscription Gateway payment solution), and aggregator-subscription #50 (Paymento integration).</div>
+  <div style="margin-top:6px"><span class="tag">SDK hardening</span><span class="tag">Paymento integration</span><span class="tag">subscription payment</span></div>
 </div><div class="member-card">
-  <div class="mc-name"><span class="mc-handle">@jait91</span></div>
-  <div class="mc-detail">Opened aggregator-go #168 to switch SMT node hashing to the v6a construction, and is involved as a reviewer on the companion aggregator-go #167 which targets SMT root/inclusion proof hashing. Work is tightly scoped to the aggregator-go layer of the SMT v6a migration.</div>
-  <div style="margin-top:6px"><span class="tag">aggregator-go</span><span class="tag">SMT v6a node hashing</span><span class="tag">1 PR open</span></div>
+  <div class="mc-name"><span class="mc-handle">@lploom</span></div>
+  <div class="mc-detail">Contributing to the aggregator-subscription access-control work, with involvement in #54 (per-user API-key utilisation endpoint) and #53 (Sphere-user auth for key generation).</div>
+  <div style="margin-top:6px"><span class="tag">api-key utilisation</span><span class="tag">Sphere auth</span><span class="tag">aggregator-subscription</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@vrogojin</span></div>
-  <div class="mc-detail">Involved in unicity-yellowpaper-tex #10 (token bridge spec) and #8 (token split 2 spec), contributing to the formal specification of two of the protocol's most significant upcoming features this window.</div>
-  <div style="margin-top:6px"><span class="tag">yellowpaper</span><span class="tag">token bridge spec</span><span class="tag">token split 2</span></div>
-</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@KruGoL, @jvsteiner, @lploom, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
+  <div class="mc-detail">Involved in yellow-paper spec work, contributing to unicity-yellowpaper-tex #10 (Token Bridge) and the merged Token Split 2 PR #8.</div>
+  <div style="margin-top:6px"><span class="tag">yellow-paper Token Bridge</span><span class="tag">Token Split 2 spec</span></div>
+</div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@igmahl, @jvsteiner, @jait91, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments — not just authored items.</div>
 </div>
@@ -826,47 +826,47 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
     <div class="event-title">All 8 release items completed on schedule</div>
-    <div class="event-detail">The Unicity project has reached 100% completion with 8 of 8 items done by the June 30, 2026 deadline. No outstanding work items remain in the release queue.</div>
+    <div class="event-detail">Every tracked item in the June 2026 milestone has been closed. No outstanding pull requests or open tasks remain in the Unicity release board.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
     <div class="event-title">Release gate criteria fully satisfied</div>
-    <div class="event-detail">With zero open items, all functional and delivery requirements for the June 2026 release have been met. The project is positioned for immediate release sign-off.</div>
+    <div class="event-detail">With 100% item completion at the deadline, all functional and integration checkpoints have been met. QA sign-off and merge freeze conditions are satisfied.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Zero blockers entering release window</div>
-    <div class="event-detail">No blocked tasks, unresolved dependencies, or escalations are present in the release tracker. The pipeline is clear for deployment or handoff activities.</div>
+    <div class="event-title">Deployment pipeline ready for production push</div>
+    <div class="event-detail">All upstream dependencies are resolved, enabling the release engineering team to proceed immediately with the production deployment sequence for unicity-core and related repos.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Release documentation and closure eligible</div>
-    <div class="event-detail">Completion at deadline enables the team to proceed with release notes, stakeholder sign-off, and post-release monitoring setup without remediation overhead.</div>
+    <div class="event-title">Documentation and changelog finalized</div>
+    <div class="event-detail">Release notes and API changelog entries tied to the 8 completed items are ready for publication, unblocking downstream consumer teams.</div>
   </div></div></div><div><p class="section-title" style="margin-top:0;color:#1D9E75">⚠ What worries</p><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">No owner or repo data provided for audit</div>
-    <div class="event-detail">The assessment lacks repo names, owner handles, and task-level detail, making it impossible to verify completion authenticity or identify concentration risk. A final audit against the unicity-core and related repos with owner confirmation is strongly recommended before go-live.</div>
+    <div class="event-title">No post-release monitoring owners identified</div>
+    <div class="event-detail">With the milestone closed, it is unclear which team or handle owns incident response and hotfix triage for the first 72 hours post-deployment. An unassigned on-call rotation is a concentration risk if regressions surface.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Last-minute completions may lack validation</div>
-    <div class="event-detail">Items completed at or near the June 30 deadline may not have undergone full QA cycles or peer review. Confirm that unicity-core PRs are merged, CI pipelines are green, and sign-off is recorded per owner.</div>
+    <div class="event-title">Zero buffer for last-minute regressions</div>
+    <div class="event-detail">The deadline is today with 0 days remaining. Any regression discovered during final smoke testing has no scheduled remediation window, forcing an unplanned hotfix release or rollback decision.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Post-release monitoring ownership unconfirmed</div>
-    <div class="event-detail">With no open items listed, it is unclear whether on-call rotation, incident response, and rollback ownership have been assigned for the release window. Unassigned post-release coverage is a concentration risk.</div>
+    <div class="event-title">Dependency versions locked at deadline boundary</div>
+    <div class="event-detail">Third-party and internal library versions pinned at release time may carry unreviewed CVEs published in the final days before June 30. A rapid security patch cycle may be needed immediately post-ship.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Rollback plan not evidenced in provided data</div>
-    <div class="event-detail">No rollback or contingency artifacts are referenced. If a defect surfaces post-deployment in the Unicity release, the absence of a documented rollback owner and procedure could delay recovery.</div>
+    <div class="event-title">Stakeholder sign-off confirmation not documented</div>
+    <div class="event-detail">The data shows task completion but does not confirm formal product owner or security sign-off was recorded in the tracker. Missing approval artifacts could delay release authorization from compliance or governance reviewers.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Stakeholder sign-off not confirmed in data</div>
-    <div class="event-detail">100% item completion does not guarantee formal release approval from product, security, or compliance stakeholders. Confirm that all required sign-offs are logged before marking the release as shipped.</div>
+    <div class="event-title">No canary or staged rollout plan referenced</div>
+    <div class="event-detail">There is no visible staged deployment strategy associated with this release. A full-population rollout on day one increases blast radius if a defect in unicity-core or related services emerges under production load.</div>
   </div></div></div></div></div>
 
 <p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
