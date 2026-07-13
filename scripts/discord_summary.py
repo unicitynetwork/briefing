@@ -60,7 +60,7 @@ def gh_search(q):
 
 # Three project areas with their orgs and display names
 AREAS = [
-    ('astrid',        ['astrid-runtime'],  'Astrid'),
+    ('astrid',        ['unicity-aos'],  'Astrid'),
     ('sphere',        ['unicity-sphere'],  'Sphere'),
     ('unicitynetwork',['unicitynetwork'],  'Unicity Network'),
 ]
