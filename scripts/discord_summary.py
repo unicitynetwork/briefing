@@ -35,6 +35,13 @@ def discord_post(payload_dict):
         raise
 
 # 1. Fetch PRs from GitHub
+#
+# Losing access to an org (rename, transfer, permissions, SSO, outage) must NEVER
+# fail the job. gh_search returns None to mean "could not read" and [] to mean
+# "read fine, nothing merged" — the two are deliberately distinguishable so a
+# degraded run reports itself instead of silently claiming zero activity.
+
+failed_sources = []   # orgs we could not read this run
 
 def gh_search(q):
     url = 'https://api.github.com/search/issues?q=' + urllib.parse.quote(q) + '&per_page=50'
@@ -43,8 +50,13 @@ def gh_search(q):
         'Accept': 'application/vnd.github.v3+json',
         'User-Agent': 'unicity-briefing'
     })
-    with urllib.request.urlopen(req) as r:
-        return json.loads(r.read())['items']
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.loads(r.read())['items']
+    except Exception as e:
+        # 401/403 (token), 404/422 (org renamed, deleted, or not visible), 5xx, timeouts
+        print(f'  SEARCH FAILED: {e} | {q[:90]}')
+        return None
 
 # Three project areas with their orgs and display names
 AREAS = [
@@ -62,6 +74,9 @@ for area_key, orgs, _ in AREAS:
     area_prs[area_key] = []
     for org in orgs:
         prs = gh_search(f'org:{org} is:pr is:merged merged:{date_str}')
+        if prs is None:
+            failed_sources.append(org)
+            continue
         area_prs[area_key].extend(prs)
         all_prs.extend(prs)
         for pr in prs:
@@ -74,9 +89,29 @@ for area_key, orgs, _ in AREAS:
 
 total = len(all_prs)
 print(f'Found {total} PRs merged on {date_str}')
+if failed_sources:
+    print(f'WARNING: could not read {len(failed_sources)} source(s): {", ".join(failed_sources)}')
 
+warn_line = ''
+if failed_sources:
+    warn_line = ('\u26a0\ufe0f Could not read: ' + ', '.join(failed_sources) +
+                 '\nThese are missing from this summary (org renamed, moved, or access changed).')
+
+# Nothing merged anywhere.
 if total == 0:
-    print('No PRs merged — skipping Discord post.')
+    if failed_sources:
+        # Don't go quiet on a broken run — a silent "no activity" hides the breakage.
+        discord_post({
+            'username': 'Unicity Briefing',
+            'embeds': [{
+                'title': 'Daily summary unavailable',
+                'description': f'{date_disp}\n\n{warn_line}',
+                'color': 15158332   # red 0xE74C3C
+            }]
+        })
+        print('Posted degraded-run warning.')
+        exit(0)
+    print('No PRs merged - skipping Discord post.')
     exit(0)
 
 # 2. Build per-area PR lists for Claude
@@ -184,10 +219,14 @@ AREA_COLORS = {
     'Unicity Network':  3639005,   # blue    0x378ADD
 }
 
+summary_desc = f'{date_disp}\n\n{header}'
+if warn_line:
+    summary_desc += f'\n\n{warn_line}'
+
 embeds = [{
     'title': cap('What was shipped yesterday', 256),
-    'description': cap(f'{date_disp}\n\n{header}', 4096),
-    'color': 1941621
+    'description': cap(summary_desc, 4096),
+    'color': 15158332 if failed_sources else 1941621   # red if degraded, else teal
 }]
 
 for area in areas_out:
