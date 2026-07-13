@@ -65,8 +65,8 @@ def claude(prompt, max_tokens=3000):
             print(f'Claude error ({model}): {e}')
     return None
 
-ORGS = ['unicity-astrid', 'unicity-sphere', 'unicitynetwork']
-ORG_LABELS = {'unicity-astrid': 'Astrid', 'unicity-sphere': 'Sphere', 'unicitynetwork': 'Unicity Network'}
+ORGS = ['astrid-runtime', 'unicity-sphere', 'unicitynetwork']
+ORG_LABELS = {'astrid-runtime': 'Astrid', 'unicity-sphere': 'Sphere', 'unicitynetwork': 'Unicity Network'}
 MEMBERS = ['joshuajbouw','MastaP','igmahl','KruGoL','ristik','martti007','jvsteiner',
            'ahtotruu','b3y0urs3lf','jait91','lploom','vrogojin','0xt1mo']
 MEMBER_NAMES = {
@@ -371,7 +371,7 @@ print(f'Board issues: {len(board_issues)}')
 # ── 6b. Blocked items — simple list from board status column only
 BLOCKED_STATUSES = {'blocked', 'blocking'}
 BOARD_URLS = {
-    'unicity-astrid':  'https://github.com/orgs/unicity-astrid/projects/1/views/1',
+    'astrid-runtime':  'https://github.com/orgs/astrid-runtime/projects/1/views/1',
     'unicity-sphere':  'https://github.com/orgs/unicity-sphere/projects/1/views/1',
     'unicitynetwork':  'https://github.com/orgs/unicitynetwork/projects/1/views/17',
 }
@@ -425,8 +425,8 @@ def pr_lines(prs, limit=60):
 theme_prompt = f"""You are writing the daily engineering briefing for the Unicity project.
 Period: {window_label} | PRs merged: {total_merged} | Releases: {', '.join(releases) or 'none'}
 
-=== unicity-astrid ({len(org_prs.get('unicity-astrid',[]))} PRs) ===
-{pr_lines(org_prs.get('unicity-astrid',[])) or 'No activity'}
+=== astrid-runtime ({len(org_prs.get('astrid-runtime',[]))} PRs) ===
+{pr_lines(org_prs.get('astrid-runtime',[])) or 'No activity'}
 
 === unicity-sphere ({len(org_prs.get('unicity-sphere',[]))} PRs) ===
 {pr_lines(org_prs.get('unicity-sphere',[])) or 'No activity'}
@@ -655,12 +655,12 @@ def render_standup_card():
     STANDUP_TEST_L = {'test', 'testing', 'in test', 'qa'}
 
     ORG_CFG = {
-        'unicity-astrid': {
+        'astrid-runtime': {
             'label': 'Astrid',
             'dot':   '#7F77DD',
             'bg':    '#EEEDFE',
             'text':  '#3C3489',
-            'board': 'https://github.com/orgs/unicity-astrid/projects/1/views/1',
+            'board': 'https://github.com/orgs/astrid-runtime/projects/1/views/1',
         },
         'unicity-sphere': {
             'label': 'Sphere',
@@ -759,7 +759,7 @@ def render_standup_card():
         return out
 
     all_sources = {
-        'unicity-astrid': boards.get('unicity-astrid', []),
+        'astrid-runtime': boards.get('astrid-runtime', []),
         'unicity-sphere':  boards.get('unicity-sphere', []),
         'unicitynetwork':  boards.get('unicitynetwork', []),
         '_sif':            sif_items,
@@ -777,7 +777,7 @@ def render_standup_card():
     out += f'<span style="font-size:12px;color:rgba(255,255,255,.55)"><span style="color:#F0B429;font-weight:700">{total_test}</span> in test</span>'
     out += '</div></div>'
     out += '<div style="display:flex">'
-    out += render_col('unicity-astrid', boards.get('unicity-astrid', []))
+    out += render_col('astrid-runtime', boards.get('astrid-runtime', []))
     out += render_col('unicity-sphere',  boards.get('unicity-sphere', []))
     out += render_col('unicitynetwork',  boards.get('unicitynetwork', []))
     out += render_col('_sif',            sif_items)
@@ -798,9 +798,9 @@ def render_board_section():
     by_org = {}
     for issue in board_issues[:40]:
         by_org.setdefault(issue['org'], []).append(issue)
-    org_keys  = {'Astrid': 'unicity-astrid', 'Sphere': 'unicity-sphere', 'Unicity Network': 'unicitynetwork'}
+    org_keys  = {'Astrid': 'astrid-runtime', 'Sphere': 'unicity-sphere', 'Unicity Network': 'unicitynetwork'}
     board_urls = {
-        'Astrid':          'https://github.com/orgs/unicity-astrid/projects/1/views/1',
+        'Astrid':          'https://github.com/orgs/astrid-runtime/projects/1/views/1',
         'Sphere':          'https://github.com/orgs/unicity-sphere/projects/1/views/1',
         'Unicity Network': 'https://github.com/orgs/unicitynetwork/projects/1/views/17',
     }
@@ -1005,7 +1005,7 @@ def long_pr_rows(prs):
     return rows
 
 # ── 11. Build HTML ────────────────────────────────────────────────────────────────────────────
-n_astrid  = len(org_prs.get('unicity-astrid', []))
+n_astrid  = len(org_prs.get('astrid-runtime', []))
 n_sphere  = len(org_prs.get('unicity-sphere', []))
 n_network = len(org_prs.get('unicitynetwork', []))
 rel_str   = ' &middot; '.join(f'<span class="badge badge-release">{esc(r)}</span>' for r in releases)
@@ -1116,7 +1116,7 @@ HTML = f'''<!DOCTYPE html>
   <div class="metric"><div class="metric-label">Astrid / Sphere / Network</div><div class="metric-val hi" style="font-size:16px">{n_astrid} / {n_sphere} / {n_network}</div></div>
 </div>
 
-{org_card('unicity-astrid','badge-purple','#7F77DD','#7F77DD','astrid', n_astrid)}
+{org_card('astrid-runtime','badge-purple','#7F77DD','#7F77DD','astrid', n_astrid)}
 {org_card('unicity-sphere','badge-teal',  '#1D9E75','#1D9E75','sphere', n_sphere)}
 {org_card('unicitynetwork','badge-blue',  '#378ADD','#378ADD','network',n_network)}
 
