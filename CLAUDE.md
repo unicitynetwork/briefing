@@ -110,9 +110,19 @@ fresh empty one. `403`/`429` are deliberately *not* fatal — they are usually r
   themes call hits its 3000 cap and returns truncated JSON. Do not drop the `thinking` key.
 - **The "needs attention" call is schema-enforced** via `output_config.format` (`ATTENTION_SCHEMA`),
   and returns `{"items": [...]}` rather than a bare array. That card rendered empty on every run for
-  months: the prompt feeds PR titles wrapped in quotes and the model echoed them back unescaped inside
-  its own JSON string. Prose instructions and swapping models both failed; constrained decoding is what
-  fixes it. Any new call whose output must parse should take the same route.
+  months. The prompt renders PR titles wrapped in quotes, and one long-standing PR — `bft-core #11`,
+  whose title is literally `EVM` — comes through as `"EVM"`; the model then echoed those quotes
+  unescaped inside its own JSON string, breaking `json.loads`. Measured on real data, 6 trials each:
+
+  | config | parse failures |
+  |---|---|
+  | `claude-sonnet-4-6`, prompt-only | 6/6 — deterministic, hence "broken every run" |
+  | `claude-haiku-4-5`, prompt-only | 2/6 — intermittent, which is why swapping models looked like a fix |
+  | `claude-sonnet-5`, prompt-only | 0/6 |
+  | either model, schema-enforced | 0/6 |
+
+  Sonnet 5 alone appears to fix it, but only the schema makes it structurally impossible. Keep both.
+  Any new call whose output must parse should take the same route.
 - Model is a per-call argument (`claude(..., model=)`), not a global, so one call can move without
   moving the others.
 
