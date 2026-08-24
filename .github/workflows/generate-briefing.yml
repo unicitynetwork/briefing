@@ -5,6 +5,10 @@ on:
     - cron: '17 2 * * 1-5'  # 04:17 EET (UTC+2) Mon–Fri
   workflow_dispatch:
 
+permissions:
+  contents: write   # push the regenerated index.html
+  pages: write      # request the legacy Pages build after the push
+
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -12,6 +16,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate and push briefing
         env:
+          # Reads: needs cross-org + private-project access, so it must be a human PAT.
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          # Write: repo-scoped, owned by no person, so publishing survives departures.
+          GH_PUSH_TOKEN: ${{ github.token }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python3 scripts/generate_briefing.py

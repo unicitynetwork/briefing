@@ -1153,8 +1153,16 @@ HTML = f'''<!DOCTYPE html>
 print(f'HTML built: {len(HTML)} chars')
 
 # ── 12. Push index.html ─────────────────────────────────────────────────────────────────────────────
+# Everything above reads with GH_TOKEN — a human's PAT, because the sweep needs cross-org
+# and private-project access that the workflow's own token cannot have. The write below is
+# deliberately a DIFFERENT credential: GH_PUSH_TOKEN is the workflow's built-in GITHUB_TOKEN,
+# which is scoped to this repo and belongs to no person, so publishing cannot break when
+# someone leaves the org (it did, 2026-08-17 to 2026-08-24: PUT returned 404 for ten days).
+# Falls back to GH_TOKEN so local runs still work.
+PUSH_TOKEN = os.environ.get('GH_PUSH_TOKEN', '').strip() or GH_TOKEN
+
 sha_url = 'https://api.github.com/repos/unicitynetwork/briefing/contents/index.html'
-req = urllib.request.Request(sha_url, headers={'Authorization': f'token {GH_TOKEN}',
+req = urllib.request.Request(sha_url, headers={'Authorization': f'token {PUSH_TOKEN}',
     'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'unicity-briefing'})
 try:
     with urllib.request.urlopen(req) as r:
@@ -1167,10 +1175,22 @@ push_body = {'message': f'briefing: auto-report {report_date} ({window_label})',
 if current_sha: push_body['sha'] = current_sha
 
 req = urllib.request.Request(sha_url, data=json.dumps(push_body).encode(),
-    headers={'Authorization': f'token {GH_TOKEN}', 'Accept': 'application/vnd.github.v3+json',
+    headers={'Authorization': f'token {PUSH_TOKEN}', 'Accept': 'application/vnd.github.v3+json',
              'Content-Type': 'application/json', 'User-Agent': 'unicity-briefing'}, method='PUT')
 with urllib.request.urlopen(req) as r:
     result = json.loads(r.read())
     print(f'Pushed: {result["commit"]["sha"]}')
+
+# Pages here is a legacy (branch-source) build, and a commit pushed with GITHUB_TOKEN does not
+# reliably trigger one — the commit would land while the live page stayed stale. Ask for the
+# build explicitly; a duplicate request is harmless if the implicit build already fired.
+req = urllib.request.Request('https://api.github.com/repos/unicitynetwork/briefing/pages/builds',
+    data=b'', headers={'Authorization': f'token {PUSH_TOKEN}',
+    'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'unicity-briefing'}, method='POST')
+try:
+    with urllib.request.urlopen(req) as r:
+        print(f'Pages build requested: {json.loads(r.read()).get("status")}')
+except Exception as e:
+    print(f'WARNING: Pages build request failed ({e}) — commit is pushed, page may lag.')
 
 print('Done. https://unicitynetwork.github.io/briefing/')

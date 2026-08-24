@@ -5,6 +5,9 @@ on:
     - cron: '47 1 * * *'  # 03:47 EET (UTC+2) every day including weekends
   workflow_dispatch:
 
+permissions:
+  contents: read   # only checks out the script; posts outward to Discord
+
 jobs:
   post-summary:
     runs-on: ubuntu-latest
