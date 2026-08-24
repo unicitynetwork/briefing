@@ -22,6 +22,20 @@ generated_at = now.strftime('%-d %B %Y, %H:%M UTC')
 print(f'Window: {date_range} ({window_label})')
 
 # ── 2. Helpers ──────────────────────────────────────────────────────────────────────────────
+# Every fetch below degrades to an empty result so one dead endpoint cannot sink the report.
+# That is right for a single flaky call and wrong for a broken credential: on 2026-08-24 an
+# empty GH_PAT made all 100+ calls 401, every section rendered empty, and the run published
+# "0 PRs, no activity" over a good page and still exited 0. Count auth failures so §12 can
+# tell "quiet weekend" apart from "we cannot see anything".
+fetch_failures = {'auth': 0, 'other': 0}
+
+def note_fetch_failure(exc):
+    # Only 401 is unambiguously a bad credential. 403/429 are usually GitHub rate limiting
+    # (the involves sweep fires ~78 searches), and a transient limit must not block a report
+    # whose data is otherwise fine — the blackout check below still catches the total-loss case.
+    code = getattr(exc, 'code', None)
+    fetch_failures['auth' if code == 401 else 'other'] += 1
+
 def gh_search(q, per_page=50):
     url = 'https://api.github.com/search/issues?q=' + urllib.parse.quote(q) + f'&per_page={per_page}'
     req = urllib.request.Request(url, headers={
@@ -33,6 +47,7 @@ def gh_search(q, per_page=50):
         with urllib.request.urlopen(req) as r:
             return json.loads(r.read()).get('items', [])
     except Exception as e:
+        note_fetch_failure(e)
         print(f'  search error: {e} | {q[:80]}')
         return []
 
@@ -45,6 +60,7 @@ def gh_graphql(query, variables=None):
         with urllib.request.urlopen(req) as r:
             return json.loads(r.read())
     except Exception as e:
+        note_fetch_failure(e)
         print(f'  graphql error: {e}')
         return {}
 
@@ -1153,6 +1169,19 @@ HTML = f'''<!DOCTYPE html>
 print(f'HTML built: {len(HTML)} chars')
 
 # ── 12. Push index.html ─────────────────────────────────────────────────────────────────────────────
+# Refuse to publish a report we cannot stand behind. A real zero-activity day still ships:
+# the gate needs either outright auth failures, or a total blackout across BOTH the PR
+# sweep and every board — which no genuine quiet weekend produces.
+blackout = (total_merged == 0 and not long_prs and not any(board_counts.values())
+            and not apr26_total and not sif_items and not concierge_items)
+if fetch_failures['auth'] or blackout:
+    reason = (f"{fetch_failures['auth']} authentication failure(s) — check the GH_PAT secret"
+              if fetch_failures['auth'] else
+              'every PR search and every project board came back empty')
+    print(f'ABORT: not publishing — {reason}.')
+    print('The previously published page is left in place. Fix the credential and re-run.')
+    raise SystemExit(1)
+
 # Everything above reads with GH_TOKEN — a human's PAT, because the sweep needs cross-org
 # and private-project access that the workflow's own token cannot have. The write below is
 # deliberately a DIFFERENT credential: GH_PUSH_TOKEN is the workflow's built-in GITHUB_TOKEN,

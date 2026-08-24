@@ -91,10 +91,17 @@ sections or drop the `time.sleep` calls.
 (read fine, nothing merged). A degraded run posts a red "Daily summary unavailable" embed rather than
 silently claiming zero activity. Preserve that distinction when touching its `gh_search`.
 
-`generate_briefing.py` takes the opposite approach: every fetch and every Claude call degrades to an
-empty list/dict and the page still renders with that section missing or empty (`boards_ok`,
-`needs_html`, `apr26_html`, `blocked_html` are all conditionally emitted). Any new AI-backed section must
-follow the same pattern — parse in a `try`, fall back to a neutral default, never let it abort the push.
+`generate_briefing.py` takes the opposite approach *within* the report: every fetch and every Claude
+call degrades to an empty list/dict and the page still renders with that section missing or empty
+(`boards_ok`, `needs_html`, `apr26_html`, `blocked_html` are all conditionally emitted). Any new
+AI-backed section must follow the same pattern — parse in a `try`, fall back to a neutral default.
+
+But §12 gates the publish. `note_fetch_failure` counts `401`s, and the push aborts with a non-zero exit
+if there was any `401`, or if the PR sweep *and* every board came back empty. Rationale: on 2026-08-24 an
+empty `GH_PAT` made every call 401, each section degraded to empty exactly as designed, and the run
+published "0 PRs, no activity" over a good page and exited 0. A stale correct page plus a red run beats a
+fresh empty one. `403`/`429` are deliberately *not* fatal — they are usually rate limiting from the
+~78-request sweep, and must not block an otherwise sound report.
 
 ### HTML safety
 
