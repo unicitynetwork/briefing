@@ -53,7 +53,7 @@ run. `git pull` before touching anything.
 | Schedule | `17 2 * * 1-5` — weekdays only | `47 1 * * *` — every day |
 | Window | Yesterday; **Mon looks back 3 days** (Fri–Sun) | Always exactly yesterday |
 | Data | Merged PRs + open PRs + 3 ProjectV2 boards + `involves:` sweep | Merged PRs only |
-| Claude | 4 calls, `claude-sonnet-4-6` → `claude-haiku-4-5` fallback | 1 call, haiku, no fallback |
+| Claude | 4 calls, `claude-sonnet-5` (cross-fallback to haiku) | 1 call, `claude-haiku-4-5`, no fallback |
 | Output | Full HTML page pushed to `main` | Discord embeds via webhook |
 
 They duplicate the org list, member handles, area labels and color values. **A change to the tracked orgs
@@ -102,6 +102,19 @@ empty `GH_PAT` made every call 401, each section degraded to empty exactly as de
 published "0 PRs, no activity" over a good page and exited 0. A stale correct page plus a red run beats a
 fresh empty one. `403`/`429` are deliberately *not* fatal — they are usually rate limiting from the
 ~78-request sweep, and must not block an otherwise sound report.
+
+### Claude call configuration
+
+- **`thinking` is explicitly disabled on every call.** Sonnet 5 turns adaptive thinking on when the
+  field is omitted (Sonnet 4.6 did not), and `max_tokens` caps thinking *plus* output — measured, the
+  themes call hits its 3000 cap and returns truncated JSON. Do not drop the `thinking` key.
+- **The "needs attention" call is schema-enforced** via `output_config.format` (`ATTENTION_SCHEMA`),
+  and returns `{"items": [...]}` rather than a bare array. That card rendered empty on every run for
+  months: the prompt feeds PR titles wrapped in quotes and the model echoed them back unescaped inside
+  its own JSON string. Prose instructions and swapping models both failed; constrained decoding is what
+  fixes it. Any new call whose output must parse should take the same route.
+- Model is a per-call argument (`claude(..., model=)`), not a global, so one call can move without
+  moving the others.
 
 ### HTML safety
 
