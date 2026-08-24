@@ -82,7 +82,7 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
   <p>Monday, 24 August 2026</p>
   <div class="header-meta">
     <span class="window-badge">Coverage: Friday – Sunday &middot; GitHub API (author + involves sweep)</span>
-    <span class="updated-badge">Updated: 24 August 2026, 13:55 UTC</span>
+    <span class="updated-badge">Updated: 24 August 2026, 14:08 UTC</span>
     
   </div>
 </div>
@@ -557,35 +557,35 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
 
 <div class="card" style="border-color:#7F77DD"><div class="org-header"><span class="badge badge-purple">Astrid</span><span style="font-size:13px;color:#666">2 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#7F77DD"></div>
   <div class="event-body">
-    <div class="event-title">Schema namespace and installer host migration off codewall.dev</div>
-    <div class="event-detail">PRs #14 and #13 together complete the detachment of the artefact schema $id namespace and installer host from the codewall.dev domain. #14 moves the schema identifiers and installer references to the new namespace, ensuring downstream consumers resolve schemas against the correct authority. #13 enforces D3.25: a single check runs in exactly one place and a single deployment follows exactly one analysis path, eliminating ambiguity in the execution topology. Together these changes harden the AOS configuration contract ahead of any public release.</div>
-    <div class="event-meta"><code>unicity-aos</code></div>
+    <div class="event-title">Rebrand off codewall.dev domain and hardening CI</div>
+    <div class="event-detail">PR #14 moves the schema $id namespace and installer host off the codewall.dev domain, a foundational rebrand step that ripples into downstream schema consumers. PR #13 (D3.25) consolidates CI so one check runs in one place and one deployment runs a single analysis path, eliminating duplicate or conflicting pipeline runs. Together these two PRs tighten identity consistency and CI determinism ahead of broader platform changes. Both were authored by @jvsteiner and set up dependencies referenced later in semanticd's own $id migration.</div>
+    <div class="event-meta"><code>codewall-design</code></div>
   </div></div></div>
 <div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge badge-teal">Sphere</span><span style="font-size:13px;color:#666">1 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Payment confirm screen source-blob prewarming</div>
-    <div class="event-detail">PR #754 introduces prewarming of source blobs triggered from the payments confirm screen in the Sphere SDK. By fetching and caching the required blobs before the user completes confirmation, the feature reduces latency on the critical payment completion path. This is a targeted performance improvement that front-loads I/O work into idle time the user spends reviewing the confirm screen, avoiding a cold-fetch stall at the moment of submission.</div>
-    <div class="event-meta"><code>unicity-sphere</code></div>
+    <div class="event-title">Prewarm payment source blobs on confirm screen</div>
+    <div class="event-detail">PR #754 adds prewarming of source blobs directly from the payment confirm screen, reducing latency perceived by users right before they finalize a transaction. By fetching and caching blob data ahead of the final confirmation step, the SDK cuts down on blocking network calls during the most time-sensitive part of the checkout flow. This is a targeted performance optimization to the payments module authored by @MastaP with no breaking API changes.</div>
+    <div class="event-meta"><code>sphere-sdk</code></div>
   </div></div></div>
 <div class="card" style="border-color:#378ADD"><div class="org-header"><span class="badge badge-blue">Unicity Network</span><span style="font-size:13px;color:#666">14 PRs merged</span></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Console dashboard rebuilt and closed against management API</div>
-    <div class="event-detail">PRs #134 and #128 form the core of a full console rebuild: #134 reconstructs the frontend against the current design of record, while #128 closes the functional gaps between the console UI and the management API so every API capability is reachable from the dashboard. #127 fixes a session-hygiene bug where sign-out was only clearing state client-side, leaving the server-side session alive; it now terminates the session at the server on sign-out. PR #132 adds a guard preventing an admin from revoking its own console access, and #133 enforces that PATCH cannot deactivate a resource — deactivation is only permitted through the POST routes. These changes collectively make the console a trustworthy and complete operator interface.</div>
+    <div class="event-title">Console rebuilt with in-app user guide search</div>
+    <div class="event-detail">A major dashboard overhaul spans PR #134 (rebuild the console against the design of record), PR #128 (close gaps between console and management API), and PR #142 (ship the user guide inside the console behind a ⌘K command palette). PR #143 adds CI to publish the user guide on the self-hosted runner, and PR #144 fixes the Docker dashboard stage so it actually has the docs corpus it now reads at build time. PR #140 cleans up a stale caveat in verify-artefact.sh referencing an unmerged codewall-design PR, closing the loop on the rebrand dependency. This cluster represents the dashboard's evolution from a bare console into a fully documented, searchable operator surface.</div>
     <div class="event-meta"><code>semanticd</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">In-console user guide behind ⌘K command palette</div>
-    <div class="event-detail">PR #142 ships a user guide rendered directly inside the semanticd console, surfaced through a ⌘K command-palette shortcut, giving operators searchable documentation without leaving the UI. #143 adds CI publishing of that guide on the self-hosted runner so the built artefact is always up to date with the codebase. #144 fixes a Docker stage ordering bug in which the dashboard build stage did not yet have the docs corpus it was now expected to read, causing the guide to be absent from the container image. Together these three PRs deliver and operationally stabilise the embedded documentation experience.</div>
+    <div class="event-title">Session and access control hardening for admins</div>
+    <div class="event-detail">PR #132 fixes an authz bug where an admin could lock itself out of its own console, and PR #133 restricts deactivation so PATCH cannot perform it—only the dedicated POST routes can deactivate accounts. PR #127 ensures sign-out actually ends the session server-side rather than just clearing client state, closing a session-fixation-style gap. These three PRs, all by @jvsteiner, tighten the authorization and session lifecycle around dashboard access, reducing both lockout risk and stale-session exposure.</div>
     <div class="event-meta"><code>semanticd</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Analysis engine: heavy detectors isolated, compile errors enforced</div>
-    <div class="event-detail">PR #131 restructures the analysis centre so that heavy detectors run exclusively there rather than being duplicated across execution paths, sharpening the separation of responsibilities introduced in the AOS area-3 work. The same PR promotes a rule that fails to compile from a warning to a hard error, preventing silent analysis gaps when rule syntax is broken. PR #137 by @jait91 fixes a race condition in the inference worker pool where workers could miss jobs that had been queued before the worker polled, improving throughput reliability under load. PR #126 addresses eight specific findings from the second review pass on #120 covering the plane and database layers.</div>
+    <div class="event-title">Detector engine reliability and rule compilation checks</div>
+    <div class="event-detail">PR #131 refactors analysis so the centre runs only the heavy detectors, and introduces strict validation where a rule that fails to compile is treated as a hard error rather than silently skipped. PR #137 fixes the inference engine so workers stop missing queued jobs, addressing a job-loss bug in the queue consumption path by @jait91. PR #126 addresses eight essential findings from the #120 second-pass review across the plane and db layers. PR #138 fixes CI so the migration test no longer needs to ask Docker for a container, speeding up and simplifying test infrastructure. Together these harden both the correctness of the analysis engine and the reliability of its supporting test/CI plumbing.</div>
     <div class="event-meta"><code>semanticd</code></div>
   </div></div><div class="event-row"><div class="event-dot" style="background:#378ADD"></div>
   <div class="event-body">
-    <div class="event-title">Schema namespace migration and CI/docs housekeeping</div>
-    <div class="event-detail">PR #139 re-vendors artefact.schema.json to align the $id field with the new namespace established in unicity-aos #14, keeping the schema reference canonical across both repositories. #138 fixes a CI regression in the migration test suite that was incorrectly asking Docker for a container it no longer needed, restoring clean test runs. #140 drops a now-stale caveat in verify-artefact.sh that warned about an unmerged codewall-design PR, reflecting that the upstream work has landed. These cleanup PRs reduce noise in CI output and keep the documentation and tooling accurate after the namespace migration.</div>
+    <div class="event-title">Re-vendor schema for the codewall $id migration</div>
+    <div class="event-detail">PR #139 re-vendors artefact.schema.json to reflect the $id namespace move initiated in codewall-design PR #14, keeping semanticd's schema copy in sync with the new canonical location. This is a direct downstream consequence of the astrid rebrand work, ensuring schema validation continues to resolve correctly against the new namespace. It's a small but critical dependency-tracking PR by @jvsteiner that prevents drift between the source schema and its vendored copy.</div>
     <div class="event-meta"><code>semanticd</code></div>
   </div></div><p class="section-title" style="margin-top:14px">Timeline — Friday – Sunday</p><div class="timeline"><div class="tl-item tl-fix"><span class="tl-time">Fri 08:50</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/127" class="tl-link">semanticd #127</a> — fix(dashboard): end the session server-side on sign-out</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 14:57</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/133" class="tl-link">semanticd #133</a> — fix(authz): PATCH cannot deactivate; the POST routes are the only path</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 15:20</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/132" class="tl-link">semanticd #132</a> — fix(authz): an admin cannot lock itself out of its own console</span></div><div class="tl-item tl-feat"><span class="tl-time">Fri 16:39</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/128" class="tl-link">semanticd #128</a> — feat(dashboard): close the gaps between the console and the management API</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 17:19</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/137" class="tl-link">semanticd #137</a> — fix(engine): prevent inference workers from missing queued jobs</span></div><div class="tl-item tl-fix"><span class="tl-time">Fri 18:26</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/138" class="tl-link">semanticd #138</a> — fix(ci): the migration test stops asking Docker for a container</span></div><div class="tl-item tl-fix"><span class="tl-time">Sun 17:34</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/126" class="tl-link">semanticd #126</a> — fix(plane,db): the eight essential findings from the #120 second pass</span></div><div class="tl-item tl-feat"><span class="tl-time">Sun 19:14</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/131" class="tl-link">semanticd #131</a> — feat(analysis): the centre runs the heavy detectors only, and a rule that will not compile is an error</span></div><div class="tl-item tl-feat"><span class="tl-time">Sun 19:30</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/134" class="tl-link">semanticd #134</a> — feat(dashboard): rebuild the console against the design of record</span></div><div class="tl-item tl-done"><span class="tl-time">Sun 19:47</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/139" class="tl-link">semanticd #139</a> — Re-vendor artefact.schema.json for the $id namespace move</span></div><div class="tl-item tl-done"><span class="tl-time">Sun 20:35</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/140" class="tl-link">semanticd #140</a> — docs(scripts): drop verify-artefact.sh's stale &quot;unmerged codewall-design PR&quot; caveat</span></div><div class="tl-item tl-feat"><span class="tl-time">Mon 00:23</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/142" class="tl-link">semanticd #142</a> — feat(dashboard): the user guide, in the console, behind ⌘K</span></div><div class="tl-item tl-chore"><span class="tl-time">Mon 00:38</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/143" class="tl-link">semanticd #143</a> — ci: publish the user guide on the self-hosted runner</span></div><div class="tl-item tl-fix"><span class="tl-time">Mon 00:52</span><span class="tl-label"><a href="https://github.com/unicitynetwork/semanticd/pull/144" class="tl-link">semanticd #144</a> — fix(docker): give the dashboard stage the docs corpus it now reads</span></div></div></div>
 
@@ -824,42 +824,78 @@ code{font-family:'SF Mono',Monaco,monospace;font-size:11.5px;background:#f5f4f0;
     <div class="board-detail"><code>.github #12</code></div>
   </div></div></div></div>
 
-
+<div class='card' style='border-color:#EF9F27'><div class='org-header'><span class='badge' style='background:#FAEEDA;color:#633806'>Needs attention</span></div><div class="event-row">
+  <div class="event-dot" style="background:#E24B4A"></div>
+  <div class="event-body">
+    <div class="event-title">bft-core #11 &quot;EVM&quot; by @MastaP</div>
+    <div class="event-detail">Open 217 days with no board tracking — the oldest untracked PR in the repo. Needs immediate triage: assign a reviewer, confirm it's still wanted, and add to a board or close.</div>
+    <div class="event-meta"><span class="badge" style="background:#FCEBEB;color:#791F1F">critical</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#EF9F27"></div>
+  <div class="event-body">
+    <div class="event-title">nostr-js-sdk #4 and nostr-sdk #4 (unit test PRs) by @b3y0urs3lf</div>
+    <div class="event-detail">Both open 199 days, untracked on any board. Large test-suite additions likely stale/conflicting with current code. Decide: rebase and merge, or close if superseded.</div>
+    <div class="event-meta"><span class="badge" style="background:#FAEEDA;color:#633806">close or revive</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">sphere-cli #3, #9, #12 by @vrogojin</div>
+    <div class="event-detail">Three overlapping 'trader withdraw' / CI-hardening PRs (122, 112, 106 days old), none tracked on the Sphere board. Likely duplicate/competing implementations of the withdraw subcommand — need a decision on which to keep before further review effort is spent.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">decision needed</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">sphere-sdk #90 &quot;Feat/auto connect&quot; and aggregator-go #51 &quot;Streaming round processing with adaptive timing&quot;</div>
+    <div class="event-detail">Both PRs are already merged but still sitting in Backlog/Todo on their boards. Simple board hygiene fix — move cards to Done to unblock accurate status reporting.</div>
+    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">unblock</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#378ADD"></div>
+  <div class="event-body">
+    <div class="event-title">capsule-memory #3 by @joshuajbouw and capsule-react #16 by @joshuajbouw</div>
+    <div class="event-detail">Open 159 and 110 days respectively, both untracked on the Astrid board. No reviewer assigned yet — needs an owner to pick these up before they go further stale.</div>
+    <div class="event-meta"><span class="badge" style="background:#E6F1FB;color:#0C447C">assign reviewer</span></div>
+  </div></div><div class="event-row">
+  <div class="event-dot" style="background:#7F77DD"></div>
+  <div class="event-body">
+    <div class="event-title">astrid #961 &quot;Bind a specific LLM provider/model to a principal&quot; (umbrella issue)</div>
+    <div class="event-detail">No status assigned despite being an umbrella/tracking issue for principal-model binding work. Needs triage to set status and confirm scope before dependent sub-issues can be planned.</div>
+    <div class="event-meta"><span class="badge" style="background:#EEEDFE;color:#3C3489">review needed</span></div>
+  </div></div></div>
 
 <div class="card" style="border-color:#1D9E75">
   <div class="org-header"><span class="badge badge-teal">Team activity</span><span style="font-size:12px;color:#666">All members &mdash; author + involves sweep</span></div>
   <div class="member-grid"><div class="member-card">
   <div class="mc-name">Joshua J. Bouw <span class="mc-handle">@joshuajbouw</span></div>
-  <div class="mc-detail">Joshua has two open PRs in aos-ce (#85, #86) both addressing the same root issue: the MCP server rejecting the AOS host plugin --workspace argument. He is also involved in codewall #7 (the long-standing CI failure where the e2e version gate calls `rg` which is absent from the runner) and codewall-design #13 (area-3 single-check, single-analysis-path design). Additionally he is engaged on semanticd #131, which gates heavy detectors to the centre and makes non-compiling rules a hard error.</div>
-  <div style="margin-top:6px"><span class="tag">2 PRs open (aos-ce)</span><span class="tag">MCP workspace argv fix</span><span class="tag">CI rg gap (codewall #7)</span><span class="tag">semanticd analysis hardening</span></div>
+  <div class="mc-detail">Focused on getting AOS MCP host plugin argv handling right, with two related open PRs in aos-ce: #86 and #85, the latter superseded/refined by the former. Also weighing in on codewall-design #13 (single-analysis-path policy), codewall #7 (broken e2e version gate calling missing `rg` binary), and semanticd #131 (heavy detectors centralization and rule compile errors).</div>
+  <div style="margin-top:6px"><span class="tag">aos-ce mcp fix</span><span class="tag">2 open PRs</span><span class="tag">codewall CI gate</span></div>
 </div><div class="member-card">
   <div class="mc-name">Pavel Grigorenko <span class="mc-handle">@MastaP</span></div>
-  <div class="mc-detail">Pavel merged codewall-design #3 (closing prose-to-schema gaps for the 2026-08-07 protocol cut) and sphere-sdk #754 (prewarming source blobs from the confirm screen). He now carries four open PRs in sphere and sphere-sdk: #756 (live balance refresh during drain), #491 (toast stack cap for multi-token receive), #757 (sequential claim acks — 54 round trips per receive), and #755 (balance not moving until drain completes). He is also a reviewer on sphere-sdk #753, semanticd #148, state-transition-sdk-js #146, state-transition-sdk-java #83, and semanticd #48.</div>
-  <div style="margin-top:6px"><span class="tag">2 merged</span><span class="tag">4 PRs open (sphere/sphere-sdk)</span><span class="tag">receive drain &amp; balance fixes</span><span class="tag">54-ack latency fix</span></div>
+  <div class="mc-detail">Merged codewall-design #3 (protocol cut closing prose/schema gaps) and sphere-sdk #754 (prewarm source blobs on confirm screen). Currently has four open sphere/sphere-sdk PRs pushing receive-flow performance: #756 (live balance refresh during drain), #755 (balance updates before full drain completes), #757 (batching 54 sequential claim-ack round trips), and sphere #491 (capping the toast stack for multi-token receive). Also involved in sphere-sdk #753 (send-side prefetch), semanticd #148 (harmful-content classifier, disabled by default), and cross-repo service-timeout work (state-transition-sdk-js #146, -java #83, semanticd #48).</div>
+  <div style="margin-top:6px"><span class="tag">sphere receive perf</span><span class="tag">2 merged</span><span class="tag">4 open PRs</span><span class="tag">cross-repo timeouts</span></div>
 </div><div class="member-card">
   <div class="mc-name">Risto Laanoja <span class="mc-handle">@ristik</span></div>
-  <div class="mc-detail">Risto has four open PRs this window: aggregator-go #178 and #179 (service-time binding and gosec finding fixes respectively), plus state-transition-sdk-js #146 and state-transition-sdk-java #83 both enforcing request timeouts. The timeout work spans three repos, indicating a cross-cutting hardening effort coordinated with other contributors on the same PRs.</div>
-  <div style="margin-top:6px"><span class="tag">4 PRs open</span><span class="tag">timeout enforcement (3 repos)</span><span class="tag">gosec findings (aggregator-go #179)</span><span class="tag">cross-cutting hardening</span></div>
+  <div class="mc-detail">Driving service-time binding and request timeout enforcement across three repos with open PRs: aggregator-go #178, state-transition-sdk-js #146, and state-transition-sdk-java #83. Also has aggregator-go #179 open to fix gosec static analysis findings.</div>
+  <div style="margin-top:6px"><span class="tag">timeout enforcement</span><span class="tag">4 open PRs</span><span class="tag">gosec fixes</span><span class="tag">cross-repo</span></div>
 </div><div class="member-card">
   <div class="mc-name">Martti Marran <span class="mc-handle">@martti007</span></div>
-  <div class="mc-detail">Martti is a reviewer on state-transition-sdk-js #146 (bind service time and enforce request timeouts), contributing to the cross-repo timeout hardening effort alongside Risto and Pavel.</div>
-  <div style="margin-top:6px"><span class="tag">reviewer</span><span class="tag">state-transition-sdk-js #146</span><span class="tag">timeout hardening</span></div>
+  <div class="mc-detail">Involved in state-transition-sdk-js #146, the JS-side counterpart to the cross-repo service-time binding and request timeout enforcement effort.</div>
+  <div style="margin-top:6px"><span class="tag">timeout enforcement</span><span class="tag">state-transition-sdk-js</span></div>
 </div><div class="member-card">
   <div class="mc-name">Jamie Steiner <span class="mc-handle">@jvsteiner</span></div>
-  <div class="mc-detail">Jamie had an exceptionally productive window, merging 13 PRs across semanticd and codewall-design: highlights include codewall-design #14 (namespace and installer host migration), codewall-design #10 (sign bytes not shape), codewall-design #13 (area-3 single analysis path), and six semanticd PRs rebuilding the dashboard (console redesign #134, user guide behind ⌘K #142, rulesets tab #146, authz fixes #133/#144, and CI/docs cleanup #138–#143). He has two open PRs in codewall (#6 moving the plane host domain, #7 fixing the never-passing CI) and is active reviewer on six more codewall-design and semanticd PRs including the upcoming severity scale work (#147, #15).</div>
-  <div style="margin-top:6px"><span class="tag">13 merged</span><span class="tag">dashboard &amp; console overhaul</span><span class="tag">codewall domain migration</span><span class="tag">CI &amp; authz fixes</span></div>
+  <div class="mc-detail">Extremely active merging: 6 codewall-design PRs (#14, #13, #12, #10, #7, #4) landing the schema $id/host migration, protocol byte-signing, deferred-analysis/SOC feed as-built docs, and tool_result corpus additions; plus 10 semanticd PRs (#146, #144, #143, #142, #140, #139, #138, #134, #133) covering the dashboard rebuild, user guide, docker/CI fixes, and authz PATCH deactivation fix. Has two open codewall PRs (#6 moving the plane host off-domain, #7 fixing the broken e2e `rg` gate), and is involved in codewall-design #15, #11, #5, #3, #2, plus semanticd #147 on the unified severity scale.</div>
+  <div style="margin-top:6px"><span class="tag">16 merged</span><span class="tag">codewall-design cleanup</span><span class="tag">semanticd dashboard rebuild</span><span class="tag">2 open PRs</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@b3y0urs3lf</span></div>
-  <div class="mc-detail">This contributor is active as a reviewer across several semanticd PRs: authz hardening (#132, admin self-lockout fix), dashboard and management API gap closure (#128), server-side sign-out (#127), a light-mode feature request (#130), and the staging rollout (#48). No merges or authored PRs this window; primary role is review and feedback.</div>
-  <div style="margin-top:6px"><span class="tag">reviewer</span><span class="tag">semanticd authz &amp; dashboard</span><span class="tag">staging rollout (#48)</span><span class="tag">light mode request</span></div>
+  <div class="mc-detail">Involved across a cluster of semanticd dashboard/authz work: #132 (admin lockout fix), #128 (dashboard/management API parity), #127 (server-side sign-out session end), #130 (light mode feature request), and #48 (staging rollout).</div>
+  <div style="margin-top:6px"><span class="tag">semanticd dashboard</span><span class="tag">authz</span><span class="tag">feature request</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@jait91</span></div>
-  <div class="mc-detail">Two merges land this window: semanticd #145 (JWT signing and session binding hardening) and semanticd #137 (preventing inference workers from missing queued jobs — a reliability fix for the engine). As reviewer, involvement spans semanticd dashboard PRs (#146, #134, #133, #132, #128) and aggregator-go #178 (service-time binding).</div>
-  <div style="margin-top:6px"><span class="tag">2 merged</span><span class="tag">JWT &amp; session hardening</span><span class="tag">engine worker reliability</span><span class="tag">semanticd dashboard reviewer</span></div>
+  <div class="mc-detail">Merged semanticd #145 (hardened JWT signing/session binding) and #137 (fixed inference workers missing queued jobs). Also involved in the dashboard rebuild cluster (#146, #134, #133, #132, #128) and cross-repo timeout work via aggregator-go #178.</div>
+  <div style="margin-top:6px"><span class="tag">2 merged</span><span class="tag">semanticd auth/engine</span><span class="tag">dashboard involvement</span></div>
 </div><div class="member-card">
   <div class="mc-name"><span class="mc-handle">@lploom</span></div>
-  <div class="mc-detail">Three codewall-design PRs merged: #11 (area-3 deferred analysis and SOC feed as-built), #5 (multi-tenancy as-built record), and #2 (policy-versioning docs corrected against code, §9 decisions closed). Two PRs remain open co-authored with jvsteiner: codewall-design #15 and semanticd #147, both introducing the unified five-value severity scale from store to wire to feed. Reviewer involvement continues on codewall-design #10, #7 and semanticd #137, #127, #126.</div>
-  <div style="margin-top:6px"><span class="tag">3 merged (codewall-design)</span><span class="tag">2 PRs open</span><span class="tag">unified severity scale</span><span class="tag">as-built doc coverage</span></div>
+  <div class="mc-detail">Merged three codewall-design as-built documentation PRs: #11 (deferred analysis/SOC feed), #5 (multi-tenancy), and #2 (policy-versioning/§9 decisions). Has two open PRs pushing the unified severity scale across store/wire/feed: codewall-design #15 and semanticd #147, plus involvement in codewall-design #10, #7, and semanticd #137, #127, #126.</div>
+  <div style="margin-top:6px"><span class="tag">3 merged docs</span><span class="tag">severity scale unification</span><span class="tag">2 open PRs</span></div>
 </div></div><div style="margin-top:12px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)"><p style="font-size:11px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">No activity this window</p><p style="font-size:11.5px;color:#888;line-height:1.7">@igmahl, @KruGoL, @ahtotruu, @vrogojin, @0xt1mo</p></div><div class="method-note"><strong>Sweep method (permanent):</strong> Each report runs
 <code>involves:USERNAME</code> for every team member in addition to org-level PR/issue sweeps.
 Catches closes, reviews, comments, and assignments — not just authored items.</div>
@@ -976,58 +1012,43 @@ Catches closes, reviews, comments, and assignments — not just authored items.<
 <div class="card" style="border-color:#1D9E75"><div class="org-header"><span class="badge" style="background:#E1F5EE;color:#085041">June release</span><span style="font-size:13px;color:#666">8/8 done &middot; 0 days to deadline</span><span class="badge" style="background:#E1F5EE;color:#085041;margin-left:auto">on track</span><a href="https://github.com/orgs/unicitynetwork/projects/1/views/20" style="font-size:11px;color:#378ADD;font-family:'SF Mono',monospace;text-decoration:none">board ↗</a></div><div style="background:#f5f4f0;border-radius:4px;height:5px;margin-bottom:12px;overflow:hidden"><div style="background:#1D9E75;width:100%;height:100%;border-radius:4px"></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><p class="section-title" style="margin-top:0;color:#085041">✔ What's moving</p><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">All 8 release items completed on schedule</div>
-    <div class="event-detail">The Unicity June 2026 milestone has reached 100% completion with 8 of 8 items done by the June 30 deadline. No outstanding work items remain in the release tracker.</div>
+    <div class="event-title">All 8 release items completed</div>
+    <div class="event-detail">100% of scoped work for the June 2026 Unicity release is marked done with zero open items remaining.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Release candidate build ready for deployment</div>
-    <div class="event-detail">With all items closed, the release candidate should be staged and validated. Confirm final build artifacts are tagged and signed in the unicity-core repo.</div>
+    <div class="event-title">Release deadline reached with no backlog</div>
+    <div class="event-detail">June 30, 2026 deadline arrives with 0 days remaining and no outstanding tasks blocking sign-off.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Regression and acceptance testing closure</div>
-    <div class="event-detail">Completion of all items implies QA sign-off has been obtained. Verify that test reports are archived and linked to the release record for audit traceability.</div>
+    <div class="event-title">Final release candidate ready for cut</div>
+    <div class="event-detail">With all items closed, the team should tag the release branch and prepare release notes for publication.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Release documentation and changelog finalized</div>
-    <div class="event-detail">All 8 items being done signals documentation tasks are complete. Confirm release notes, API changelogs, and migration guides are published to the unicity-docs repo.</div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">Stakeholder sign-off and go/no-go confirmed</div>
-    <div class="event-detail">Full item closure enables a clean go/no-go gate. Ensure product owner and release manager handles have formally approved the release in the project tracker.</div>
+    <div class="event-title">Post-completion validation likely underway</div>
+    <div class="event-detail">Standard practice suggests QA/smoke testing on the completed build should be confirmed before public release.</div>
   </div></div></div><div><p class="section-title" style="margin-top:0;color:#1D9E75">⚠ What worries</p><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">No owner handles recorded for completed items</div>
-    <div class="event-detail">The release data contains no assignee or owner handles for any of the 8 completed tasks. This creates concentration risk and makes post-release incident ownership ambiguous — owner mapping should be documented immediately.</div>
+    <div class="event-title">No visibility into QA/sign-off status</div>
+    <div class="event-detail">Task completion doesn't confirm testing, staging validation, or stakeholder sign-off occurred; verify these before declaring the release shippable.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Zero open items may mask deferred scope</div>
-    <div class="event-detail">A perfect 100% completion rate at deadline warrants scrutiny. Verify no items were quietly descoped, moved to a future milestone, or closed without full resolution in unicity-core or related repos.</div>
+    <div class="event-title">Zero buffer time for last-minute issues</div>
+    <div class="event-detail">With 0 days to deadline, any bug found in final review has no schedule slack to absorb a fix-and-retest cycle.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Post-release hotfix ownership is undefined</div>
-    <div class="event-detail">With no named owners in the release record, any day-one production defects will have unclear escalation paths. A hotfix on-call rota and repo-level CODEOWNERS file should be confirmed before deployment.</div>
+    <div class="event-title">Unclear ownership for release execution</div>
+    <div class="event-detail">No named owner is specified for cutting the tag, deploying, and communicating the release; assign someone now to avoid last-minute scrambling.</div>
   </div></div><div class="event-row">
   <div class="event-dot" style="background:#1D9E75"></div>
   <div class="event-body">
-    <div class="event-title">Deployment and rollback plan not evidenced</div>
-    <div class="event-detail">The structured data shows item completion but no explicit deployment runbook or rollback procedure is referenced. Confirm these artifacts exist in unicity-ops or an equivalent repo before go-live.</div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">Dependency validation on external integrations absent</div>
-    <div class="event-detail">No detail exists on whether downstream or third-party integration dependencies were verified as part of closure. Any unvalidated external contracts could cause failures at runtime despite internal tasks being done.</div>
-  </div></div><div class="event-row">
-  <div class="event-dot" style="background:#1D9E75"></div>
-  <div class="event-body">
-    <div class="event-title">Release sign-off timestamp and audit trail unclear</div>
-    <div class="event-detail">Items marked done without timestamps or approver handles leaves the audit trail incomplete. Regulatory or compliance reviews for the Unicity project may require evidence of formal sign-off with named approvers and dates.</div>
+    <div class="event-title">Missing changelog/communication confirmation</div>
+    <div class="event-detail">Completion of dev items doesn't guarantee release notes, migration guides, or user-facing comms are ready for the June 30 publish.</div>
   </div></div></div></div></div>
 
 <p class="footer-note">ristik/ndsmt-experiments commits require manual check</p>
