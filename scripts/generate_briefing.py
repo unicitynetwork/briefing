@@ -72,14 +72,22 @@ def gh_graphql(query, variables=None):
 #                 months. Haiku parenthesises instead. This is luck, not a guarantee — the durable
 #                 fix is structured outputs (output_config.format), which Haiku 4.5 supports.
 # Each call falls back to the other model if its first choice errors.
-SONNET = 'claude-sonnet-4-6'
+SONNET = 'claude-sonnet-5'
 HAIKU  = 'claude-haiku-4-5-20251001'
 
-def claude(prompt, max_tokens=3000, model=SONNET):
+# thinking is ON BY DEFAULT on Sonnet 5 (it was off on Sonnet 4.6), and max_tokens caps
+# thinking + output together. Measured: with adaptive thinking the themes call hits the
+# 3000 cap and returns truncated JSON (stop_reason=max_tokens). These are summarisation
+# tasks, so disable it — that is also 2x faster and cheaper than 4.6 was.
+def claude(prompt, max_tokens=3000, model=SONNET, schema=None):
     for model in (model, HAIKU if model != HAIKU else SONNET):
         try:
-            payload = json.dumps({'model': model, 'max_tokens': max_tokens,
-                'messages': [{'role': 'user', 'content': prompt}]}).encode()
+            body = {'model': model, 'max_tokens': max_tokens,
+                    'messages': [{'role': 'user', 'content': prompt}],
+                    'thinking': {'type': 'disabled'}}
+            if schema:
+                body['output_config'] = {'format': {'type': 'json_schema', 'schema': schema}}
+            payload = json.dumps(body).encode()
             req = urllib.request.Request('https://api.anthropic.com/v1/messages', data=payload,
                 headers={'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01',
                          'content-type': 'application/json'})
@@ -525,15 +533,34 @@ BOARD ISSUES:
 {chr(10).join(f'- [{i["sev"].upper()}] {i["ref"]} ({i["org"]}): {i["title"]} — {i["msg"]}' for i in board_issues[:20]) or 'None'}
 
 Write 3-6 "Needs attention" items. Name exact PR/issue, age, owner, blocker, action needed.
-Badge options: "review needed", "decision needed", "close or revive", "assign reviewer", "unblock", "critical"
-Badge colors: "purple", "amber", "blue", "red", "green"
+Pick the badge and colour that best fit each item."""
 
-Respond ONLY with a valid JSON array no fences:
-[{{"title":"...","badge":"...","badge_color":"amber","detail":"..."}}]"""
+# Schema-enforced. This card produced NOTHING on every run for months: the prompt feeds PR
+# titles wrapped in quotes and the model echoed them unescaped inside its JSON string
+# ('"title":"bft-core #11 "EVM" ...'), failing json.loads. Asking for valid JSON in prose
+# could not fix that — routing the call to a different model only changed which run it
+# broke on. Constrained decoding makes it structurally impossible.
+ATTENTION_SCHEMA = {
+    'type': 'object',
+    'properties': {'items': {'type': 'array', 'items': {
+        'type': 'object',
+        'properties': {
+            'title':       {'type': 'string'},
+            'badge':       {'type': 'string', 'enum': ['review needed', 'decision needed',
+                                                       'close or revive', 'assign reviewer',
+                                                       'unblock', 'critical']},
+            'badge_color': {'type': 'string', 'enum': ['purple', 'amber', 'blue', 'red', 'green']},
+            'detail':      {'type': 'string'},
+        },
+        'required': ['title', 'badge', 'badge_color', 'detail'],
+        'additionalProperties': False}}},
+    'required': ['items'],
+    'additionalProperties': False,
+}
 
-raw3 = claude(attention_prompt, max_tokens=1500, model=HAIKU)
+raw3 = claude(attention_prompt, max_tokens=1500, schema=ATTENTION_SCHEMA)
 try:
-    needs_attention = json.loads(raw3)
+    needs_attention = json.loads(raw3)['items']
     print(f'Needs attention OK: {len(needs_attention)} items')
 except Exception as e:
     print(f'Needs attention parse error: {e}')
