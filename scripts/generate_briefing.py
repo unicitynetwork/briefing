@@ -64,8 +64,19 @@ def gh_graphql(query, variables=None):
         print(f'  graphql error: {e}')
         return {}
 
-def claude(prompt, max_tokens=3000):
-    for model in ('claude-sonnet-4-6', 'claude-haiku-4-5-20251001'):
+# Model per call, chosen by measured A/B on real 2026-08-21..23 data, not by vibes:
+#   themes     -> Sonnet. Haiku dropped the whole Astrid section (0 themes for an org with 2 PRs).
+#   narratives -> Sonnet. Haiku fabricated a headline count (said 26 merged for jvsteiner; truth 15).
+#   attention  -> Haiku.  Sonnet reproduces PR titles' own quotes UNESCAPED inside the JSON string
+#                 ("bft-core #11 "EVM" ..."), which is why this card has been silently missing for
+#                 months. Haiku parenthesises instead. This is luck, not a guarantee — the durable
+#                 fix is structured outputs (output_config.format), which Haiku 4.5 supports.
+# Each call falls back to the other model if its first choice errors.
+SONNET = 'claude-sonnet-4-6'
+HAIKU  = 'claude-haiku-4-5-20251001'
+
+def claude(prompt, max_tokens=3000, model=SONNET):
+    for model in (model, HAIKU if model != HAIKU else SONNET):
         try:
             payload = json.dumps({'model': model, 'max_tokens': max_tokens,
                 'messages': [{'role': 'user', 'content': prompt}]}).encode()
@@ -520,7 +531,7 @@ Badge colors: "purple", "amber", "blue", "red", "green"
 Respond ONLY with a valid JSON array no fences:
 [{{"title":"...","badge":"...","badge_color":"amber","detail":"..."}}]"""
 
-raw3 = claude(attention_prompt, max_tokens=1500)
+raw3 = claude(attention_prompt, max_tokens=1500, model=HAIKU)
 try:
     needs_attention = json.loads(raw3)
     print(f'Needs attention OK: {len(needs_attention)} items')
