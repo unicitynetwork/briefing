@@ -41,10 +41,11 @@ def discord_post(payload_dict):
 # "read fine, nothing merged" — the two are deliberately distinguishable so a
 # degraded run reports itself instead of silently claiming zero activity.
 
-failed_sources = []   # orgs we could not read this run
+failed_sources    = []   # orgs we could not read this run
+truncated_sources = []   # orgs whose result set did not fit in one page
 
 def gh_search(q):
-    url = 'https://api.github.com/search/issues?q=' + urllib.parse.quote(q) + '&per_page=50'
+    url = 'https://api.github.com/search/issues?q=' + urllib.parse.quote(q) + '&per_page=100'
     req = urllib.request.Request(url, headers={
         'Authorization': f'token {GH_TOKEN}',
         'Accept': 'application/vnd.github.v3+json',
@@ -52,7 +53,14 @@ def gh_search(q):
     })
     try:
         with urllib.request.urlopen(req) as r:
-            return json.loads(r.read())['items']
+            data  = json.loads(r.read())
+            items = data['items']
+            # One page only. Say so rather than under-reporting in silence - the whole
+            # point of this summary is that nothing merged goes unmentioned.
+            if data.get('total_count', 0) > len(items):
+                print(f'  TRUNCATED: {data["total_count"]} results, showing {len(items)} | {q[:90]}')
+                truncated_sources.append((q, data['total_count'], len(items)))
+            return items
     except Exception as e:
         # 401/403 (token), 404/422 (org renamed, deleted, or not visible), 5xx, timeouts
         print(f'  SEARCH FAILED: {e} | {q[:90]}')
@@ -96,6 +104,11 @@ warn_line = ''
 if failed_sources:
     warn_line = ('\u26a0\ufe0f Could not read: ' + ', '.join(failed_sources) +
                  '\nThese are missing from this summary (org renamed, moved, or access changed).')
+if truncated_sources:
+    dropped = sum(t - n for _, t, n in truncated_sources)
+    warn_line += (('\n\n' if warn_line else '') +
+                  f'\u26a0\ufe0f {dropped} more merged PR(s) did not fit in one page of search '
+                  'results and are not counted here.')
 
 # Nothing merged anywhere.
 if total == 0:
@@ -116,6 +129,12 @@ if total == 0:
 
 # 2. Build per-area PR lists for Claude
 
+def repo_counts(prs):
+    counts = {}
+    for pr in prs:
+        counts.setdefault(pr['repository_url'].split('/')[-1], []).append(pr)
+    return counts
+
 def build_pr_text(prs):
     lines = []
     for pr in prs:
@@ -130,7 +149,8 @@ area_sections = []
 for area_key, orgs, label in AREAS:
     prs = area_prs[area_key]
     if prs:
-        area_sections.append(f'=== {label} ({len(prs)} PRs) ===\n{build_pr_text(prs)}')
+        breakdown = ', '.join(f'{r} {len(v)}' for r, v in sorted(repo_counts(prs).items()))
+        area_sections.append(f'=== {label} ({len(prs)} PRs across {breakdown}) ===\n{build_pr_text(prs)}')
 
 pr_text = '\n\n'.join(area_sections)
 
@@ -147,7 +167,7 @@ Write a summary with one section per project area that had activity.
 Each section has:
 - "area": the project area name exactly as shown (Astrid, Sphere, or Unicity Network)
 - "pr_count": number of PRs in that area
-- "themes": array of 1-3 themes, each with:
+- "themes": array of 1-4 themes, each with:
   - "title": short punchy title, max 8 words, plain text
   - "repos": comma-separated list of repo names involved (e.g. "astrid, sdk-rust, capsule-memory")
   - "description": 2-3 plain English sentences explaining what changed and why it matters. Mention specific repo names.
@@ -167,7 +187,9 @@ Respond ONLY with a valid JSON array, no markdown fences, no preamble:
 Rules:
 - Only include areas that have PRs
 - Skip pure chore/bump PRs unless they represent a meaningful version milestone
-- Max 3 themes per area
+- Max 4 themes per area
+- Every repo named in that area's header must appear in at least one theme's "repos".
+  A repo with only one or two PRs still gets named - do not let a busy repo crowd it out.
 - Title: max 60 chars, no special characters
 - Repos: just the short repo name(s), comma separated
 - Description: max 300 chars, plain text, no backticks, no asterisks"""
@@ -229,15 +251,26 @@ embeds = [{
     'color': 15158332 if failed_sources else 1941621   # red if degraded, else teal
 }]
 
-for area in areas_out:
-    area_name  = area.get('area', 'Update')
-    pr_count   = area.get('pr_count', '')
-    themes     = area.get('themes', [])
-    color      = AREA_COLORS.get(area_name, 6579300)
+# The areas and the PR counts come from AREAS and the search results, never from the
+# model: an area that merged PRs always gets an embed even if Claude omitted it, and
+# the count in the title is the one we counted. Claude only supplies the prose.
+by_area = {}
+for a in (areas_out if isinstance(areas_out, list) else []):
+    if isinstance(a, dict):
+        by_area[str(a.get('area', '')).strip().lower()] = a
+
+for area_key, orgs, label in AREAS:
+    prs = area_prs[area_key]
+    if not prs:
+        continue
+    themes = by_area.get(label.lower(), {}).get('themes') or []
+    color  = AREA_COLORS.get(label, 6579300)
 
     # Build description: one block per theme
     theme_blocks = []
-    for t in themes[:3]:
+    for t in themes[:4]:
+        if not isinstance(t, dict):
+            continue
         title  = t.get('title', '')
         repos  = t.get('repos', '')
         desc   = t.get('description', '')
@@ -248,16 +281,41 @@ for area in areas_out:
             block += f'\n{desc}'
         theme_blocks.append(block)
 
-    description = '\n\n'.join(theme_blocks)
+    # Coverage backstop. Themes are capped, so a repo in the minority of a busy area
+    # can be left out entirely - on 2026-08-25 semanticd took 7 of Unicity Network's
+    # 9 PRs and both aggregator-go PRs went unmentioned. Whatever the model skipped
+    # is listed verbatim rather than disappearing from the summary.
+    by_repo = repo_counts(prs)
+    blob    = ' '.join(theme_blocks).lower()
+    missing = [r for r in sorted(by_repo)
+               if not re.search(r'(?<![\w-])' + re.escape(r.lower()) + r'(?![\w-])', blob)]
+    if missing:
+        print(f'  {label}: themes omitted {", ".join(missing)} - listing explicitly')
+        lines_ = [f'[{r} #{pr["number"]}]({pr["html_url"]}) {cap(pr["title"], 90)} — @{pr["user"]["login"]}'
+                  for r in missing for pr in by_repo[r]]
+        shown = lines_[:12]
+        if len(lines_) > len(shown):
+            shown.append(f'...and {len(lines_) - len(shown)} more')
+        theme_blocks.append('**Also merged**\n' + '\n'.join(shown))
 
     embeds.append({
-        'title': cap(f'{area_name} \u2014 {pr_count} PRs', 256),
-        'description': cap(description, 4096),
+        'title': cap(f'{label} — {len(prs)} PRs', 256),
+        'description': cap('\n\n'.join(theme_blocks), 4096),
         'color': color
     })
 
-total_chars = sum(len(e.get('title','')) + len(e.get('description','')) for e in embeds)
-print(f'Embed count: {len(embeds)}, total chars: {total_chars}')
+# Discord rejects a payload whose embeds exceed 6000 characters in total. Trim the
+# longest description first so one busy area cannot silence the others.
+def embed_chars():
+    return sum(len(e.get('title', '')) + len(e.get('description', '')) for e in embeds)
+
+while embed_chars() > 5800:
+    biggest = max(embeds, key=lambda e: len(e.get('description', '')))
+    if len(biggest['description']) <= 300:
+        break
+    biggest['description'] = biggest['description'][:-220].rstrip().rstrip('.').rstrip() + '\n...'
+
+print(f'Embed count: {len(embeds)}, total chars: {embed_chars()}')
 
 discord_post({
     'username': 'Unicity Briefing',

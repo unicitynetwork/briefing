@@ -103,6 +103,29 @@ published "0 PRs, no activity" over a good page and exited 0. A stale correct pa
 fresh empty one. `403`/`429` are deliberately *not* fatal — they are usually rate limiting from the
 ~78-request sweep, and must not block an otherwise sound report.
 
+### The model writes prose, never facts (`discord_summary.py`)
+
+Areas, PR counts and repo coverage in the Discord embeds come from `AREAS` and the search
+results — never from the model's JSON. The render loop iterates `AREAS`, so an area that
+merged PRs gets an embed even if Claude omitted it entirely, and the count in the title is
+the one we counted, not `pr_count` from the response.
+
+Themes are capped (4 per area), so a repo in the minority of a busy area can still be left
+out of the prose. After rendering, each area's merged repos are diffed against the theme
+text; anything unmentioned is appended verbatim under **Also merged**. The check uses a
+word-boundary regex, not `in` — otherwise a theme naming `sphere-sdk` would mark `sphere`
+as covered.
+
+On 2026-08-25, `semanticd` took 7 of Unicity Network's 9 PRs and Haiku spent all three
+themes on it; both `aggregator-go` PRs vanished from the summary with no trace, while the
+HTML briefing (4 themes per org plus per-member narratives and a full timeline) reported
+them fine. The fetch was never the problem — the log said `Found 14 PRs`. Cross-check a
+"missing PR" report against the run log before suspecting the token or the search.
+
+`gh_search` reads one page and reports `total_count > len(items)` into `truncated_sources`,
+which appends a note to the embed. Under-reporting must be visible; that is the same
+principle as the `None` vs `[]` split above.
+
 ### Claude call configuration
 
 - **`thinking` is explicitly disabled on every call.** Sonnet 5 turns adaptive thinking on when the
