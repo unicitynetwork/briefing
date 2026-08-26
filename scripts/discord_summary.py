@@ -167,7 +167,7 @@ Write a summary with one section per project area that had activity.
 Each section has:
 - "area": the project area name exactly as shown (Astrid, Sphere, or Unicity Network)
 - "pr_count": number of PRs in that area
-- "themes": array of 1-4 themes, each with:
+- "themes": array of 1-6 themes, each with:
   - "title": short punchy title, max 8 words, plain text
   - "repos": comma-separated list of repo names involved (e.g. "astrid, sdk-rust, capsule-memory")
   - "description": 2-3 plain English sentences explaining what changed and why it matters. Mention specific repo names.
@@ -187,9 +187,16 @@ Respond ONLY with a valid JSON array, no markdown fences, no preamble:
 Rules:
 - Only include areas that have PRs
 - Skip pure chore/bump PRs unless they represent a meaningful version milestone
-- Max 4 themes per area
-- Every repo named in that area's header must appear in at least one theme's "repos".
-  A repo with only one or two PRs still gets named - do not let a busy repo crowd it out.
+- Max 6 themes per area. Use as many as the area's repos need.
+- An area is a GitHub org, not a product. One org holds unrelated projects: aggregator-go
+  is blockchain infrastructure, semanticd is agent security. They share an area and nothing
+  else, so they never share a theme.
+- A theme may span several repos only when those repos are one system changed together -
+  sphere, sphere-sdk and wallet-api are one wallet product, so a single theme covering them
+  is right. Merging unrelated repos to save a theme slot is wrong.
+- Prefer giving each repo its own theme. If a repo has no coherent theme worth writing,
+  leave it out entirely rather than bolting it onto an unrelated one - it gets listed
+  separately by the caller. A misleading grouping is worse than an omission.
 - Title: max 60 chars, no special characters
 - Repos: just the short repo name(s), comma separated
 - Description: max 300 chars, plain text, no backticks, no asterisks"""
@@ -268,7 +275,7 @@ for area_key, orgs, label in AREAS:
 
     # Build description: one block per theme
     theme_blocks = []
-    for t in themes[:4]:
+    for t in themes[:6]:
         if not isinstance(t, dict):
             continue
         title  = t.get('title', '')
@@ -281,10 +288,11 @@ for area_key, orgs, label in AREAS:
             block += f'\n{desc}'
         theme_blocks.append(block)
 
-    # Coverage backstop. Themes are capped, so a repo in the minority of a busy area
-    # can be left out entirely - on 2026-08-25 semanticd took 7 of Unicity Network's
-    # 9 PRs and both aggregator-go PRs went unmentioned. Whatever the model skipped
-    # is listed verbatim rather than disappearing from the summary.
+    # Coverage backstop. The prompt deliberately lets Claude drop a repo it cannot
+    # theme coherently, because the alternative is what it did on the first attempt at
+    # this fix: a single "Request timeouts and operator notifications" theme welding
+    # aggregator-go to semanticd purely to satisfy a coverage rule. Anything skipped is
+    # listed verbatim here, so omission is cheap and grab-bag themes are unnecessary.
     by_repo = repo_counts(prs)
     blob    = ' '.join(theme_blocks).lower()
     missing = [r for r in sorted(by_repo)

@@ -110,11 +110,26 @@ results — never from the model's JSON. The render loop iterates `AREAS`, so an
 merged PRs gets an embed even if Claude omitted it entirely, and the count in the title is
 the one we counted, not `pr_count` from the response.
 
-Themes are capped (4 per area), so a repo in the minority of a busy area can still be left
-out of the prose. After rendering, each area's merged repos are diffed against the theme
-text; anything unmentioned is appended verbatim under **Also merged**. The check uses a
-word-boundary regex, not `in` — otherwise a theme naming `sphere-sdk` would mark `sphere`
-as covered.
+After rendering, each area's merged repos are diffed against the theme text; anything
+unmentioned is appended verbatim under **Also merged**. The check uses a word-boundary
+regex, not `in` — otherwise a theme naming `sphere-sdk` would mark `sphere` as covered.
+
+**Do not turn that backstop into a coverage rule in the prompt.** The first fix told the
+model every repo *must* appear in a theme, with the cap at 4. It complied by welding
+unrelated projects together — `"Request timeouts and operator notifications" ::
+aggregator-go, semanticd`, one a blockchain aggregator and the other agent security.
+An area is a GitHub *org*, so unrelated products share one; the model needs room and
+permission to leave a repo alone. The prompt now caps at 6, forbids cross-product themes
+by name, and says outright that omission is preferred to a wrong grouping because the
+caller lists the remainder. Measured on 25 Aug data, 18 trials each:
+
+| prompt | runs with a cross-project theme |
+|---|---|
+| max 4 themes, every repo must appear | 4/18 |
+| max 6 themes, omission allowed, grouping forbidden | 0/18 |
+
+The backstop is what makes omission cheap; the prompt is what makes it preferred. Keep
+both — tightening either one alone brings back one of the two failure modes.
 
 On 2026-08-25, `semanticd` took 7 of Unicity Network's 9 PRs and Haiku spent all three
 themes on it; both `aggregator-go` PRs vanished from the summary with no trace, while the
