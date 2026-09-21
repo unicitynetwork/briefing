@@ -134,7 +134,12 @@ and Codewall. So:
   outright; otherwise one schema-enforced call sorts it from title, body and changed paths. Titles and
   board links were checked and neither is reliable on its own. Anything not specifically Codewall is
   SIF, which owns the shared engine — the product owner's call, not an accident. Each decision and its
-  reason is in the run log.
+  reason is in the run log. This one call runs with **adaptive thinking on** (the others keep it off):
+  without it Sonnet 5 sorted by where the code lives, not what it does, and filed Codewall's
+  enrolment work under SIF. Its `max_tokens` is raised to cover the thinking.
+- **Highlights are labelled** `new feature`, `major change` or `minor`, and `minor` ones are dropped
+  in code. Asking the model not to pad did not work — it still listed small fixes on a quiet week;
+  a legitimate place to put them does.
 - **Direct pushes come from the repository activity API**, which separates `push`/`force_push` from
   `pr_merge` and records who pushed and when. Commit dates cannot: a commit written Friday and pushed
   Monday belongs to Monday. Commits that turn out to belong to a merged PR are dropped. They are not

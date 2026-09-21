@@ -505,13 +505,17 @@ created = data.get('created', [])    # absent from data saved before creations w
 # Every call is schema-enforced (output_config.format): CLAUDE.md records the needs-attention
 # card rendering empty for months because free-form JSON broke on quotes inside PR titles.
 # Thinking is disabled for the same reason as in generate_briefing.py: max_tokens caps thinking
-# plus output together, and these are summarisation calls.
+# plus output together, and these are summarisation calls. The semanticd sort is the exception
+# (think=True): it is a judgement, and without thinking Sonnet 5 sorted by where code lives rather
+# than what it does - on 14-20 Sep 2026 it put Codewall's enrolment recovery (#347) and unenforced
+# fallback policy (#351) under SIF. Haiku 4.5 takes no adaptive thinking, so its fallback stays off.
 usage = Counter()
 models_used = Counter()
 
-def claude(prompt, schema, max_tokens=4000):
+def claude(prompt, schema, max_tokens=4000, think=False):
     for model in (args.model, HAIKU if args.model != HAIKU else SONNET):
-        body = {'model': model, 'max_tokens': max_tokens, 'thinking': {'type': 'disabled'},
+        thinking = {'type': 'adaptive'} if think and model != HAIKU else {'type': 'disabled'}
+        body = {'model': model, 'max_tokens': max_tokens, 'thinking': thinking,
                 'messages': [{'role': 'user', 'content': prompt}],
                 'output_config': {'format': {'type': 'json_schema', 'schema': schema}}}
         req = urllib.request.Request('https://api.anthropic.com/v1/messages',
@@ -549,8 +553,9 @@ SECTION_SCHEMA = {
     'properties': {
         'overview': {'type': 'string'},
         'highlights': {'type': 'array', 'items': {
-            'type': 'object', 'additionalProperties': False, 'required': ['title', 'text'],
-            'properties': {'title': {'type': 'string'}, 'text': {'type': 'string'}}}}}}
+            'type': 'object', 'additionalProperties': False, 'required': ['kind', 'title', 'text'],
+            'properties': {'kind': {'type': 'string', 'enum': ['new feature', 'major change', 'minor']},
+                           'title': {'type': 'string'}, 'text': {'type': 'string'}}}}}}
 
 GLANCE_SCHEMA = {
     'type': 'object', 'additionalProperties': False, 'required': ['bullets'],
@@ -588,16 +593,23 @@ def split_semanticd(items):
 Codewall: {PROJECT_DESC['Codewall']}
 SIF: {PROJECT_DESC['SIF']}
 
-Sort each change below into the product it serves. Answer Codewall only when the change is
-specifically for Codewall: enrolling machines, the fleet of enrolled endpoints, policy sent to
-or enforced on those machines, the Codewall console. Everything else is SIF, including work on
-the engine both products share (rules, policies, classifiers, database, CI, tests, docs,
-deployment). Changed-file counts under Codewall or SIF-only paths are strong evidence.
+Sort each change below into the product it serves. Judge by what the change does, not by where
+its code lives: Codewall's control plane, database and most of its logic sit in the shared engine,
+so a change that touches only shared code can still be Codewall's.
+
+Codewall: enrolling machines and recovering an enrolment, the fleet of enrolled machines, the
+policies sent to and enforced on those machines (including what a machine enforces when it has no
+policy of its own), and the Codewall console. Files under Codewall paths are evidence for
+Codewall; their absence is not evidence for SIF.
+
+SIF: the gateway that inspects AI traffic, its rules, rulesets, classifiers and policies, the SIF
+console, and work on the engine that serves both products equally (database, CI, tests, docs,
+deployment). When a change clearly serves both, answer SIF.
 
 Return every id exactly as written, with a reason of at most 12 words.
 
 {lines}"""
-    out = claude(prompt, SPLIT_SCHEMA, max_tokens=3000)
+    out = claude(prompt, SPLIT_SCHEMA, max_tokens=16000, think=True)
     if out is None:
         problems.append('semanticd changes could not be sorted between SIF and Codewall; all counted as SIF')
         return
@@ -669,22 +681,22 @@ This week's engineering record for {name} (written by engineers, often technical
 {record}
 
 Write:
-- "overview": 1-2 sentences on what this week brought for {name}.
-- "highlights": up to 4 new features or major changes, most important first. Each has
+- "overview": 1-2 sentences on what is new or changed for {name}. If nothing new or major
+  happened, say so plainly, e.g. "A quiet week: mostly small fixes."
+- "highlights": the week's changes, grouped, most important first, at most 8 items in all -
+  put minor work into one or two broad items rather than one per fix. Each has
+  - "kind", one of:
+    - "new feature": something people can now do or use that they could not before
+    - "major change": a significant change in how the product works, or a fix for a problem
+      people outside engineering actually noticed, such as users unable to send money or a
+      service going down repeatedly
+    - "minor": everything else - small fixes, polish, speed-ups, documentation, tests, build and
+      release tooling, refactors, dependency updates, internal clean-up
   - "title": at most 8 plain words
   - "text": 1-2 sentences: what is new or different now, and why it matters to someone who uses
     or depends on {name}.
-
-What belongs:
-- New features, new apps or products, new things people can do, and changes big enough that users
-  or partners would notice: a launch, a new way of working, a significant change in how the
-  product behaves.
-- Leave out bug fixes, polish, speed-ups, documentation, tests, build and release tooling,
-  refactors, dependency updates and internal clean-up. Mention a fix only if the problem was big
-  enough that people outside engineering would have noticed it, and then briefly.
-- Group related changes into one highlight.
-- If nothing new or major happened, say that in one plain sentence and return no highlights.
-  Do not pad.
+  Only "new feature" and "major change" items are shown, at most four; "minor" ones are dropped.
+  Label honestly - a small fix marked "major change" puts noise in front of readers.
 
 How to write:
 - Plain words for someone who does not work in software. No repo, file, package, function or
@@ -700,9 +712,14 @@ for name, _ in PROJECTS:
         continue
     print(f'Writing {name} ({len(b["prs"])} PRs, {len(b["direct"])} direct commits, '
           f'{len(b["releases"])} releases, {len(b["created"])} new repos)')
-    out = claude(section_prompt(name, b), SECTION_SCHEMA)
+    out = claude(section_prompt(name, b), SECTION_SCHEMA, max_tokens=8000)
     if out is None:
         problems.append(f'{name}: the summary could not be written')
+    else:
+        minor = [h['title'] for h in out['highlights'] if h.get('kind') == 'minor']
+        out['highlights'] = [h for h in out['highlights'] if h.get('kind') != 'minor'][:4]
+        if minor:
+            print(f'  {name}: left out {len(minor)} minor item(s): ' + '; '.join(minor))
     sections[name] = out
 
 glance = None
@@ -755,7 +772,7 @@ for name, desc in PROJECTS:
         s = sections[name]
         L += [md(s['overview']), '']
         if s['highlights']:
-            L += [f'- **{md(h["title"])}.** {md(h["text"])}' for h in s['highlights'][:4]] + ['']
+            L += [f'- **{md(h["title"])}.** {md(h["text"])}' for h in s['highlights']] + ['']
 
 model_note = ', '.join(sorted(models_used)) or 'none'
 L += ['---', f'<sub>Generated {now:%-d %B %Y} from the team\'s GitHub activity \u00b7 {model_note}</sub>', '']
