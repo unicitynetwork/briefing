@@ -1,0 +1,35 @@
+name: Weekly project summary
+
+on:
+  workflow_dispatch:   # manual for now; run any day to report the previous full Mon–Sun week
+    inputs:
+      week_of:
+        description: 'Any date inside the week to report, YYYY-MM-DD. Leave empty for the previous full week.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read   # only checks out the script; the report leaves as a run artifact
+
+jobs:
+  summarise:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write weekly summary
+        env:
+          # Reads only, across all four orgs and their private repos.
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          WEEK_OF: ${{ inputs.week_of }}   # via env, never interpolated into the shell
+        run: python3 scripts/weekly_summary.py ${WEEK_OF:+--week-of "$WEEK_OF"}
+      # An incomplete report still carries its own warning banner and the script exits 1, so
+      # upload whatever was written; the run stays red either way.
+      - name: Upload report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-summary
+          path: weekly-*.md
+          if-no-files-found: warn
