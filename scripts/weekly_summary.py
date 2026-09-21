@@ -696,7 +696,9 @@ Write:
   - "text": 1-2 sentences: what is new or different now, and why it matters to someone who uses
     or depends on {name}.
   Only "new feature" and "major change" items are shown, at most four; "minor" ones are dropped.
-  Label honestly - a small fix marked "major change" puts noise in front of readers.
+  Label honestly - a small fix marked "major change" puts noise in front of readers. Work on tests,
+  builds, CI or other engineering tooling is always "minor", however much of it there was, and so
+  is cosmetic polish. A short list, or none, is the right answer for a quiet week.
 
 How to write:
 - Plain words for someone who does not work in software. No repo, file, package, function or
