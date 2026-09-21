@@ -132,7 +132,13 @@ and Codewall. So:
 - **Direct pushes come from the repository activity API**, which separates `push`/`force_push` from
   `pr_merge` and records who pushed and when. Commit dates cannot: a commit written Friday and pushed
   Monday belongs to Monday. Commits that turn out to belong to a merged PR are dropped. Bot-authored
-  commits are listed apart from human pushes.
+  commits are listed apart from human pushes. A default branch's first push arrives as
+  `branch_creation`, with no previous head to compare, so it is reported as one event (commit count,
+  newest few listed) and kept out of the commit totals — a repo imported with hundreds of commits of
+  local history would otherwise swamp them. New repos start this way, often several a week. But
+  `branch_creation` also covers a branch made from existing commits and set as default, where nothing
+  was pushed, and the feed cannot tell them apart; so only a creation within 7 days of the repo's own
+  creation is reported as a first push. Any other is logged, not listed.
 - **Releases** come from a GraphQL scan of *every* org repo — publishing a release from an existing
   tag is not a push, so the pushed-this-week list would miss it — *and* from `chore: release vX.Y.Z`
   titles, because `sphere-sdk` tags versions without ever creating a GitHub Release.

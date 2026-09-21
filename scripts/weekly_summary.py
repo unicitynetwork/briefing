@@ -291,13 +291,36 @@ def in_merged_pr(repo, branch, shas):
                 hit.add(s)
     return hit
 
+# A new repo's first push arrives as `branch_creation` (never as a push with an all-zero `before`),
+# with no previous head to compare against, so its history cannot be listed commit by commit. It is
+# recorded as one event with its commit count and newest commits, and kept out of the commit totals:
+# a repo imported with 500 commits of local history would otherwise swamp them.
+# `branch_creation` also covers a branch made from existing commits in the UI and then set as the
+# default, where nothing was pushed at all. The two look the same in the feed, so only a creation
+# within NEW_REPO_GRACE of the repo's own creation counts as a first push; any other is logged.
+NEW_REPO_GRACE = timedelta(days=7)
+CREATION_Q = '''query($o: String!, $n: String!, $oid: GitObjectID!) { repository(owner: $o, name: $n) {
+  object(oid: $oid) { ... on Commit { history(first: 5) { totalCount
+    nodes { oid messageHeadline url author { name user { login } } } } } } } }'''
+
+def read_creation(repo, branch, a):
+    owner, name = repo.split('/')
+    h = gh_graphql(CREATION_Q, {'o': owner, 'n': name, 'oid': a['after']})['repository']['object']['history']
+    return {'repo': repo, 'branch': branch, 'at': a['timestamp'], 'commits': h['totalCount'],
+            'pusher': (a.get('actor') or {}).get('login') or 'unknown',
+            'latest': [{'sha': c['oid'], 'title': c['messageHeadline'], 'url': c['url'],
+                        'author': ((c.get('author') or {}).get('user') or {}).get('login')
+                                  or (c.get('author') or {}).get('name') or 'unknown'}
+                       for c in h['nodes']]}
+
 def collect_direct(repos):
+    """(commits pushed without a PR, default branches created by a push) for the week."""
     age = now - week_start
     period = 'month' if age < timedelta(days=28) else 'quarter' if age < timedelta(days=88) else 'year'
     if age > timedelta(days=360):
         problems.append('direct pushes are only kept for a year and were not checked for this week')
-        return []
-    commits = []
+        return [], []
+    commits, creations = [], []
     for r in repos:
         repo, branch = r['full_name'], r['default_branch']
         try:
@@ -310,19 +333,29 @@ def collect_direct(repos):
             continue
         if len(feed) >= 50 * 100 and ts(feed[-1]['timestamp']) >= week_start:
             problems.append(f'{repo}: push history too long to reach this week, direct pushes may be missing')
-        pushes = [a for a in feed if a['activity_type'] in ('push', 'force_push') and in_week(a['timestamp'])]
+        week = [a for a in feed if in_week(a['timestamp'])]
+        for a in week:
+            if a['activity_type'] == 'branch_creation' or (
+                    a['activity_type'] in ('push', 'force_push') and set(a['before']) == {'0'}):
+                if not r.get('created_at') or ts(a['timestamp']) - ts(r['created_at']) > NEW_REPO_GRACE:
+                    print(f'{repo}: {branch} created from existing history, not a first push - not listed')
+                    continue
+                try:
+                    creations.append(read_creation(repo, branch, a))
+                    print(f'{repo}: {branch} created by a push of {creations[-1]["commits"]} commit(s)')
+                except Exception as e:
+                    problems.append(f'{repo}: the push that created {branch} could not be read')
+                    print(f'  creation read failed for {repo}: {e}')
+        pushes = [a for a in week if a['activity_type'] in ('push', 'force_push') and set(a['before']) != {'0'}]
         found = []
         for a in pushes:
             pusher = (a.get('actor') or {}).get('login') or 'unknown'
             try:
-                if set(a['before']) == {'0'}:
-                    raw = [gh_get(f'/repos/{repo}/commits/{a["after"]}')[0]]
-                else:
-                    cmp = gh_get(f'/repos/{repo}/compare/{a["before"]}...{a["after"]}')[0]
-                    raw = cmp['commits']
-                    if cmp.get('total_commits', 0) > len(raw):
-                        problems.append(f'{repo}: a push of {cmp["total_commits"]} commits, only '
-                                        f'{len(raw)} are listed')
+                cmp = gh_get(f'/repos/{repo}/compare/{a["before"]}...{a["after"]}')[0]
+                raw = cmp['commits']
+                if cmp.get('total_commits', 0) > len(raw):
+                    problems.append(f'{repo}: a push of {cmp["total_commits"]} commits, only '
+                                    f'{len(raw)} are listed')
             except Exception as e:
                 # A force push can leave `before` unreachable. List the new head, and say that any
                 # other commits in the push are missing rather than letting the report look complete.
@@ -361,7 +394,7 @@ def collect_direct(repos):
         if found:
             print(f'{repo}: {len(found)} commit(s) pushed straight to {branch}')
         commits.extend(found)
-    return commits
+    return commits, creations
 
 # ── 6. Releases ───────────────────────────────────────────────────────────────────────────────
 # Every repo, not only those pushed this week: publishing a release from an existing tag is not a
@@ -446,17 +479,18 @@ else:
     prs = collect_prs()
     repos = active_repos()
     print(f'Repos pushed to this week: {len(repos)}')
-    direct = collect_direct(repos)
+    direct, created = collect_direct(repos)
     releases = collect_releases()
     split_evidence(prs)
     data = {'week': [week_start.isoformat(), week_end.isoformat()], 'prs': prs,
-            'direct': direct, 'releases': releases, 'problems': list(problems)}
+            'direct': direct, 'created': created, 'releases': releases, 'problems': list(problems)}
     if args.save_data:
         with open(args.save_data, 'w') as f:
             json.dump(data, f, indent=1)
         print(f'Saved collected data to {args.save_data}')
 
 prs, direct, releases = data['prs'], data['direct'], data['releases']
+created = data.get('created', [])    # absent from data saved before creations were tracked
 
 # Not every repo publishes a GitHub Release: sphere-sdk tags versions from a CI-pushed
 # "chore: release v0.17.3" commit and nothing else. Same title rule as the daily scripts.
@@ -585,16 +619,24 @@ Return every id exactly as written, with a reason of at most 12 words.
 
 split_semanticd([it for it in prs + direct if it['repo'] == SPLIT_REPO])
 
-buckets = {name: {'prs': [], 'direct': [], 'releases': []} for name, _ in PROJECTS}
+buckets = {name: {'prs': [], 'direct': [], 'releases': [], 'created': []} for name, _ in PROJECTS}
 for p in prs:
     buckets[p.get('project') or project_of(p['repo'])]['prs'].append(p)
 for c in direct:
     buckets[c.get('project') or project_of(c['repo'])]['direct'].append(c)
 for r in releases:
     buckets[project_of(r['repo'])]['releases'].append(r)
+for c in created:
+    buckets[project_of(c['repo'])]['created'].append(c)
 
 def short(repo):
     return repo.split('/')[1]
+
+def plural(n, word):
+    return f'{n} {word}{"" if n == 1 else "s"}'
+
+def creation_fact(c):
+    return f'new repo {short(c["repo"])} ({plural(c["commits"], "commit")})'
 
 def section_prompt(name, b):
     lines = [f'- Release of {short(r["repo"])} {r["tag"]}'
@@ -603,6 +645,9 @@ def section_prompt(name, b):
     lines += [f'- Merged in {short(p["repo"])}: "{p["title"]}" | {p["body"]}' for p in b['prs']]
     lines += [f'- Pushed straight to {short(c["repo"])}: "{c["title"]}" | {c["body"]}'
               for c in b['direct']]
+    lines += [f'- New repository {short(c["repo"])}, first pushed with {plural(c["commits"], "commit")}'
+              + '; newest: ' + '; '.join(f'"{l["title"]}"' for l in c['latest'][:3])
+              for c in b['created']]
     record = '\n'.join(lines)
     return f"""You are writing one section of the weekly update on the Unicity project. The readers are
 not engineers: leadership, partners, investors and community members. They want to know what
@@ -635,7 +680,7 @@ Rules:
 sections = {}
 for name, _ in PROJECTS:
     b = buckets[name]
-    if not (b['prs'] or b['direct'] or b['releases']):
+    if not (b['prs'] or b['direct'] or b['releases'] or b['created']):
         continue
     print(f'Writing {name} ({len(b["prs"])} PRs, {len(b["direct"])} direct commits, '
           f'{len(b["releases"])} releases)')
@@ -668,10 +713,8 @@ def md(s):
     s = s.replace('\\', '\\\\').replace('<', '&lt;').replace('>', '&gt;')
     return re.sub(r'([*_`\[\]|])', r'\\\1', s)
 
-def plural(n, word):
-    return f'{n} {word}{"" if n == 1 else "s"}'
-
-people = {it['author'] for it in prs + direct if not it['bot']}
+people = ({it['author'] for it in prs + direct if not it['bot']}
+          | {c['pusher'] for c in created if not is_bot(c['pusher'], '')})
 human_direct = [c for c in direct if not c['bot']]
 active = [n for n, _ in PROJECTS if n in sections]
 totals = [f'**{len(prs)}** pull requests merged across {plural(len(active), "project")}']
@@ -705,22 +748,33 @@ for name, desc in PROJECTS:
     facts = [plural(len(b['prs']), 'pull request') + ' merged']
     if b['direct']:
         facts.append(f'{len(b["direct"])} pushed without a pull request')
+    facts += [creation_fact(c) for c in b['created']]
     facts += [f'released {short(r["repo"])} [{md(r["tag"])}]({r["url"]})' for r in b['releases']]
-    facts.append('by repo: ' + ', '.join(f'{r} {n}' for r, n in repo_n.most_common()))
+    if repo_n:    # empty when a new repo is the project's only activity; its fact is above
+        facts.append('by repo: ' + ', '.join(f'{r} {n}' for r, n in repo_n.most_common()))
     L += ['<sub>' + ' · '.join(facts) + '</sub>', '']
     s = sections[name]
     if s is None:
         L += ['*Summary unavailable this week. What changed:*', '']
         L += [f'- {md(it["title"])} ({short(it["repo"])})' for it in b['prs'] + b['direct']]
+        L += [f'- {creation_fact(c)}' for c in b['created']]
         L += ['']
         continue
     L += [md(s['overview']), '']
     L += [f'- **{md(h["title"])}.** {md(h["text"])}' for h in s['highlights'][:5]]
     L += ['']
 
-if direct:
+if direct or created:
     L += ['## Pushed without a pull request',
           "These commits reached a repository's main branch directly, bypassing review.", '']
+    if created:
+        L += ['**New repositories, first pushed directly**', '']
+        for c in sorted(created, key=lambda c: c['at']):
+            L += [f'- **{short(c["repo"])}** — {plural(c["commits"], "commit")}, pushed by {md(c["pusher"])}']
+            L += [f'  - [`{l["sha"][:7]}`]({l["url"]}) {md(l["title"])}' for l in c['latest'][:3]]
+            if c['commits'] > 3:
+                L += [f'  - …and {c["commits"] - min(3, len(c["latest"]))} earlier']
+        L += ['']
     for label, group in (('', human_direct), ('Automated', [c for c in direct if c['bot']])):
         if not group:
             continue
