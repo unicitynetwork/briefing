@@ -549,13 +549,15 @@ SPLIT_SCHEMA = {
                        'reason': {'type': 'string'}}}}}}
 
 SECTION_SCHEMA = {
-    'type': 'object', 'additionalProperties': False, 'required': ['overview', 'highlights'],
+    'type': 'object', 'additionalProperties': False, 'required': ['highlights', 'overview'],
     'properties': {
-        'overview': {'type': 'string'},
+        # Highlights first: output follows schema order, so every item is labelled before the
+        # overview is written, and the overview can then sum up only the items that are kept.
         'highlights': {'type': 'array', 'items': {
             'type': 'object', 'additionalProperties': False, 'required': ['kind', 'title', 'text'],
             'properties': {'kind': {'type': 'string', 'enum': ['new feature', 'major change', 'minor']},
-                           'title': {'type': 'string'}, 'text': {'type': 'string'}}}}}}
+                           'title': {'type': 'string'}, 'text': {'type': 'string'}}}},
+        'overview': {'type': 'string'}}}
 
 GLANCE_SCHEMA = {
     'type': 'object', 'additionalProperties': False, 'required': ['bullets'],
@@ -680,9 +682,7 @@ Week: {week_label}
 This week's engineering record for {name} (written by engineers, often technical):
 {record}
 
-Write:
-- "overview": 1-2 sentences on what is new or changed for {name}. If nothing new or major
-  happened, say so plainly, e.g. "A quiet week: mostly small fixes."
+Write, in this order:
 - "highlights": the week's changes, grouped, most important first, at most 8 items in all -
   put minor work into one or two broad items rather than one per fix. Each has
   - "kind", one of:
@@ -699,6 +699,9 @@ Write:
   Label honestly - a small fix marked "major change" puts noise in front of readers. Work on tests,
   builds, CI or other engineering tooling is always "minor", however much of it there was, and so
   is cosmetic polish. A short list, or none, is the right answer for a quiet week.
+- "overview": 1-2 sentences summing up only the "new feature" and "major change" items above.
+  Do not mention anything marked "minor", or that other work happened. If there are none, say in
+  one sentence that it was a quiet week with no new features or major changes.
 
 How to write:
 - Plain words for someone who does not work in software. No repo, file, package, function or
@@ -725,10 +728,10 @@ for name, _ in PROJECTS:
     sections[name] = out
 
 glance = None
-written = {n: s for n, s in sections.items() if s}
+# Built from the kept highlights only - not the overviews - so minor work cannot reach the top.
+written = {n: s for n, s in sections.items() if s and s['highlights']}
 if written:
-    digest = '\n\n'.join(f'{n}: {s["overview"]}\n' + '\n'.join(f'- {h["title"]}: {h["text"]}'
-                                                             for h in s['highlights'])
+    digest = '\n\n'.join(f'{n}:\n' + '\n'.join(f'- {h["title"]}: {h["text"]}' for h in s['highlights'])
                          for n, s in written.items())
     out = claude(f"""Below are this week's per-project sections of the Unicity weekly update, written for
 readers who are not engineers.
