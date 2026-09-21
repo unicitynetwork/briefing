@@ -270,9 +270,10 @@ def active_repos():
         except Exception as e:
             problems.append(f'{full}: could not be read, direct pushes not checked')
             print(f'  {full} failed: {e}')
+    # Archived repos stay in: one archived after the week still had its pushes in it, and PR search
+    # and the release scan include archived repos too.
     return [r for r in repos
-            if not r.get('archived') and r.get('pushed_at') and ts(r['pushed_at']) >= week_start
-            and not ignored(r['full_name'])]
+            if r.get('pushed_at') and ts(r['pushed_at']) >= week_start and not ignored(r['full_name'])]
 
 def in_merged_pr(repo, branch, shas):
     """SHAs that belong to a PR merged into `branch` - someone merged locally and pushed."""
@@ -323,10 +324,13 @@ def collect_direct(repos):
                         problems.append(f'{repo}: a push of {cmp["total_commits"]} commits, only '
                                         f'{len(raw)} are listed')
             except Exception as e:
-                # A force push can leave `before` unreachable; the new head is still worth listing.
+                # A force push can leave `before` unreachable. List the new head, and say that any
+                # other commits in the push are missing rather than letting the report look complete.
                 print(f'  compare failed for {repo} {a["before"][:7]}..{a["after"][:7]}: {e}')
                 try:
                     raw = [gh_get(f'/repos/{repo}/commits/{a["after"]}')[0]]
+                    problems.append(f'{repo}: a push at {a["timestamp"]} could only be read up to its '
+                                    'newest commit, earlier commits in it are not listed')
                 except Exception as e:
                     problems.append(f'{repo}: a push at {a["timestamp"]} could not be read')
                     print(f'  commit {a["after"][:7]} failed: {e}')
