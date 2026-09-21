@@ -323,6 +323,8 @@ def collect_direct(repos):
     commits, creations = [], []
     for r in repos:
         repo, branch = r['full_name'], r['default_branch']
+        if r.get('created_at') and ts(r['created_at']) >= week_end:
+            continue    # created after the week, so nothing in it was pushed during the week
         try:
             feed = gh_list(f'/repos/{repo}/activity?' + urllib.parse.urlencode(
                                {'ref': f'refs/heads/{branch}', 'time_period': period, 'per_page': 100}),
@@ -333,6 +335,12 @@ def collect_direct(repos):
             continue
         if len(feed) >= 50 * 100 and ts(feed[-1]['timestamp']) >= week_start:
             problems.append(f'{repo}: push history too long to reach this week, direct pushes may be missing')
+        # Only the current default branch is read; which branch was default in a past week is not
+        # recorded anywhere. If the current one was created after the week, it was not the default
+        # then, and pushes to the branch that was are not checked - say so.
+        if any(a['activity_type'] == 'branch_creation' and ts(a['timestamp']) >= week_end for a in feed):
+            problems.append(f'{repo}: {branch} became the default branch after this week, so pushes '
+                            'to the branch that was default then are not checked')
         week = [a for a in feed if in_week(a['timestamp'])]
         for a in week:
             if a['activity_type'] == 'branch_creation' or (
@@ -492,21 +500,6 @@ else:
 prs, direct, releases = data['prs'], data['direct'], data['releases']
 created = data.get('created', [])    # absent from data saved before creations were tracked
 
-# Not every repo publishes a GitHub Release: sphere-sdk tags versions from a CI-pushed
-# "chore: release v0.17.3" commit and nothing else. Same title rule as the daily scripts.
-def version_key(repo, tag):
-    return (repo, tag.lstrip('v'))
-
-seen = {version_key(r['repo'], r['tag']) for r in releases}
-for it in prs + direct:
-    if not re.search(r'^chore(\([^)]*\))?!?:\s*release\b|\brelease\s+v\d', it['title'], re.I):
-        continue
-    m = re.search(r'\bv?\d+\.\d+\.\d+(?:-[\w.]+)?', it['title'])
-    if m and version_key(it['repo'], m.group()) not in seen:
-        seen.add(version_key(it['repo'], m.group()))
-        releases.append({'repo': it['repo'], 'tag': m.group(), 'url': it['url'], 'name': it['title'],
-                         'prerelease': '-' in m.group(), 'notes': it['body']})
-print(f'Merged PRs: {len(prs)}, direct commits: {len(direct)}, releases: {len(releases)}')
 
 # ── 7. Claude ─────────────────────────────────────────────────────────────────────────────────
 # Every call is schema-enforced (output_config.format): CLAUDE.md records the needs-attention
@@ -619,13 +612,31 @@ Return every id exactly as written, with a reason of at most 12 words.
 
 split_semanticd([it for it in prs + direct if it['repo'] == SPLIT_REPO])
 
+# Not every repo publishes a GitHub Release: sphere-sdk tags versions from a CI-pushed
+# "chore: release v0.17.3" commit and nothing else. Same title rule as the daily scripts. Runs after
+# the semanticd sort so a release inferred from a change lands in that change's project.
+def version_key(repo, tag):
+    return (repo, tag.lstrip('v'))
+
+seen = {version_key(r['repo'], r['tag']) for r in releases}
+for it in prs + direct:
+    if not re.search(r'^chore(\([^)]*\))?!?:\s*release\b|\brelease\s+v\d', it['title'], re.I):
+        continue
+    m = re.search(r'\bv?\d+\.\d+\.\d+(?:-[\w.]+)?', it['title'])
+    if m and version_key(it['repo'], m.group()) not in seen:
+        seen.add(version_key(it['repo'], m.group()))
+        releases.append({'repo': it['repo'], 'tag': m.group(), 'url': it['url'], 'name': it['title'],
+                         'prerelease': '-' in m.group(), 'notes': it['body'],
+                         'project': it.get('project')})
+print(f'Merged PRs: {len(prs)}, direct commits: {len(direct)}, releases: {len(releases)}')
+
 buckets = {name: {'prs': [], 'direct': [], 'releases': [], 'created': []} for name, _ in PROJECTS}
 for p in prs:
     buckets[p.get('project') or project_of(p['repo'])]['prs'].append(p)
 for c in direct:
     buckets[c.get('project') or project_of(c['repo'])]['direct'].append(c)
 for r in releases:
-    buckets[project_of(r['repo'])]['releases'].append(r)
+    buckets[r.get('project') or project_of(r['repo'])]['releases'].append(r)
 for c in created:
     buckets[project_of(c['repo'])]['created'].append(c)
 
@@ -716,8 +727,8 @@ def md(s):
 people = ({it['author'] for it in prs + direct if not it['bot']}
           | {c['pusher'] for c in created if not is_bot(c['pusher'], '')})
 human_direct = [c for c in direct if not c['bot']]
-active = [n for n, _ in PROJECTS if n in sections]
-totals = [f'**{len(prs)}** pull requests merged across {plural(len(active), "project")}']
+pr_projects = sum(1 for n, _ in PROJECTS if buckets[n]['prs'])
+totals = [f'**{len(prs)}** pull requests merged across {plural(pr_projects, "project")}']
 if direct:
     totals.append(f'**{len(human_direct)}** commits pushed without a pull request'
                   + (f' (+{len(direct) - len(human_direct)} automated)' if len(direct) > len(human_direct) else ''))
