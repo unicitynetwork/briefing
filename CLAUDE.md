@@ -118,6 +118,12 @@ fresh empty one. `403`/`429` are deliberately *not* fatal — they are usually r
 
 ### `weekly_summary.py` groups by project, not by org
 
+**The audience is not engineers.** The report is new features and major changes, in plain words, per
+project — nothing else. The repo owner removed the PR/commit/contributor counts, the per-repo counts,
+the direct-push listing and the full list of merged PRs as noise for this audience, and the prompt tells
+the model to leave out bug fixes, polish, docs, tests and version numbers. Do not add engineering
+detail back to the rendered file; everything below feeds the model, not the page.
+
 Readers outside engineering think in products, and orgs do not map onto them: Codewall lives in
 `unicity-aos`, Sphere's Nostr relays live in `unicitynetwork`, and `semanticd` is the backend of both SIF
 and Codewall. So:
@@ -131,21 +137,21 @@ and Codewall. So:
   reason is in the run log.
 - **Direct pushes come from the repository activity API**, which separates `push`/`force_push` from
   `pr_merge` and records who pushed and when. Commit dates cannot: a commit written Friday and pushed
-  Monday belongs to Monday. Commits that turn out to belong to a merged PR are dropped. Bot-authored
-  commits are listed apart from human pushes. A default branch's first push arrives as
-  `branch_creation`, with no previous head to compare, so it is reported as one event (commit count,
-  newest few listed) and kept out of the commit totals — a repo imported with hundreds of commits of
-  local history would otherwise swamp them. New repos start this way, often several a week. But
-  `branch_creation` also covers a branch made from existing commits and set as default, where nothing
-  was pushed, and the feed cannot tell them apart; so only a creation within 7 days of the repo's own
-  creation is reported as a first push. Any other is logged, not listed.
+  Monday belongs to Monday. Commits that turn out to belong to a merged PR are dropped. They are not
+  listed in the report; they go to the model with the PRs, so work that skipped review is still
+  summarised. A default branch's first push arrives as `branch_creation`, with no previous head to
+  compare, so it goes to the model as one event (commit count, newest few) — a repo imported with
+  hundreds of commits of local history would otherwise swamp its project's input. New repos start this
+  way, often several a week. But `branch_creation` also covers a branch made from existing commits and
+  set as default, where nothing was pushed, and the feed cannot tell them apart; so only a creation
+  within 7 days of the repo's own creation counts as a first push. Any other is logged.
 - **Releases** come from a GraphQL scan of *every* org repo — publishing a release from an existing
   tag is not a push, so the pushed-this-week list would miss it — *and* from `chore: release vX.Y.Z`
   titles, because `sphere-sdk` tags versions without ever creating a GitHub Release.
 - The week is Monday–Sunday in `Europe/Tallinn`, weekend included. Merged-PR search is paginated — a
   week passes 100 per org, which the daily scripts never need to handle.
 - Failure handling follows `discord_summary.py`: an unreadable source is shown at the top of the file
-  and the script exits 1; a 401 aborts. A failed section call falls back to a plain list of changes.
+  and the script exits 1; a 401 aborts. A failed section call says so in that project's section.
 
 The model choice (Sonnet 5) was measured against Haiku 4.5 and Opus 5 on real data; the numbers are in
 the comment above `SONNET` in the script. Re-measure before changing it.
