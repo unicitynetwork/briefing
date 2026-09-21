@@ -5,8 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this repo is
 
 A self-updating GitHub Pages site (https://unicitynetwork.github.io/briefing/) that publishes a daily
-engineering briefing for the Unicity project, plus a daily Discord summary. There is no application
-here — just two standalone Python generators and the GitHub Actions cron jobs that run them.
+engineering briefing for the Unicity project, plus a daily Discord summary and a weekly per-project
+summary for non-engineers. There is no application here — just three standalone Python generators and
+the GitHub Actions jobs that run them: two on cron, and the weekly one by hand (`workflow_dispatch`),
+which publishes nothing and uploads its Markdown as a run artifact.
 
 `index.html` is a **build artifact**, not source. It is regenerated wholesale by
 `scripts/generate_briefing.py` and pushed straight to `main`. Never hand-edit it — edit the generator's
@@ -14,7 +16,7 @@ CSS/render functions instead, or the change is silently overwritten on the next 
 
 ## Commands
 
-There is no build, no package manager, no dependency file, no test suite, and no linter. Both scripts are
+There is no build, no package manager, no dependency file, no test suite, and no linter. All scripts are
 pure Python 3 stdlib (`urllib.request`, `json`, `re`, `base64`) — the workflows run `python3 script.py`
 with no `pip install` step. Keep it that way; adding a third-party import breaks CI.
 
@@ -23,10 +25,20 @@ with no `pip install` step. Keep it that way; adding a third-party import breaks
 GH_TOKEN=... ANTHROPIC_API_KEY=... python3 scripts/generate_briefing.py
 GH_TOKEN=... ANTHROPIC_API_KEY=... DISCORD_WEBHOOK=... python3 scripts/discord_summary.py
 
-# Trigger a real run in CI (both workflows have workflow_dispatch)
+# Weekly summary: reads only, writes weekly-<monday>_<sunday>.md for the last full week
+GH_TOKEN=... ANTHROPIC_API_KEY=... python3 scripts/weekly_summary.py [--week-of YYYY-MM-DD]
+# Snapshot the GitHub reads once, then iterate on prompts/models against identical input
+... python3 scripts/weekly_summary.py --save-data week.json
+... python3 scripts/weekly_summary.py --load-data week.json --model claude-opus-5
+
+# Trigger a real run in CI (all workflows have workflow_dispatch)
 gh workflow run generate-briefing.yml
 gh workflow run discord-summary.yml
 gh run list --workflow=generate-briefing.yml
+
+# Weekly summary: any day of the week reports the previous full Mon–Sun week (Europe/Tallinn)
+gh workflow run weekly-summary.yml                       # or -f week_of=2026-09-14 for a past week
+gh run download --name weekly-summary                    # latest run's weekly-<monday>_<sunday>.md
 ```
 
 ### Running `generate_briefing.py` locally overwrites the live site
@@ -57,7 +69,8 @@ run. `git pull` before touching anything.
 | Output | Full HTML page pushed to `main` | Discord embeds via webhook |
 
 They duplicate the org list, member handles, area labels and color values. **A change to the tracked orgs
-or team roster must be applied to both files.**
+or team roster must be applied to both files** — and to `weekly_summary.py`'s `ORGS`/`ORG_PROJECT`, which
+additionally tracks `unicity-concierge`.
 
 ### `generate_briefing.py` flow
 
@@ -102,6 +115,34 @@ empty `GH_PAT` made every call 401, each section degraded to empty exactly as de
 published "0 PRs, no activity" over a good page and exited 0. A stale correct page plus a red run beats a
 fresh empty one. `403`/`429` are deliberately *not* fatal — they are usually rate limiting from the
 ~78-request sweep, and must not block an otherwise sound report.
+
+### `weekly_summary.py` groups by project, not by org
+
+Readers outside engineering think in products, and orgs do not map onto them: Codewall lives in
+`unicity-aos`, Sphere's Nostr relays live in `unicitynetwork`, and `semanticd` is the backend of both SIF
+and Codewall. So:
+
+- **Repo → project is code, never the model.** `ORG_PROJECT` gives each org a default, `REPO_PROJECT`
+  overrides it. A new repo lands in its org's project, so it is reported rather than dropped.
+- **`semanticd` is sorted per change.** A `(codewall)`/`(sif)` conventional-commit scope decides
+  outright; otherwise one schema-enforced call sorts it from title, body and changed paths. Titles and
+  board links were checked and neither is reliable on its own. Anything not specifically Codewall is
+  SIF, which owns the shared engine — the product owner's call, not an accident. Each decision and its
+  reason is in the run log.
+- **Direct pushes come from the repository activity API**, which separates `push`/`force_push` from
+  `pr_merge` and records who pushed and when. Commit dates cannot: a commit written Friday and pushed
+  Monday belongs to Monday. Commits that turn out to belong to a merged PR are dropped. Bot-authored
+  commits are listed apart from human pushes.
+- **Releases** come from a GraphQL scan of *every* org repo — publishing a release from an existing
+  tag is not a push, so the pushed-this-week list would miss it — *and* from `chore: release vX.Y.Z`
+  titles, because `sphere-sdk` tags versions without ever creating a GitHub Release.
+- The week is Monday–Sunday in `Europe/Tallinn`, weekend included. Merged-PR search is paginated — a
+  week passes 100 per org, which the daily scripts never need to handle.
+- Failure handling follows `discord_summary.py`: an unreadable source is shown at the top of the file
+  and the script exits 1; a 401 aborts. A failed section call falls back to a plain list of changes.
+
+The model choice (Sonnet 5) was measured against Haiku 4.5 and Opus 5 on real data; the numbers are in
+the comment above `SONNET` in the script. Re-measure before changing it.
 
 ### The model writes prose, never facts (`discord_summary.py`)
 
@@ -187,7 +228,12 @@ There is no config file. These constants are edited in place:
 
 ## Secrets and deployment
 
-Repo secrets: `GH_PAT`, `ANTHROPIC_API_KEY`, `DISCORD_WEBHOOK_URL`. Pages serves the repo root from
+Repo secrets: `GH_PAT`, `ANTHROPIC_API_KEY`, `DISCORD_WEBHOOK_URL`. The weekly workflow uses the first two.
+
+This repo is **public**, so its run logs are world-readable and its artifacts downloadable by any
+signed-in GitHub user. The weekly report summarises private repos (`semanticd`, `codewall`, `concierge`
+...) — the same exposure the Pages site already has, since it names them daily — but moving the report
+anywhere more visible, or into the job summary, is a decision for the repo owner, not a formatting one. Pages serves the repo root from
 `main` (`build_type: legacy`); `.nojekyll` keeps Jekyll from touching it.
 
 ### Two credentials, on purpose — do not collapse them back into one
