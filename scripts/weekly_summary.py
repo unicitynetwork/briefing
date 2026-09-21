@@ -293,8 +293,8 @@ def in_merged_pr(repo, branch, shas):
 
 # A new repo's first push arrives as `branch_creation` (never as a push with an all-zero `before`),
 # with no previous head to compare against, so its history cannot be listed commit by commit. It is
-# recorded as one event with its commit count and newest commits, and kept out of the commit totals:
-# a repo imported with 500 commits of local history would otherwise swamp them.
+# recorded as one event with its commit count and newest commits: a repo imported with 500 commits
+# of local history would otherwise swamp the model's input for its project.
 # `branch_creation` also covers a branch made from existing commits in the UI and then set as the
 # default, where nothing was pushed at all. The two look the same in the feed, so only a creation
 # within NEW_REPO_GRACE of the repo's own creation counts as a first push; any other is logged.
@@ -505,13 +505,17 @@ created = data.get('created', [])    # absent from data saved before creations w
 # Every call is schema-enforced (output_config.format): CLAUDE.md records the needs-attention
 # card rendering empty for months because free-form JSON broke on quotes inside PR titles.
 # Thinking is disabled for the same reason as in generate_briefing.py: max_tokens caps thinking
-# plus output together, and these are summarisation calls.
+# plus output together, and these are summarisation calls. The semanticd sort is the exception
+# (think=True): it is a judgement, and without thinking Sonnet 5 sorted by where code lives rather
+# than what it does - on 14-20 Sep 2026 it put Codewall's enrolment recovery (#347) and unenforced
+# fallback policy (#351) under SIF. Haiku 4.5 takes no adaptive thinking, so its fallback stays off.
 usage = Counter()
 models_used = Counter()
 
-def claude(prompt, schema, max_tokens=4000):
+def claude(prompt, schema, max_tokens=4000, think=False):
     for model in (args.model, HAIKU if args.model != HAIKU else SONNET):
-        body = {'model': model, 'max_tokens': max_tokens, 'thinking': {'type': 'disabled'},
+        thinking = {'type': 'adaptive'} if think and model != HAIKU else {'type': 'disabled'}
+        body = {'model': model, 'max_tokens': max_tokens, 'thinking': thinking,
                 'messages': [{'role': 'user', 'content': prompt}],
                 'output_config': {'format': {'type': 'json_schema', 'schema': schema}}}
         req = urllib.request.Request('https://api.anthropic.com/v1/messages',
@@ -545,12 +549,15 @@ SPLIT_SCHEMA = {
                        'reason': {'type': 'string'}}}}}}
 
 SECTION_SCHEMA = {
-    'type': 'object', 'additionalProperties': False, 'required': ['overview', 'highlights'],
+    'type': 'object', 'additionalProperties': False, 'required': ['highlights', 'overview'],
     'properties': {
-        'overview': {'type': 'string'},
+        # Highlights first: output follows schema order, so every item is labelled before the
+        # overview is written, and the overview can then sum up only the items that are kept.
         'highlights': {'type': 'array', 'items': {
-            'type': 'object', 'additionalProperties': False, 'required': ['title', 'text'],
-            'properties': {'title': {'type': 'string'}, 'text': {'type': 'string'}}}}}}
+            'type': 'object', 'additionalProperties': False, 'required': ['kind', 'title', 'text'],
+            'properties': {'kind': {'type': 'string', 'enum': ['new feature', 'major change', 'minor']},
+                           'title': {'type': 'string'}, 'text': {'type': 'string'}}}},
+        'overview': {'type': 'string'}}}
 
 GLANCE_SCHEMA = {
     'type': 'object', 'additionalProperties': False, 'required': ['bullets'],
@@ -588,16 +595,23 @@ def split_semanticd(items):
 Codewall: {PROJECT_DESC['Codewall']}
 SIF: {PROJECT_DESC['SIF']}
 
-Sort each change below into the product it serves. Answer Codewall only when the change is
-specifically for Codewall: enrolling machines, the fleet of enrolled endpoints, policy sent to
-or enforced on those machines, the Codewall console. Everything else is SIF, including work on
-the engine both products share (rules, policies, classifiers, database, CI, tests, docs,
-deployment). Changed-file counts under Codewall or SIF-only paths are strong evidence.
+Sort each change below into the product it serves. Judge by what the change does, not by where
+its code lives: Codewall's control plane, database and most of its logic sit in the shared engine,
+so a change that touches only shared code can still be Codewall's.
+
+Codewall: enrolling machines and recovering an enrolment, the fleet of enrolled machines, the
+policies sent to and enforced on those machines (including what a machine enforces when it has no
+policy of its own), and the Codewall console. Files under Codewall paths are evidence for
+Codewall; their absence is not evidence for SIF.
+
+SIF: the gateway that inspects AI traffic, its rules, rulesets, classifiers and policies, the SIF
+console, and work on the engine that serves both products equally (database, CI, tests, docs,
+deployment). When a change clearly serves both, answer SIF.
 
 Return every id exactly as written, with a reason of at most 12 words.
 
 {lines}"""
-    out = claude(prompt, SPLIT_SCHEMA, max_tokens=3000)
+    out = claude(prompt, SPLIT_SCHEMA, max_tokens=16000, think=True)
     if out is None:
         problems.append('semanticd changes could not be sorted between SIF and Codewall; all counted as SIF')
         return
@@ -646,9 +660,6 @@ def short(repo):
 def plural(n, word):
     return f'{n} {word}{"" if n == 1 else "s"}'
 
-def creation_fact(c):
-    return f'new repo {short(c["repo"])} ({plural(c["commits"], "commit")})'
-
 def section_prompt(name, b):
     lines = [f'- Release of {short(r["repo"])} {r["tag"]}'
              + (' (pre-release)' if r['prerelease'] else '') + f': {r["name"]} | {r["notes"]}'
@@ -661,8 +672,8 @@ def section_prompt(name, b):
               for c in b['created']]
     record = '\n'.join(lines)
     return f"""You are writing one section of the weekly update on the Unicity project. The readers are
-not engineers: leadership, partners, investors and community members. They want to know what
-got better this week and why it matters, in plain language they can repeat to someone else.
+not engineers: leadership, partners, investors and community members. They want to know what is new
+and what changed in a big way this week, in plain language they could repeat to someone else.
 
 Project: {name}
 What it is: {PROJECT_DESC[name]}
@@ -671,22 +682,33 @@ Week: {week_label}
 This week's engineering record for {name} (written by engineers, often technical):
 {record}
 
-Write:
-- "overview": 2-3 sentences on what this week amounted to for {name}.
-- "highlights": the 2-5 most meaningful changes, most important first. Each has
+Write, in this order:
+- "highlights": the week's changes, grouped, most important first, at most 8 items in all -
+  put minor work into one or two broad items rather than one per fix. Each has
+  - "kind", one of:
+    - "new feature": something people can now do or use that they could not before
+    - "major change": a significant change in how the product works, or a fix for a problem
+      people outside engineering actually noticed, such as users unable to send money or a
+      service going down repeatedly
+    - "minor": everything else - small fixes, polish, speed-ups, documentation, tests, build and
+      release tooling, refactors, dependency updates, internal clean-up
   - "title": at most 8 plain words
-  - "text": 1-3 sentences: what changed, and why it matters to someone who uses or depends on {name}.
+  - "text": 1-2 sentences: what is new or different now, and why it matters to someone who uses
+    or depends on {name}.
+  Only "new feature" and "major change" items are shown, at most four; "minor" ones are dropped.
+  Label honestly - a small fix marked "major change" puts noise in front of readers. Work on tests,
+  builds, CI or other engineering tooling is always "minor", however much of it there was, and so
+  is cosmetic polish. A short list, or none, is the right answer for a quiet week.
+- "overview": 1-2 sentences summing up only the "new feature" and "major change" items above.
+  Do not mention anything marked "minor", or that other work happened. If there are none, say in
+  one sentence that it was a quiet week with no new features or major changes.
 
-Rules:
-- Group related changes. Many small fixes to one feature are one highlight.
-- Leave out routine upkeep (CI, tests, formatting, dependency bumps, refactors) unless it is
-  most of what happened; then say plainly what it makes possible.
-- Plain words. No file, crate, package, function or endpoint names, no PR numbers, usernames or
-  commit hashes. Explain an essential technical idea in everyday terms instead of naming it.
-- Say only what the record supports. Do not invent motives, customers, dates or impact the
-  record does not state. If the purpose of a change is unclear, describe what it does.
-- Do not count PRs, commits or contributors; the caller prints those.
-- If the week was quiet or only upkeep, say so plainly and return fewer highlights, even none."""
+How to write:
+- Plain words for someone who does not work in software. No repo, file, package, function or
+  endpoint names, no version numbers, PR numbers, usernames or commit hashes. If a technical idea
+  is essential, explain it in everyday terms.
+- Say only what the record supports. Do not invent motives, customers, dates or impact.
+- Do not count PRs, commits or contributors."""
 
 sections = {}
 for name, _ in PROJECTS:
@@ -694,53 +716,49 @@ for name, _ in PROJECTS:
     if not (b['prs'] or b['direct'] or b['releases'] or b['created']):
         continue
     print(f'Writing {name} ({len(b["prs"])} PRs, {len(b["direct"])} direct commits, '
-          f'{len(b["releases"])} releases)')
-    out = claude(section_prompt(name, b), SECTION_SCHEMA)
+          f'{len(b["releases"])} releases, {len(b["created"])} new repos)')
+    out = claude(section_prompt(name, b), SECTION_SCHEMA, max_tokens=8000)
     if out is None:
-        problems.append(f'{name}: the summary could not be written; its changes are listed below')
+        problems.append(f'{name}: the summary could not be written')
+    else:
+        minor = [h['title'] for h in out['highlights'] if h.get('kind') == 'minor']
+        out['highlights'] = [h for h in out['highlights'] if h.get('kind') != 'minor'][:4]
+        if minor:
+            print(f'  {name}: left out {len(minor)} minor item(s): ' + '; '.join(minor))
     sections[name] = out
 
 glance = None
-written = {n: s for n, s in sections.items() if s}
+# Built from the kept highlights only - not the overviews - so minor work cannot reach the top.
+written = {n: s for n, s in sections.items() if s and s['highlights']}
 if written:
-    digest = '\n\n'.join(f'{n}: {s["overview"]}\n' + '\n'.join(f'- {h["title"]}: {h["text"]}'
-                                                             for h in s['highlights'])
+    digest = '\n\n'.join(f'{n}:\n' + '\n'.join(f'- {h["title"]}: {h["text"]}' for h in s['highlights'])
                          for n, s in written.items())
     out = claude(f"""Below are this week's per-project sections of the Unicity weekly update, written for
 readers who are not engineers.
 
 {digest}
 
-Write 3-5 bullets for the top of the update: the most important things that happened across
-all projects, one plain sentence each, each starting with the project name and a colon.
-Use only what the sections say. Prefer shipped, user-visible progress over internal work, and
-do not give one project more than two bullets.""", GLANCE_SCHEMA, max_tokens=1500)
+Write up to 5 bullets for the top of the update: the most important new features and major changes
+across all projects, one plain sentence each, each starting with the project name and a colon.
+Use only what the sections say. Leave out projects with nothing new, give no project more than two
+bullets, and write fewer bullets rather than padding.""", GLANCE_SCHEMA, max_tokens=1500)
     glance = out['bullets'] if out else None
 
 # ── 8. Render ─────────────────────────────────────────────────────────────────────────────────
+# The report is for people outside engineering: what is new and what changed, nothing else. No PR,
+# commit or contributor counts, no repo names, no change lists - the repo owner removed all of those
+# as noise for this audience. Direct pushes, new repos and releases still reach the model above.
 def md(s):
-    """Escape text that comes from PR titles, commit messages or the model."""
+    """Escape text that comes from the model."""
     s = ' '.join(str(s).split())
     s = s.replace('\\', '\\\\').replace('<', '&lt;').replace('>', '&gt;')
     return re.sub(r'([*_`\[\]|])', r'\\\1', s)
 
-people = ({it['author'] for it in prs + direct if not it['bot']}
-          | {c['pusher'] for c in created if not is_bot(c['pusher'], '')})
-human_direct = [c for c in direct if not c['bot']]
-pr_projects = sum(1 for n, _ in PROJECTS if buckets[n]['prs'])
-totals = [f'**{len(prs)}** pull requests merged across {plural(pr_projects, "project")}']
-if direct:
-    totals.append(f'**{len(human_direct)}** commits pushed without a pull request'
-                  + (f' (+{len(direct) - len(human_direct)} automated)' if len(direct) > len(human_direct) else ''))
-if releases:
-    totals.append(plural(len(releases), 'release'))
-totals.append(plural(len(people), 'contributor'))
-
-L = [f'# Unicity weekly update', f'**{week_label}**', '', ' · '.join(totals), '']
+L = ['# Unicity weekly update', f'**{week_label}**', '']
 if week_end > now:
-    L += ['> **Week in progress** — this covers the days so far, not the full week.', '']
+    L += ['> **Week in progress** \u2014 this covers the days so far, not the full week.', '']
 if problems:
-    L += ['> ⚠️ **Incomplete:** ' + '; '.join(md(p) for p in problems) + '.', '']
+    L += ['> \u26a0\ufe0f **Incomplete:** ' + '; '.join(md(p) for p in problems) + '.', '']
 
 if glance:
     L += ['## This week at a glance', '']
@@ -750,81 +768,19 @@ if glance:
     L += ['']
 
 for name, desc in PROJECTS:
-    b = buckets[name]
     L += [f'## {name}', f'*{desc}*', '']
     if name not in sections:
-        L += ['Nothing was merged or pushed this week.', '']
-        continue
-    repo_n = Counter(short(it['repo']) for it in b['prs'] + b['direct'])
-    facts = [plural(len(b['prs']), 'pull request') + ' merged']
-    if b['direct']:
-        facts.append(f'{len(b["direct"])} pushed without a pull request')
-    facts += [creation_fact(c) for c in b['created']]
-    facts += [f'released {short(r["repo"])} [{md(r["tag"])}]({r["url"]})' for r in b['releases']]
-    if repo_n:    # empty when a new repo is the project's only activity; its fact is above
-        facts.append('by repo: ' + ', '.join(f'{r} {n}' for r, n in repo_n.most_common()))
-    L += ['<sub>' + ' · '.join(facts) + '</sub>', '']
-    s = sections[name]
-    if s is None:
-        L += ['*Summary unavailable this week. What changed:*', '']
-        L += [f'- {md(it["title"])} ({short(it["repo"])})' for it in b['prs'] + b['direct']]
-        L += [f'- {creation_fact(c)}' for c in b['created']]
-        L += ['']
-        continue
-    L += [md(s['overview']), '']
-    L += [f'- **{md(h["title"])}.** {md(h["text"])}' for h in s['highlights'][:5]]
-    L += ['']
-
-if direct or created:
-    L += ['## Pushed without a pull request',
-          "These commits reached a repository's main branch directly, bypassing review.", '']
-    if created:
-        L += ['**New repositories, first pushed directly**', '']
-        for c in sorted(created, key=lambda c: c['at']):
-            L += [f'- **{short(c["repo"])}** — {plural(c["commits"], "commit")}, pushed by {md(c["pusher"])}']
-            L += [f'  - [`{l["sha"][:7]}`]({l["url"]}) {md(l["title"])}' for l in c['latest'][:3]]
-            if c['commits'] > 3:
-                L += [f'  - …and {c["commits"] - min(3, len(c["latest"]))} earlier']
-        L += ['']
-    for label, group in (('', human_direct), ('Automated', [c for c in direct if c['bot']])):
-        if not group:
-            continue
-        if label:
-            L += [f'**{label}**', '']
-        by_repo = {}
-        for c in group:
-            by_repo.setdefault(c['repo'], []).append(c)
-        for repo, cs in sorted(by_repo.items(), key=lambda kv: -len(kv[1])):
-            pushers = ', '.join(sorted({c['pusher'] for c in cs}))
-            authors = sorted({c['author'] for c in cs} - {c['pusher'] for c in cs})
-            who = f'pushed by {pushers}' + (f', written by {", ".join(authors)}' if authors else '')
-            force = ' — **includes a force push**' if any(c['force'] for c in cs) else ''
-            branch = cs[0].get('branch', 'main')
-            where = '' if branch == 'main' else f' (to {md(branch)})'
-            L += [f'- **{short(repo)}**{where} — {plural(len(cs), "commit")}, {md(who)}{force}']
-            L += [f'  - [`{c["sha"][:7]}`]({c["url"]}) {md(c["title"])}' for c in cs[:10]]
-            if len(cs) > 10:
-                L += [f'  - …and {len(cs) - 10} more']
-        L += ['']
-
-L += ['## Everything merged', '']
-for name, _ in PROJECTS:
-    b = buckets[name]
-    if not b['prs']:
-        continue
-    by_repo = {}
-    for p in sorted(b['prs'], key=lambda p: p['at']):
-        by_repo.setdefault(short(p['repo']), []).append(p)
-    L += [f'<details><summary><b>{name}</b> — {plural(len(b["prs"]), "pull request")}</summary>', '']
-    for repo, ps in sorted(by_repo.items(), key=lambda kv: -len(kv[1])):
-        L += [f'**{repo}**', '']
-        L += [f'- [#{p["number"]}]({p["url"]}) {md(p["title"])} — @{p["author"]}' for p in ps]
-        L += ['']
-    L += ['</details>', '']
+        L += ['Nothing new this week.', '']
+    elif sections[name] is None:
+        L += ['*The summary for this project could not be written this week.*', '']
+    else:
+        s = sections[name]
+        L += [md(s['overview']), '']
+        if s['highlights']:
+            L += [f'- **{md(h["title"])}.** {md(h["text"])}' for h in s['highlights']] + ['']
 
 model_note = ', '.join(sorted(models_used)) or 'none'
-L += ['---', f'<sub>Generated {now:%-d %B %Y, %H:%M %Z} by scripts/weekly_summary.py · '
-             f'model: {model_note}</sub>', '']
+L += ['---', f'<sub>Generated {now:%-d %B %Y} from the team\'s GitHub activity \u00b7 {model_note}</sub>', '']
 
 with open(out_path, 'w') as f:
     f.write('\n'.join(L))
