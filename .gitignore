@@ -1,0 +1,4 @@
+# weekly_summary.py writes its report to the repo root, and Pages serves the repo root from main.
+# The report is a run artifact and summarises private repos; it must not be committed by accident.
+weekly-*.md
+__pycache__/
