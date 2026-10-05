@@ -128,8 +128,14 @@ Readers outside engineering think in products, and orgs do not map onto them: Co
 `unicity-aos`, Sphere's Nostr relays live in `unicitynetwork`, and `semanticd` is the backend of both SIF
 and Codewall. So:
 
-- **Repo → project is code, never the model.** `ORG_PROJECT` gives each org a default, `REPO_PROJECT`
-  overrides it. A new repo lands in its org's project, so it is reported rather than dropped.
+- **Repo → project is code, never the model.** `ORG_PROJECT` gives each org a default,
+  `REPO_PROJECT` overrides it by exact name, and `REPO_PREFIX_PROJECT` by prefix. A repo matched by
+  nothing lands in its org's project, so it is reported rather than dropped — but for a project whose
+  repos are named after it and arrive a few at a time, "reported" is not the same as "reported once".
+  Codewall was listed repo by repo; in the week of 21 Sep 2026 the new `codewall-capsules` and
+  `codewall-website` fell to the `unicity-aos` default, and Codewall's first public release was
+  written up under both AOS and Codewall. Hence the prefix rule, which matches the prefix itself or
+  the prefix plus `-` (so a future `codewallet` would not be swept in).
 - **`semanticd` is sorted per change.** A `(codewall)`/`(sif)` conventional-commit scope decides
   outright; otherwise one schema-enforced call sorts it from title, body and changed paths. Titles and
   board links were checked and neither is reliable on its own. Anything not specifically Codewall is
@@ -150,6 +156,22 @@ and Codewall. So:
   way, often several a week. But `branch_creation` also covers a branch made from existing commits and
   set as default, where nothing was pushed, and the feed cannot tell them apart; so only a creation
   within 7 days of the repo's own creation counts as a first push. Any other is logged.
+- **A force push that replaced a branch is one event, like a creation.** Comparing a push's `before`
+  with its `after` fails with a 404 when the two share no history, which is what a rebase or an
+  amended root commit leaves behind — there is no diff between the two heads to list. Treating that
+  as an unreadable source put a warning banner on the 28 Sep – 4 Oct 2026 report and failed the run,
+  over `aos-audit` force-pushing its own initial history twice in fifteen minutes. The branch was
+  not read badly, it was *replaced*, so it takes the `branch_creation` route: one event with the new
+  history's commit count and newest few (`how: 'rewritten'`). Listing those commits one by one would
+  double-count a rebase, where every SHA is new but the work is the work already counted from the
+  push it rewrote; as a single event neither reading can mislead, because a genuinely unrelated
+  history of 40 commits is reported as 40 rather than as its tip. That is what makes the banner
+  unnecessary here rather than merely quiet — do not reduce it to listing the new head, which
+  silently drops the rest. Only the branch's final history is kept, since an earlier rewrite of it
+  no longer exists. `no_common_ancestor` separates this from a real failure, and only for a
+  `force_push`: it needs a 404 *and* GitHub's "no common ancestor" wording, so an unrecognised 404
+  still raises the banner. Keep that direction — a wording change at GitHub's end must make the
+  report louder, never quieter.
 - **Releases** come from a GraphQL scan of *every* org repo — publishing a release from an existing
   tag is not a push, so the pushed-this-week list would miss it — *and* from `chore: release vX.Y.Z`
   titles, because `sphere-sdk` tags versions without ever creating a GitHub Release.

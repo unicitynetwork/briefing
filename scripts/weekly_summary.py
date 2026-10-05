@@ -109,9 +109,6 @@ ORG_PROJECT = {'unicitynetwork': 'Unicity Network', 'unicity-sphere': 'Sphere',
                'unicity-aos': 'AOS', 'unicity-concierge': 'Concierge', 'ristik': 'Unicity Network'}
 REPO_PROJECT = {
     'unicitynetwork/semanticd':            'SIF',   # default only; changes are sorted one by one in §7
-    'unicity-aos/codewall':                'Codewall',
-    'unicity-aos/codewall-design':         'Codewall',
-    'unicity-aos/codewall-dashboard':      'Codewall',
     'unicitynetwork/sif-docs':             'SIF',
     'unicitynetwork/astrid-capsule-sif':   'SIF',
     'unicitynetwork/srouter':              'SIF',   # model router; SIF gateway is its first consumer
@@ -126,6 +123,12 @@ REPO_PROJECT = {
     'unicitynetwork/sphere-activity-bot':  'Sphere',
     'unicity-sphere/astrid-site':          'AOS',
 }
+# Codewall names its repos after itself and gains them a few at a time - codewall-design,
+# codewall-dashboard, codewall-capsules, codewall-website. Listing them one by one meant each new
+# one silently fell to its org's default: in the week of 21 Sep 2026, codewall-capsules and
+# codewall-website were reported under AOS, so Codewall's first public release appeared in both
+# sections. Match the prefix instead, so the next one is right the day it is created.
+REPO_PREFIX_PROJECT = [('unicity-aos/codewall', 'Codewall')]
 # semanticd is the backend both SIF and Codewall run on. Its changes are sorted one by one in
 # §7; whatever is not specifically Codewall counts as SIF, shared engine work included.
 SPLIT_REPO = 'unicitynetwork/semanticd'
@@ -133,7 +136,12 @@ SPLIT_REPO = 'unicitynetwork/semanticd'
 IGNORED_REPOS = {'unicitynetwork/briefing'}
 
 def project_of(repo):
-    return REPO_PROJECT.get(repo) or ORG_PROJECT.get(repo.split('/')[0], 'Unicity Network')
+    if repo in REPO_PROJECT:
+        return REPO_PROJECT[repo]
+    for prefix, project in REPO_PREFIX_PROJECT:
+        if repo == prefix or repo.startswith(prefix + '-'):
+            return project
+    return ORG_PROJECT.get(repo.split('/')[0], 'Unicity Network')
 
 def ignored(repo):
     return repo in IGNORED_REPOS or repo.endswith('/.github')
@@ -159,6 +167,21 @@ def gh_get(path):
     return gh_open(urllib.request.Request(url, headers={
         'Authorization': f'token {GH_TOKEN}', 'Accept': 'application/vnd.github+json',
         'User-Agent': 'unicity-briefing'}))
+
+def no_common_ancestor(err):
+    """True only for the 404 a compare of two unrelated histories returns, not for a failed read.
+
+    Both are HTTP 404, and the difference matters: unrelated histories mean the branch was
+    rewritten, while a failed read means a source is missing. Wording we do not recognise counts
+    as a failed read, so a change at GitHub's end makes the report louder, never quieter.
+    """
+    if not isinstance(err, urllib.error.HTTPError) or err.code != 404:
+        return False
+    try:
+        message = (json.loads(err.read()) or {}).get('message') or ''
+    except Exception:
+        return False
+    return 'no common ancestor' in message.lower()
 
 def gh_list(path, max_pages=10, stop_before=None):
     """Follow Link: rel=next. stop_before(item) -> True ends paging on a newest-first feed."""
@@ -303,10 +326,10 @@ CREATION_Q = '''query($o: String!, $n: String!, $oid: GitObjectID!) { repository
   object(oid: $oid) { ... on Commit { history(first: 5) { totalCount
     nodes { oid messageHeadline url author { name user { login } } } } } } } }'''
 
-def read_creation(repo, branch, a):
+def read_creation(repo, branch, a, how='created'):
     owner, name = repo.split('/')
     h = gh_graphql(CREATION_Q, {'o': owner, 'n': name, 'oid': a['after']})['repository']['object']['history']
-    return {'repo': repo, 'branch': branch, 'at': a['timestamp'], 'commits': h['totalCount'],
+    return {'repo': repo, 'branch': branch, 'at': a['timestamp'], 'commits': h['totalCount'], 'how': how,
             'pusher': (a.get('actor') or {}).get('login') or 'unknown',
             'latest': [{'sha': c['oid'], 'title': c['messageHeadline'], 'url': c['url'],
                         'author': ((c.get('author') or {}).get('user') or {}).get('login')
@@ -355,7 +378,7 @@ def collect_direct(repos):
                     problems.append(f'{repo}: the push that created {branch} could not be read')
                     print(f'  creation read failed for {repo}: {e}')
         pushes = [a for a in week if a['activity_type'] in ('push', 'force_push') and set(a['before']) != {'0'}]
-        found = []
+        found, rewrite = [], None
         for a in pushes:
             pusher = (a.get('actor') or {}).get('login') or 'unknown'
             try:
@@ -365,13 +388,34 @@ def collect_direct(repos):
                     problems.append(f'{repo}: a push of {cmp["total_commits"]} commits, only '
                                     f'{len(raw)} are listed')
             except Exception as e:
-                # A force push can leave `before` unreachable. List the new head, and say that any
-                # other commits in the push are missing rather than letting the report look complete.
                 print(f'  compare failed for {repo} {a["before"][:7]}..{a["after"][:7]}: {e}')
+                # A force push can leave `before` with no ancestor in common with `after`, and then
+                # there is no diff between the two heads to list at all. The branch was not read
+                # badly, it was REPLACED - the same thing `branch_creation` does to a new repo, so
+                # handle it the same way: one event carrying the new history's commit count and its
+                # newest few. Listing those commits individually instead would double-count a
+                # rebase, whose every SHA is new while the work is the one already counted from the
+                # push it rewrote. As one event neither reading can mislead - a genuinely unrelated
+                # history of 40 commits is reported as 40, not as its tip - which is why this needs
+                # no banner.
+                # The feed is newest-first, so every push still to come is OLDER than this rewrite
+                # and its commits are not on the branch any more: stop here, or the week would carry
+                # both the commits that were replaced and the history that replaced them. A push
+                # NEWER than the rewrite sits on top of the new history and is already collected.
+                if a['activity_type'] == 'force_push' and no_common_ancestor(e):
+                    try:
+                        rewrite = read_creation(repo, branch, a, 'rewritten')
+                        print(f'{repo}: {branch} rewritten by a force push of '
+                              f'{rewrite["commits"]} commit(s); earlier pushes superseded')
+                        break
+                    except Exception as e:
+                        print(f'  rewritten history read failed for {repo} {a["after"][:7]}: {e}')
+                # Any other compare failure is a source we could not read. List the new head and say
+                # the rest of the push is missing, rather than letting the report look complete.
                 try:
                     raw = [gh_get(f'/repos/{repo}/commits/{a["after"]}')[0]]
-                    problems.append(f'{repo}: a push at {a["timestamp"]} could only be read up to its '
-                                    'newest commit, earlier commits in it are not listed')
+                    problems.append(f'{repo}: a push at {a["timestamp"]} could only be read up to '
+                                    'its newest commit, earlier commits in it are not listed')
                 except Exception as e:
                     problems.append(f'{repo}: a push at {a["timestamp"]} could not be read')
                     print(f'  commit {a["after"][:7]} failed: {e}')
@@ -402,6 +446,17 @@ def collect_direct(repos):
         if found:
             print(f'{repo}: {len(found)} commit(s) pushed straight to {branch}')
         commits.extend(found)
+        if rewrite:
+            # The branch may have been CREATED earlier the same week and then replaced, which is how
+            # a repo imported from a local clone and tidied up afterwards looks. That history is gone
+            # too, so the two events are one: keep it as the new repository it still is - the more
+            # useful fact for the report - carrying the history the branch actually ended up with.
+            first = next((c for c in creations if c['repo'] == repo and c['branch'] == branch), None)
+            if first:
+                first['commits'], first['latest'] = rewrite['commits'], rewrite['latest']
+                print(f'{repo}: {branch} was created this week too; reporting it once, as created')
+            else:
+                creations.append(rewrite)
     return commits, creations
 
 # ── 6. Releases ───────────────────────────────────────────────────────────────────────────────
@@ -667,7 +722,10 @@ def section_prompt(name, b):
     lines += [f'- Merged in {short(p["repo"])}: "{p["title"]}" | {p["body"]}' for p in b['prs']]
     lines += [f'- Pushed straight to {short(c["repo"])}: "{c["title"]}" | {c["body"]}'
               for c in b['direct']]
-    lines += [f'- New repository {short(c["repo"])}, first pushed with {plural(c["commits"], "commit")}'
+    lines += [(f'- History of {short(c["repo"])} {c["branch"]} replaced by a force push, now '
+               f'{plural(c["commits"], "commit")}'
+               if c.get('how') == 'rewritten' else    # absent from data saved before rewrites
+               f'- New repository {short(c["repo"])}, first pushed with {plural(c["commits"], "commit")}')
               + '; newest: ' + '; '.join(f'"{l["title"]}"' for l in c['latest'][:3])
               for c in b['created']]
     record = '\n'.join(lines)
@@ -716,7 +774,7 @@ for name, _ in PROJECTS:
     if not (b['prs'] or b['direct'] or b['releases'] or b['created']):
         continue
     print(f'Writing {name} ({len(b["prs"])} PRs, {len(b["direct"])} direct commits, '
-          f'{len(b["releases"])} releases, {len(b["created"])} new repos)')
+          f'{len(b["releases"])} releases, {len(b["created"])} new/rewritten branches)')
     out = claude(section_prompt(name, b), SECTION_SCHEMA, max_tokens=8000)
     if out is None:
         problems.append(f'{name}: the summary could not be written')
