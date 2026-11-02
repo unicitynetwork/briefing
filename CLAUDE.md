@@ -146,6 +146,20 @@ and Codewall. So:
 - **Highlights are labelled** `new feature`, `major change` or `minor`, and `minor` ones are dropped
   in code. Asking the model not to pad did not work — it still listed small fixes on a quiet week;
   a legitimate place to put them does.
+- **A section whose overview stops mid-sentence is written again.** The 19–25 Oct 2026 report opened
+  Unicity Network with "a gateway authentication gap was fixed, the network now distinguishes" and
+  stopped. Nothing could have caught it: the call returned `end_turn` with JSON valid against the
+  schema, so only the text itself shows the defect, which is what `ends_mid_sentence` checks. One
+  retry costs about 2c and the rewrite was both complete and better — it surfaced non-inclusion
+  proof work the first pass dropped. Twice in a row and the overview is left out rather than
+  published broken; the highlights carry the section without it. This is the only output check of
+  its kind — do not grow it into a style grader, which is the model's job, not the caller's.
+- **`md()` drops emphasis the model wrote, and escapes everything else.** Model text is asked to be
+  plain prose and nearly always is, but it reached for italics once (`something is *not* present`)
+  and escaping published the asterisks to the reader, since `\*` renders as a bare `*`. The report
+  formats itself — bold titles, italic descriptions — so model text needs no markers of its own.
+  Only a true emphasis span is unwrapped, with no space inside either marker, exactly as Markdown
+  requires: without that rule `2 * 3 * 4` parses as emphasis and loses its asterisks.
 - **Direct pushes come from the repository activity API**, which separates `push`/`force_push` from
   `pr_merge` and records who pushed and when. Commit dates cannot: a commit written Friday and pushed
   Monday belongs to Monday. Commits that turn out to belong to a merged PR are dropped. They are not

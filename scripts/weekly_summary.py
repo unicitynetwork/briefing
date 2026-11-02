@@ -768,6 +768,15 @@ How to write:
 - Say only what the record supports. Do not invent motives, customers, dates or impact.
 - Do not count PRs, commits or contributors."""
 
+# An overview that stops mid-sentence comes back as a perfectly successful call - `end_turn`, valid
+# JSON against the schema - so neither the stop_reason check nor the schema can see it; only the text
+# can. On 19-25 Oct 2026 Unicity Network's read "a gateway authentication gap was fixed, the network
+# now distinguishes" and the report shipped that way. The same prompt rewritten was both complete and
+# better, so one retry is worth its ~2c; if it happens twice, the half-sentence is dropped, because
+# the highlights carry the week on their own and no opening line reads better than a broken one.
+def ends_mid_sentence(text):
+    return not re.search(r'[.!?]["\'”’)]?$', (text or '').strip())
+
 sections = {}
 for name, _ in PROJECTS:
     b = buckets[name]
@@ -775,10 +784,21 @@ for name, _ in PROJECTS:
         continue
     print(f'Writing {name} ({len(b["prs"])} PRs, {len(b["direct"])} direct commits, '
           f'{len(b["releases"])} releases, {len(b["created"])} new/rewritten branches)')
-    out = claude(section_prompt(name, b), SECTION_SCHEMA, max_tokens=8000)
+    out = None
+    for _ in range(2):
+        got = claude(section_prompt(name, b), SECTION_SCHEMA, max_tokens=8000)
+        if got is None:
+            break    # the call itself failed, and claude() has already tried both models
+        out = got    # keep it even if the overview is poor: its highlights are the section
+        if not ends_mid_sentence(got.get('overview')):
+            break
+        print(f'  {name}: the overview stopped mid-sentence, writing the section again')
     if out is None:
         problems.append(f'{name}: the summary could not be written')
     else:
+        if ends_mid_sentence(out.get('overview')):
+            print(f'  {name}: no complete overview after the retry - leaving it out')
+            out['overview'] = ''
         minor = [h['title'] for h in out['highlights'] if h.get('kind') == 'minor']
         out['highlights'] = [h for h in out['highlights'] if h.get('kind') != 'minor'][:4]
         if minor:
@@ -807,8 +827,21 @@ bullets, and write fewer bullets rather than padding.""", GLANCE_SCHEMA, max_tok
 # commit or contributor counts, no repo names, no change lists - the repo owner removed all of those
 # as noise for this audience. Direct pushes, new repos and releases still reach the model above.
 def md(s):
-    """Escape text that comes from the model."""
+    """Escape text that comes from the model.
+
+    Emphasis it wrote itself is dropped rather than escaped. The model is asked for plain prose and
+    mostly obliges, but it reached for italics once (`something is *not* present`, 19-25 Oct 2026)
+    and escaping left a reader looking at the asterisks, since `\\*` renders as a bare `*`. The
+    report does its own formatting - bold titles, italic descriptions - so model text has no need
+    of any. Every other marker is still escaped: layout is the renderer's to decide, not the
+    model's.
+    """
     s = ' '.join(str(s).split())
+    # Only a real emphasis span: no space inside either marker, as Markdown itself requires. Without
+    # that, "2 * 3 * 4" reads as emphasis and loses its asterisks.
+    s = re.sub(r'\*\*(?!\s)([^*\n]*[^\s*])\*\*', r'\1', s)              # **bold**
+    s = re.sub(r'\*(?!\s)([^*\n]*[^\s*])\*', r'\1', s)                  # *italic*
+    s = re.sub(r'(?<![\w\\])_(?!\s)([^_\n]*[^\s_])_(?!\w)', r'\1', s)   # _italic_, not snake_case
     s = s.replace('\\', '\\\\').replace('<', '&lt;').replace('>', '&gt;')
     return re.sub(r'([*_`\[\]|])', r'\\\1', s)
 
@@ -833,7 +866,8 @@ for name, desc in PROJECTS:
         L += ['*The summary for this project could not be written this week.*', '']
     else:
         s = sections[name]
-        L += [md(s['overview']), '']
+        if s['overview']:
+            L += [md(s['overview']), '']
         if s['highlights']:
             L += [f'- **{md(h["title"])}.** {md(h["text"])}' for h in s['highlights']] + ['']
 
